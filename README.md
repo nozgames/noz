@@ -1,2 +1,2 @@
 # noz
-NoZ Game Engine
+NoZ Game Engine v1.0
