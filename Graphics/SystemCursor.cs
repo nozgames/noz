@@ -31,6 +31,7 @@ namespace NoZ {
         IBeam
     }
 
+#if false
     [SystemResource]
     [SerializedType(Allocator = typeof(Allocator))]
     public sealed class ArrowCursor : Cursor {
@@ -48,4 +49,5 @@ namespace NoZ {
             public static object CreateInstance() => Game.GraphicsDriver.CreateCursor(SystemCursor.IBeam);
         }
     }
+#endif
 }

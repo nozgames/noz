@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+#if false
+
 namespace NoZ.Graphics {
 
     /// <summary>
@@ -144,3 +146,5 @@ namespace NoZ.Graphics {
         }
     }
 }
+
+#endif

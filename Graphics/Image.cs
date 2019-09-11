@@ -25,26 +25,39 @@
 using System;
 using System.IO;
 
-using NoZ.Serialization;
+//using NoZ.Serialization;
 
 namespace NoZ {
 
-    [SharedResource]
-    [SerializedType(Allocator = typeof(ImageAllocator))]
-    [Version(1)]
-    public abstract class Image : ISerializedType, IResource {
+    //[SharedResource]
+    //[SerializedType(Allocator = typeof(ImageAllocator))]
+    //[Version(1)]
+    public abstract class Image { // : ISerializedType, IResource {
         public static Image Load (string filename) {
             using (var stream = File.OpenRead(filename)) {
+#if false
                 return Game.GraphicsDriver.LoadImage (stream);
+#else
+                return null;
+#endif
+
             }
         }
 
         public static Image Load (Stream stream) {
+#if false
             return Game.GraphicsDriver.LoadImage(stream);
+#else
+            return null;
+#endif
         }
 
         public static Image Create (int width, int height, PixelFormat format) {
+#if false
             return Game.GraphicsDriver.CreateImage(width, height, format);
+#else
+            return null;
+#endif
         }
 
         protected Image() {
@@ -88,7 +101,9 @@ namespace NoZ {
             }
         }
 
+#if false
         Resource IResource.Resource { get; set; }
+#endif
 
         private static Color GetPixelR8G8B8A8 (byte[] raw, int x, int y, int width) {
             int offset = x * 4 + y * width * 4;
@@ -139,6 +154,7 @@ namespace NoZ {
             UnlockBytes();
         }
 
+#if false
 
         void ISerializedType.Deserialize(BinaryDeserializer reader) {
             Border = reader.ReadThickness();
@@ -165,6 +181,7 @@ namespace NoZ {
         private static class ImageAllocator {
             public static object CreateInstance() => Game.GraphicsDriver.CreateImage();
         }
+#endif
 
         protected abstract byte[] LockBytes();
 

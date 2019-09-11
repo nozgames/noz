@@ -1,7 +1,7 @@
 ﻿/*
   NozEngine Library
 
-  Copyright(c) 2019 NoZ Games, LLC
+  Copyright(c) 2015 NoZ Games, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -22,17 +22,12 @@
   SOFTWARE.
 */
 
-using System;
-
 namespace NoZ {
 
-    public static class Audio {
-        public static Voice Play(AudioClip clip) {
-            return Game.AudioDriver?.Play(clip) ?? Voice.Error;
-        }
+    public enum Alignment {
+        Min,
+        Center,
+        Max
+    };
 
-        public static bool IsPlaying(Voice voice) {
-            return Game.AudioDriver.IsPlaying(voice);
-        }
-    }
 }

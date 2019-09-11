@@ -22,8 +22,14 @@ namespace NoZ {
 
         Image CreateImage(int width, int height, PixelFormat format);
 
+        void BeginFrame();
+
+        void EndFrame();
+
+#if false
         Cursor CreateCursor(Image image);
 
         Cursor CreateCursor(SystemCursor systemCursor);
+#endif
     }
 }

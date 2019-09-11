@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-using NoZ.Serialization;
+//using NoZ.Serialization;
 
 namespace NoZ {
-    [SharedResource]
-    [Version(1)]
-    public class Font : IResource, ISerializedType {
+    //[SharedResource]
+    //[Version(1)]
+    public class Font { // : IResource, ISerializedType {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class Glyph {
             public Vector2 Bearing { get; private set; }
@@ -38,7 +38,9 @@ namespace NoZ {
 
         public Image Image { get; private set; }
 
+#if false
         Resource IResource.Resource { get; set; }
+#endif
 
         public Glyph GetGlyph (char c) {
             return _glyphs[c];
@@ -59,6 +61,7 @@ namespace NoZ {
             return advance;
         }
 
+#if false
         void ISerializedType.Deserialize(BinaryDeserializer reader) {
             Ascent = reader.ReadSingle();
             Height = reader.ReadSingle();
@@ -136,5 +139,6 @@ namespace NoZ {
 
             return font;
         }
+#endif
     }
 }
