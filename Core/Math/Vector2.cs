@@ -137,6 +137,11 @@ namespace NoZ {
             return new Vector2(lhs.x / rhs.x, lhs.y / rhs.y);
         }
 
+        public static Vector2 operator -(Vector2 lhs)
+        {
+            return new Vector2(-lhs.x, -lhs.y);
+        }
+
         public static Vector2 operator /(Vector2 lhs, float rhs) => new Vector2(lhs.x / rhs, lhs.y / rhs);
         public static Vector2 operator *(Vector2 lhs, float rhs) => new Vector2(lhs.x * rhs, lhs.y * rhs);
         public static Vector2 operator +(Vector2 lhs, float rhs) => new Vector2(lhs.x + rhs, lhs.y + rhs);

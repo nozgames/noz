@@ -158,6 +158,16 @@ namespace NoZ {
             return new Rect(x - ex, y - ey, width + ex * 2, height + ey * 2);
         }
 
+        public Rect Offset (in Vector2 offset)
+        {
+            return new Rect(x + offset.x, y + offset.y, width, height);
+        }
+
+        public Rect Offset(float ox, float oy)
+        {
+            return new Rect(x + ox, y + oy, width, height);
+        }
+
         public Rect Intersection(Rect rect) {
             throw new NotImplementedException();
             /*
