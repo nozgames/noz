@@ -1,5 +1,5 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
 
@@ -22,12 +22,42 @@
   SOFTWARE.
 */
 
-namespace NoZ {
+using System;
+using System.IO;
+using System.Reflection;
 
-    public enum Alignment {
-        Min,
-        Center,
-        Max
-    };
+namespace NoZ
+{
 
+    public enum ResourceArchiveMode
+    {
+        /// <summary>
+        /// Opens the archive in read only mode
+        /// </summary>
+        ReadOnly,
+
+        /// <summary>
+        /// Opens the archive in write only mode
+        /// </summary>
+        WriteOnly,
+
+        /// <summary>
+        /// Opens the archive in read/write mode
+        /// </summary>
+        ReadWrite
+    }
+
+    public abstract class ResourceArchive : IDisposable
+    {
+        public ResourceArchiveMode Mode { get; private set; }
+
+        public ResourceArchive(ResourceArchiveMode mode)
+        {
+            Mode = mode;
+        }
+
+        public abstract Stream OpenRead(string name, FieldInfo fieldInfo);
+
+        public virtual void Dispose() { }
+    }
 }

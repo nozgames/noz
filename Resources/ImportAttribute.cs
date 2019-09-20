@@ -1,5 +1,5 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
 
@@ -22,12 +22,21 @@
   SOFTWARE.
 */
 
-namespace NoZ {
+using System;
 
-    public enum Alignment {
-        Min,
-        Center,
-        Max
-    };
+namespace NoZ
+{
+    /// <summary>
+    /// Binds a resource to a field
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ImportAttribute : Attribute
+    {
+        public string Name { get; private set; }
 
+        public ImportAttribute(string name)
+        {
+            Name = name;
+        }
+    }
 }

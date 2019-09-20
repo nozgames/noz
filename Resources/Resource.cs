@@ -1,5 +1,5 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
 
@@ -22,12 +22,20 @@
   SOFTWARE.
 */
 
-namespace NoZ {
+namespace NoZ
+{
+    public abstract class Resource
+    {
+        public static bool IsVerbose { get; set; } = true;
 
-    public enum Alignment {
-        Min,
-        Center,
-        Max
-    };
+        /// <summary>
+        /// Name of the resource
+        /// </summary>
+        public string Name { get; private set; }
 
+        public Resource(string name)
+        {
+            Name = name;
+        }
+    }
 }

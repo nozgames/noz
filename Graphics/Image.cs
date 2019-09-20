@@ -1,7 +1,7 @@
 ﻿/*
   NoZ Game Engine
 
-  Copyright(c) 2015 NoZ Games, LLC
+  Copyright(c) 2019 NoZ Games, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -25,45 +25,47 @@
 using System;
 using System.IO;
 
-//using NoZ.Serialization;
-
-namespace NoZ {
-
-    //[SharedResource]
-    //[SerializedType(Allocator = typeof(ImageAllocator))]
-    //[Version(1)]
-    public abstract class Image { // : ISerializedType, IResource {
-        public static Image Load (string filename) {
-            using (var stream = File.OpenRead(filename)) {
-#if false
-                return Game.GraphicsDriver.LoadImage (stream);
-#else
-                return null;
-#endif
-
-            }
+namespace NoZ.Graphics
+{
+    [ResourceLoader]
+    public abstract class Image : Resource
+    {
+        /// <summary>
+        /// Create a blank image 
+        /// </summary>
+        /// <param name="name">Optional name of image</param>
+        /// <param name="width">Width of image</param>
+        /// <param name="height">Height of image</param>
+        /// <param name="format">Format of image</param>
+        /// <returns>Created image</returns>
+        public static Image Create (string name, int width, int height, PixelFormat format) {
+            return Game.GraphicsDriver.CreateImage(name, width, height, format);
         }
 
-        public static Image Load (Stream stream) {
-#if false
-            return Game.GraphicsDriver.LoadImage(stream);
-#else
-            return null;
-#endif
+        /// <summary>
+        /// Create a named image from a stream
+        /// </summary>
+        /// <param name="name">Name of image</param>
+        /// <param name="reader">Stream to read from</param>
+        /// <returns>Created image</returns>
+        public static Image Create (string name, BinaryReader reader)
+        {
+            // Create the image
+            var image = Create(name, reader.ReadInt16(), reader.ReadInt16(), (PixelFormat)reader.ReadByte());
+
+            image.Border = reader.ReadThickness();
+
+            byte[] dst = image.LockBytes();
+            reader.Read(dst, 0, image.Stride * image.Height);
+            image.UnlockBytes();
+
+            return image;
         }
 
-        public static Image Create (int width, int height, PixelFormat format) {
-#if false
-            return Game.GraphicsDriver.CreateImage(width, height, format);
-#else
-            return null;
-#endif
+        protected Image(string name) : base(name) {
         }
 
-        protected Image() {
-        }
-
-        protected Image(int width, int height, PixelFormat format) {
+        protected Image(string name, int width, int height, PixelFormat format) : base (name) {
             Width = width;
             Height = height;
             PixelFormat = format;
@@ -76,14 +78,29 @@ namespace NoZ {
         /// </summary>
         public Thickness Border { get; set; }
 
+        /// <summary>
+        /// Width of the image in pixels
+        /// </summary>
         public int Width { get; private set; }
 
+        /// <summary>
+        /// Height of the image in pixels
+        /// </summary>
         public int Height { get; private set; }
 
+        /// <summary>
+        /// Number of bytes in a single row of pixels
+        /// </summary>
         public int Stride { get; private set; }
 
+        /// <summary>
+        /// Format of each pixel
+        /// </summary>
         public PixelFormat PixelFormat { get; private set; }
 
+        /// <summary>
+        /// Width and height in vector form
+        /// </summary>
         public Vector2Int Size => new Vector2Int(Width, Height);
 
         public int BytesPerPixel {
@@ -100,10 +117,6 @@ namespace NoZ {
                 }
             }
         }
-
-#if false
-        Resource IResource.Resource { get; set; }
-#endif
 
         private static Color GetPixelR8G8B8A8 (byte[] raw, int x, int y, int width) {
             int offset = x * 4 + y * width * 4;
@@ -153,35 +166,22 @@ namespace NoZ {
         public void Unlock() {
             UnlockBytes();
         }
+        
+        /// <summary>
+        /// Save the image to the given stream
+        /// </summary>
+        /// <param name="writer">Stream to save image to</param>
+        public void Save (BinaryWriter writer)
+        {
+            writer.Write((short)Width);
+            writer.Write((short)Height);
+            writer.Write((byte)PixelFormat);
+            writer.Write(Border);
 
-#if false
-
-        void ISerializedType.Deserialize(BinaryDeserializer reader) {
-            Border = reader.ReadThickness();
-            Width = reader.ReadInt16();
-            Height = reader.ReadInt16();
-            PixelFormat = (PixelFormat)reader.ReadByte();
-            Stride = Width * BytesPerPixel;
-
-            byte[] dst = LockBytes();
-            reader.ReadBytes(dst, 0);
+            var bytes = LockBytes();
+            writer.Write(bytes, 0, bytes.Length);
             UnlockBytes();
         }
-
-        void ISerializedType.Serialize(BinarySerializer writer) {
-            writer.WriteThickness(Border);
-            writer.WriteInt16((short)Width);
-            writer.WriteInt16((short)Height);
-            writer.WriteByte((byte)PixelFormat);
-
-            writer.WriteBytes(LockBytes());
-            UnlockBytes();
-        }
-
-        private static class ImageAllocator {
-            public static object CreateInstance() => Game.GraphicsDriver.CreateImage();
-        }
-#endif
 
         protected abstract byte[] LockBytes();
 

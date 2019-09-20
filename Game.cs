@@ -22,6 +22,8 @@
   SOFTWARE.
 */
 
+using NoZ.Graphics;
+
 namespace NoZ
 {
     public class Game
@@ -35,15 +37,18 @@ namespace NoZ
         private IAudioDriver _audioDriver;
         private IGraphicsDriver _graphicsDriver;
         private Window _window;
+        private ResourceDatabase _resourceDatabase;
 
         public static IAudioDriver AudioDriver { get { return Instance._audioDriver; } }
         public static IGraphicsDriver GraphicsDriver { get { return Instance._graphicsDriver; } }
+        public static ResourceDatabase Resources { get { return Instance._resourceDatabase;  } }
 
-        public Game (Window window, IGraphicsDriver graphicsDriver, IAudioDriver audioDriver)
+        public Game (Window window, IGraphicsDriver graphicsDriver, IAudioDriver audioDriver, ResourceArchive[] archives)
         {
             _window = window;
             _graphicsDriver = graphicsDriver;
             _audioDriver = audioDriver;
+            _resourceDatabase = new ResourceDatabase(archives);
             Instance = this;
         }
 

@@ -1,5 +1,5 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
 
@@ -22,12 +22,16 @@
   SOFTWARE.
 */
 
-namespace NoZ {
+using System;
 
-    public enum Alignment {
-        Min,
-        Center,
-        Max
-    };
-
+namespace NoZ
+{
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ImageBorderAttribute : Attribute
+    {
+        public float left;
+        public float top;
+        public float right;
+        public float bottom;
+    }
 }

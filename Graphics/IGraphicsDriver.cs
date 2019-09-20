@@ -1,35 +1,37 @@
-﻿using System.IO;
+﻿/*
+  NoZ Game Engine
 
-namespace NoZ {
-    public interface IGraphicsDriver {
+  Copyright(c) 2019 NoZ Games, LLC
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files(the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions :
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+namespace NoZ.Graphics
+{
+    public interface IGraphicsDriver
+    {
         GraphicsContext CreateContext();
 
-        /// <summary>
-        /// Create an empty image.
-        /// </summary>
-        /// <remarks>
-        /// Empty images are uses primarily by the serialization system. 
-        /// </remarks>
-        /// <returns>Created image.</returns>
-        Image CreateImage();
-
-        /// <summary>
-        /// Create an image loading its contents from the given stream
-        /// </summary>
-        /// <param name="stream">Stream to load the image from</param>
-        /// <returns>Created image.</returns>
-        Image LoadImage(Stream stream);
-
-        Image CreateImage(int width, int height, PixelFormat format);
+        Image CreateImage(string name, int width, int height, PixelFormat format);
 
         void BeginFrame();
 
         void EndFrame();
-
-#if false
-        Cursor CreateCursor(Image image);
-
-        Cursor CreateCursor(SystemCursor systemCursor);
-#endif
     }
 }

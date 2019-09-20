@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.IO;
 
 //using NoZ.Serialization;
 
@@ -7,7 +7,7 @@ namespace NoZ {
 //    [SharedResource]
 //    [Version(1)]
 //    [SerializedType(Allocator = typeof(AudioClipAllocator))]
-    public abstract class AudioClip { // : IResource, ISerializedType {
+    public abstract class AudioClip : Resource { // : IResource, ISerializedType {
         public int SampleCount { get; private set; } = 0;
         public int Frequency { get; private set; } = 44100;
         public AudioChannelFormat ChannelFormat { get; private set; } = AudioChannelFormat.Stereo;
@@ -17,12 +17,9 @@ namespace NoZ {
         /// </summary>
 //        Resource IResource.Resource { get; set; }
 
-        public static AudioClip Create() {
-#if false
-            return Game.AudioDriver.CreateClip();
-#else
+        public static AudioClip Create(string name, BinaryReader reader) {
+            var clip = Game.AudioDriver.CreateClip();
             return null;
-#endif
         }
 
         public static AudioClip Create(int samples, AudioChannelFormat channelFormat, int frequency) {
@@ -33,10 +30,10 @@ namespace NoZ {
 #endif
         }
 
-        protected AudioClip() {
+        protected AudioClip() : base(null) {
         }
 
-        protected AudioClip(int samples, AudioChannelFormat channelFormat, int frequency) {
+        protected AudioClip(int samples, AudioChannelFormat channelFormat, int frequency) : base (null) {
             SampleCount = samples;
             ChannelFormat = channelFormat;
             Frequency = frequency;
@@ -57,30 +54,32 @@ namespace NoZ {
             Audio.Play(this);
         }
 
-#if false
-        void ISerializedType.Deserialize(BinaryDeserializer reader) {
+        void Deserialize(BinaryReader reader)
+        {
             ChannelFormat = (AudioChannelFormat)reader.ReadByte();
             Frequency = reader.ReadInt32();
             SampleCount = reader.ReadInt32();
             if (SampleCount == 0)
                 return;
 
-            SetData(reader.ReadShorts(), 0);
+            SetData(reader.ReadShorts(SampleCount), 0);
         }
 
-        void ISerializedType.Serialize(BinarySerializer writer) {
-            writer.WriteByte((byte)ChannelFormat);
-            writer.WriteInt32(Frequency);
-            writer.WriteInt32(SampleCount);
+        void Serialize(BinaryWriter writer)
+        {
+            writer.Write((byte)ChannelFormat);
+            writer.Write(Frequency);
+            writer.Write(SampleCount);
 
             if (SampleCount == 0)
                 return;
 
             short[] data = new short[SampleCount];
             GetData(data, 0);
-            writer.WriteShorts(data);
+            writer.Write(data);
         }
 
+#if false
         private static class AudioClipAllocator {
             public static object CreateInstance() => Game.AudioDriver.CreateClip();
         }

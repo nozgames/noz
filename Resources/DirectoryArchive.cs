@@ -1,7 +1,7 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
-  Copyright(c) 2019 NoZ Games, LLC
+  Copyright(c) 2017 NoZ Games, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -22,12 +22,28 @@
   SOFTWARE.
 */
 
-namespace NoZ {
+using System;
+using System.Reflection;
+using System.IO;
 
-    public enum Alignment {
-        Min,
-        Center,
-        Max
-    };
+namespace NoZ
+{
+    public class DirectoryArchive : ResourceArchive
+    {
+        public DirectoryInfo Directory { get; private set; }
 
+        public DirectoryArchive(string path, ResourceArchiveMode mode) : base(mode)
+        {
+            // Make sure the directory exists.
+            if (!System.IO.Directory.Exists(path))
+                System.IO.Directory.CreateDirectory(path);
+
+            Directory = new DirectoryInfo(path);
+        }
+
+        public override Stream OpenRead(string name, FieldInfo fieldInfo)
+        {
+            return File.Create(Path.Combine(Directory.FullName, name));
+        }
+    }
 }
