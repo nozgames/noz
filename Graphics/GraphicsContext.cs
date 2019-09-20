@@ -67,7 +67,7 @@ namespace NoZ {
         private Stack<State> _state;
         private Stack<Matrix3> _worldToScreen;
 
-        public static GraphicsContext Create() => Game.GraphicsDriver.CreateContext();
+        public static GraphicsContext Create() => Window.Graphics.CreateContext();
 
         protected GraphicsContext() {
             _state = new Stack<State>(4);

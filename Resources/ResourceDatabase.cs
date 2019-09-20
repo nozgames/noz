@@ -30,32 +30,43 @@ using System.IO;
 
 namespace NoZ
 {
-    public class ResourceDatabase
+    public static class ResourceDatabase
     {
         /// <summary>
         /// Cached resources by resource name
         /// </summary>
-        private Dictionary<string, Resource> _cache;
+        private static Dictionary<string, Resource> _cache;
 
         /// <summary>
         /// List of archives that supply resources to the database.
         /// </summary>
-        private ResourceArchive[] _archives;
+        private static ResourceArchive[] _archives;
 
         /// <summary>
         /// Stopwatched used to time loading of resources.
         /// </summary>
-        private Stopwatch _stopwatch;
+        private static Stopwatch _stopwatch;
 
-        private Dictionary<string, MethodInfo> _createMethods;
+        private static Dictionary<string, MethodInfo> _createMethods;
 
 
-        public ResourceDatabase(ResourceArchive[] archives)
+        static ResourceDatabase ()
         {
             _stopwatch = new Stopwatch();
             _cache = new Dictionary<string, Resource>();
             _createMethods = new Dictionary<string, MethodInfo>();
-            _archives = archives;
+            _archives = new ResourceArchive[] { };
+        }
+
+        /// <summary>
+        /// Add a new archive to the resource database
+        /// </summary>
+        /// <param name="archive"></param>
+        public static void AddArchive (ResourceArchive archive)
+        {
+            var list = new List<ResourceArchive>(_archives);
+            list.Add(archive);
+            _archives = list.ToArray();
         }
 
         /// <summary>
@@ -64,7 +75,7 @@ namespace NoZ
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private Stream OpenRead(string name, FieldInfo info)
+        private static Stream OpenRead(string name, FieldInfo info)
         {
             foreach (var archive in _archives)
             {
@@ -80,7 +91,7 @@ namespace NoZ
         /// Load assets from static fields in the given type
         /// </summary>
         /// <param name="type"></param>
-        public void Load(Type type)
+        public static void Load(Type type)
         {
             // Only static classes allowed
             if (!type.IsClass || !(type.IsAbstract && type.IsSealed))
@@ -111,7 +122,7 @@ namespace NoZ
             }
         }
 
-        private Resource CreateResource(string name, string typeName, BinaryReader reader)
+        private static Resource CreateResource(string name, string typeName, BinaryReader reader)
         {
             if (!_createMethods.TryGetValue(typeName, out var method))
             {

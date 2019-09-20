@@ -18,7 +18,7 @@ namespace NoZ {
 //        Resource IResource.Resource { get; set; }
 
         public static AudioClip Create(string name, BinaryReader reader) {
-            var clip = Game.AudioDriver.CreateClip();
+            var clip = Window.Audio.CreateClip();
             return null;
         }
 

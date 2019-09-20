@@ -39,7 +39,7 @@ namespace NoZ.Graphics
         /// <param name="format">Format of image</param>
         /// <returns>Created image</returns>
         public static Image Create (string name, int width, int height, PixelFormat format) {
-            return Game.GraphicsDriver.CreateImage(name, width, height, format);
+            return Window.Graphics.CreateImage(name, width, height, format);
         }
 
         /// <summary>

@@ -28,6 +28,12 @@ namespace NoZ.Graphics
     {
         GraphicsContext CreateContext();
 
+        /// <summary>
+        /// Called to bind the graphics driver to a window
+        /// </summary>
+        /// <param name="window"></param>
+        void Bind(Window window);
+
         Image CreateImage(string name, int width, int height, PixelFormat format);
 
         void BeginFrame();

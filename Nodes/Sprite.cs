@@ -22,12 +22,16 @@
   SOFTWARE.
 */
 
+using NoZ.Graphics;
+
 namespace NoZ
 {
     public class Sprite : Node
     {
         private Vector2 _size;
         private Vector2 _pivot = Vector2.Half;
+
+        public Image Image { get; set; }
 
         public Vector2 Size {
             get => _size;
@@ -42,6 +46,11 @@ namespace NoZ
                 _pivot = value;
                 InvalidateFrame();
             }
+        }
+
+        public Sprite (Image image)
+        {
+            Image = image;
         }
 
         /// <summary>
