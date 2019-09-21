@@ -17,17 +17,8 @@ namespace NoZ {
         /// </summary>
 //        Resource IResource.Resource { get; set; }
 
-        public static AudioClip Create(string name, BinaryReader reader) {
-            var clip = Window.Audio.CreateClip();
-            return null;
-        }
-
         public static AudioClip Create(int samples, AudioChannelFormat channelFormat, int frequency) {
-#if false
-            return Game.AudioDriver.CreateClip(samples, channelFormat, frequency);
-#else
-            return null;
-#endif
+            return Window.Audio.CreateClip(samples, channelFormat, frequency);
         }
 
         protected AudioClip() : base(null) {
@@ -54,18 +45,25 @@ namespace NoZ {
             Audio.Play(this);
         }
 
-        void Deserialize(BinaryReader reader)
+        public static AudioClip Create(string name, BinaryReader reader)
         {
-            ChannelFormat = (AudioChannelFormat)reader.ReadByte();
-            Frequency = reader.ReadInt32();
-            SampleCount = reader.ReadInt32();
-            if (SampleCount == 0)
-                return;
+            var clip = Window.Audio.CreateClip();
+            clip.ChannelFormat = (AudioChannelFormat)reader.ReadByte();
+            clip.Frequency = reader.ReadInt32();
+            clip.SampleCount = reader.ReadInt32();
+            if (clip.SampleCount == 0)
+                return clip;
 
-            SetData(reader.ReadShorts(SampleCount), 0);
+            clip.SetData(reader.ReadShorts(clip.SampleCount), 0);
+
+            return clip;
         }
-
-        void Serialize(BinaryWriter writer)
+        
+        /// <summary>
+        /// Save the image to the given stream
+        /// </summary>
+        /// <param name="writer">Stream to save image to</param>
+        public void Save(BinaryWriter writer)
         {
             writer.Write((byte)ChannelFormat);
             writer.Write(Frequency);
@@ -78,11 +76,5 @@ namespace NoZ {
             GetData(data, 0);
             writer.Write(data);
         }
-
-#if false
-        private static class AudioClipAllocator {
-            public static object CreateInstance() => Game.AudioDriver.CreateClip();
-        }
-#endif
     }
 }

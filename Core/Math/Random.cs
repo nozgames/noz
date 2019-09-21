@@ -1,5 +1,5 @@
 ﻿/*
-  NozEngine Library
+  NoZ Game Engine
 
   Colin Green, January 2005
   Copyright(c) 2019 NoZ Games, LLC
