@@ -26,7 +26,7 @@ namespace NoZ
 
         public IEnumerable<Node> Children => _children ?? _emptyList;
 
-        public bool Visible { get; set; } = true;
+        public bool IsVisible { get; set; } = true;
 
         public virtual bool DoesArrangeChildren => false;
 
@@ -170,7 +170,7 @@ namespace NoZ
             if (_frame == oldFrame)
                 return;
 
-            OnFrameChanged(Frame);
+            OnFrameChanged(oldFrame);
 
             // Let all of our children know our frame changed too
             if (_children != null)

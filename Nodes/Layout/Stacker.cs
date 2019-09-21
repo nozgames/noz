@@ -58,7 +58,7 @@ namespace NoZ
             for(int i=0, c=ChildCount; i<c; i++)
             {
                 var child = GetChildAt(i);
-                if (!child.Visible)
+                if (!child.IsVisible)
                     continue;
 
                 childFrame[u_axis + 2] = _measures[i][u_axis];
@@ -96,7 +96,7 @@ namespace NoZ
             for(int i=0,c=ChildCount; i<c; i++)
             {
                 var child = GetChildAt(i);
-                if(!child.Visible)
+                if(!child.IsVisible)
                     continue;
 
                 _measures[i] = child.Measure(available);

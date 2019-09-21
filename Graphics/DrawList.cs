@@ -1,17 +1,39 @@
-﻿using System;
+﻿/*
+  NoZ Game Engine
+
+  Copyright(c) 2019 NoZ Games, LLC
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files(the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions :
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 using System.Collections.Generic;
 
-#if false
-
-namespace NoZ.Graphics {
-
+namespace NoZ.Graphics
+{
     /// <summary>
     /// List of all nodes that will be drawn sorted by their layer and sort order.  The draw list has a 
     /// maximum of 65535 drawable nodes.
     /// </summary>
-    class DrawList {
-
-        public struct DrawNode {
+    class DrawList
+    {
+        public struct DrawNode
+        {
             public ushort PaintersIndex;
             public ushort SortGroup;
             public int SortOrder;
@@ -29,7 +51,8 @@ namespace NoZ.Graphics {
             }
         }
 
-        public struct DrawLayer {
+        public struct DrawLayer
+        {
             /// <summary>
             /// Node that the layer represents
             /// </summary>
@@ -49,13 +72,14 @@ namespace NoZ.Graphics {
         private List<DrawNode> _nodes = new List<DrawNode>(4096);
         private List<DrawLayer> _layers = new List<DrawLayer>(64);
 
-        private void BuildLayer(ushort layerIndex) {
+        private void BuildLayer(ushort layerIndex)
+        {
             var drawLayer = _layers[layerIndex];
             drawLayer.Start = (ushort)_nodes.Count;
 
             // Add all children recursively
-            for(int i = 0, c = drawLayer.Node.VisualChildCount; i<c; i++)
-                AddNode(drawLayer.Node.GetVisualChild(i));
+            for(int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)
+                AddNode(drawLayer.Node.GetChildAt(i));
 
             // Update the layer count to reflect all of the nodes within the layer
             drawLayer.Count = (ushort)(_nodes.Count - drawLayer.Start);
@@ -98,8 +122,8 @@ namespace NoZ.Graphics {
                 _nodes.Add(sd);
             }
 
-            for(int i=0, c=node.VisualChildCount; i<c; i++) {
-                AddNode(node.GetVisualChild(i));
+            for(int i=0, c=node.ChildCount; i<c; i++) {
+                AddNode(node.GetChildAt(i));
             }
         }
 
@@ -144,7 +168,11 @@ namespace NoZ.Graphics {
         public void Draw(GraphicsContext gc) {
             Draw(gc, 0);
         }
+
+        public void Clear ()
+        {
+            _nodes.Clear();
+            _layers.Clear();
+        }
     }
 }
-
-#endif

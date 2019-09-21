@@ -28,6 +28,8 @@ namespace NoZ
 
         public WindowDelegate _windowDelegate;
 
+        public abstract Vector2Int Size { get; }
+
         public static T Create<T>(WindowDelegate windowDelegate, IGraphicsDriver graphics, IAudioDriver audio) where T : Window
         {
             var window = Activator.CreateInstance<T>();
@@ -44,7 +46,7 @@ namespace NoZ
             Graphics.BeginFrame();
 
             var context = Graphics.CreateContext();
-            context.Begin(new Vector2Int(800, 600), Color.Red);
+            context.Begin(Size, Color.Red);
 
             _windowDelegate?.OnBeginFrame(context);
 

@@ -1,11 +1,73 @@
-﻿using System.Collections.Generic;
+﻿/*
+  NoZ Game Engine
+
+  Copyright(c) 2019 NoZ Games, LLC
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files(the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions :
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
+using NoZ.Graphics;
 
 namespace NoZ
 {
-    public class Scene : Node
+    public class Scene : Node, ILayer
     {
-        public Vector2 Size { get; set; }
+        private DrawList _drawList;
+        private Vector2 _size;
+
+        public Vector2 Size {
+            get => _size;
+            set {
+                if (_size != value) {
+                    _size = value;
+                    InvalidateFrame();
+                }
+            }
+        }
+
+        public int SortOrder { get; private set; }
 
         protected override Rect CalculateFrame() => new Rect(Position, Size);
+
+        public Scene ()
+        {
+            _drawList = new DrawList();
+        }
+
+
+        public void Present (GraphicsContext gc)
+        {
+            var frame = Frame;
+            Size = Window.Instance.Size.ToVector2();
+            _drawList.Build(this);
+            _drawList.Draw(gc);
+            _drawList.Clear();
+        }
+
+        public void BeginLayer(GraphicsContext gc)
+        {
+            
+        }
+
+        public void EndLayer(GraphicsContext gc)
+        {
+            
+        }
     }
 }

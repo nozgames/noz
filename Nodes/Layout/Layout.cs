@@ -105,7 +105,7 @@ namespace NoZ
             // Force all of our children to arrange 
             foreach(var child in Children)
             {
-                child.Arrange(Frame.Offset(-Position.x, -Position.y));
+                child.Arrange(Frame);
             }
         }
 
@@ -180,7 +180,7 @@ namespace NoZ
                 actualRect.y + actualRect.height * Pivot.y
                 );
 
-            _arrangredFrame = actualRect;
+            _arrangredFrame = actualRect.Offset(-Position);
 
             InvalidateFrame();
         }
