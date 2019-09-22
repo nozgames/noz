@@ -4,7 +4,7 @@ using NoZ.Graphics;
 
 namespace NoZ
 {
-    public class WindowDelegate
+    public class WindowDelegate : Object
     {
         public virtual void OnCreated() { }
 
@@ -19,6 +19,11 @@ namespace NoZ
 
     public abstract class Window
     {
+        public static readonly Event<MouseButton> MouseButtonDownEvent = new Event<MouseButton>();
+        public static readonly Event<MouseButton> MouseButtonUpEvent = new Event<MouseButton>();
+        public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
+        public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
+
         public abstract IntPtr GetNativeHandle();
 
         public static Window Instance { get; private set; }
@@ -27,6 +32,8 @@ namespace NoZ
         public static IAudioDriver Audio { get; private set; }
 
         public WindowDelegate _windowDelegate;
+
+        private GraphicsContext _gc;
 
         public abstract Vector2Int Size { get; }
 
@@ -37,6 +44,7 @@ namespace NoZ
             Graphics = graphics;
             Audio = audio;
             Instance = window;
+            Input.Initialize(window);
             window._windowDelegate?.OnCreated();
             return window;
         }
@@ -45,18 +53,22 @@ namespace NoZ
         {
             Graphics.BeginFrame();
 
-            var context = Graphics.CreateContext();
-            context.Begin(Size, Color.Red);
+            if (null == _gc)
+                _gc = Graphics.CreateContext();
 
-            _windowDelegate?.OnBeginFrame(context);
+            _gc.Begin(Size, Color.Red);
+
+            _windowDelegate?.OnBeginFrame(_gc);
 
             // TODO: views
 
-            _windowDelegate?.OnEndFrame(context);
+            _windowDelegate?.OnEndFrame(_gc);
 
-            context.End();
+            _gc.End();
 
             Graphics.EndFrame();
+
+            Node.ProcessDestroyedNodes();
         }
     }
 }

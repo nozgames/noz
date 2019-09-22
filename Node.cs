@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
   NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
@@ -28,8 +27,11 @@ using System.Collections.Generic;
 
 namespace NoZ
 {
-    public class Node
+    public class Node : Object
     {
+        public static readonly Event<Node> DestroyEvent = new Event<Node>();
+
+        private static List<Node> _pendingDestroy = new List<Node>();
         private static List<Node> _emptyList = new List<Node>();
         private Vector2 _scale = Vector2.One;
         private List<Node> _children;
@@ -52,6 +54,7 @@ namespace NoZ
         public IEnumerable<Node> Children => _children ?? _emptyList;
 
         public bool IsVisible { get; set; } = true;
+        public bool IsDestroyed { get; set; } = false;
 
         public virtual bool DoesArrangeChildren => false;
 
@@ -230,7 +233,45 @@ namespace NoZ
 
         protected virtual void OnParentFrameChanged(Rect frame) { }
 
+        protected virtual void OnDestroy ()
+        {
+            DestroyEvent.Broadcast(this);
+        }
+
         protected virtual Rect CalculateFrame() => new Rect(Position, Vector2.Zero);
+
+        private void DestroyInternal (Node node)
+        {
+            if (IsDestroyed)
+                return;
+
+            IsDestroyed = true;
+            _pendingDestroy.Add(this);
+
+            if (_children != null)
+                for (int i = 0; i < _children.Count; i++)
+                    DestroyInternal(_children[i]);
+        }
+
+        public void Destroy() => DestroyInternal(this);
+
+        public static void ProcessDestroyedNodes ()
+        {
+            for (int i = 0; i < _pendingDestroy.Count; i++)
+            {
+                var node = _pendingDestroy[i];
+
+                // Remove ourself from the tree
+                node.RemoveFromParent();
+
+                // Destroy ourself
+                node.OnDestroy();
+
+                // Automatically remove any observers of the node since we know it is no longer
+                // going to be sending events.
+                Event.UnsubscribeAllObservers(node);
+            }
+        }
     }
 }
 
