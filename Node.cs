@@ -173,11 +173,62 @@ namespace NoZ
         /// <returns>First matching node</returns>
         public Node FindChild (string name)
         {
+            if (_children == null)
+                return null;
+
             Node result = null;
             for (int i = 0, c = _children.Count; i < c && null == result; i++)
                 result = _children[i].Name == name ? _children[i] : _children[i].FindChild(name);
 
             return result;
+        }
+
+        /// <summary>
+        /// Find first child that is castable to the given type using a depth first search
+        /// </summary>
+        /// <typeparam name="T">Type to search for</typeparam>
+        /// <returns>Node that matches the given type</returns>
+        public Node FindChild<T> () where T : Node
+        {
+            if (_children == null)
+                return null;
+
+            Node result = null;
+            for (int i = 0, c = _children.Count; i < c && null == result; i++)
+                result = typeof(T).IsAssignableFrom(_children[i].GetType()) ? _children[i] : _children[i].FindChild<T>();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Internal method used by FindChildren to recurse
+        /// </summary>
+        /// <typeparam name="T">Node Type to search for</typeparam>
+        /// <param name="list">Accumulated list of nodes matching given type</param>
+        private void FindChildrenInternal<T>(List<T> list) where T : Node
+        {
+            if (_children == null)
+                return;
+
+            for (int i = 0, c = _children.Count; i < c; i++)
+            {
+                if (typeof(T).IsAssignableFrom(_children[i].GetType()))
+                    list.Add(_children[i] as T);
+
+                _children[i].FindChildrenInternal(list);
+            }
+        }
+
+        /// <summary>
+        /// Find first child that is castable to the given type using a depth first search
+        /// </summary>
+        /// <typeparam name="T">Type to search for</typeparam>
+        /// <returns>Node that matches the given type</returns>
+        public Node[] FindChildren<T>() where T : Node
+        {
+            var results = new List<T>();
+            FindChildrenInternal(results);
+            return results.ToArray();
         }
 
         public virtual Vector2 Measure(in Vector2 available) => Vector2.Zero;
