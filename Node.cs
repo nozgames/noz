@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
   NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
@@ -97,6 +98,11 @@ namespace NoZ
             get; set;
         }
 
+        /// <summary>
+        /// Name of the node
+        /// </summary>
+        public string Name { get; set; }
+
         public int ChildCount => _children?.Count ?? 0;
 
         public Node GetChildAt(int index) => _children?[index] ?? null;
@@ -155,6 +161,20 @@ namespace NoZ
             _scene = scene;
             foreach (var child in Children)
                 child.PropegateScene(scene);
+        }
+
+        /// <summary>
+        /// Find a child node with the given name a depth first search
+        /// </summary>
+        /// <param name="name">Name to seach for</param>
+        /// <returns>First matching node</returns>
+        public Node FindChild (string name)
+        {
+            Node result = null;
+            for (int i = 0, c = _children.Count; i < c && null == result; i++)
+                result = _children[i].Name == name ? _children[i] : _children[i].FindChild(name);
+
+            return result;
         }
 
         public virtual Vector2 Measure(in Vector2 available) => Vector2.Zero;
