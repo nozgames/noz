@@ -15,4 +15,8 @@
     <Folder Include="Transitions\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="6.1.2" />
+  </ItemGroup>
+
 </Project>

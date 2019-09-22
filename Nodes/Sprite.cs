@@ -130,12 +130,9 @@ namespace NoZ
             if (_meshInvalid)
                 UpdateMesh();
 
-            var transform = Matrix3.Identity;
-            transform = Matrix3.Translate(Parent.Position);
-
             gc.SetColor(Color);
             gc.SetImage(Image);
-            gc.SetTransform(transform);
+            //gc.SetTransform(transform);
             gc.SetMaskMode(MaskMode);
 
             if (_indexBuffer == null)
@@ -346,7 +343,7 @@ namespace NoZ
             }
         }
 
-        protected override Rect CalculateFrame() => new Rect(Position - _size * Pivot, _size);
+        protected override Rect CalculateFrame() => new Rect(-_size * Pivot, _size);
 
         protected override void OnFrameChanged (in Rect old)
         {

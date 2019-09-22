@@ -38,6 +38,7 @@ namespace NoZ.Graphics
             public ushort SortGroup;
             public int SortOrder;
             public Node Node;
+            public Matrix3 Transform;
 
             public class Comparer : IComparer<DrawNode> {
                 public static Comparer Instance = new Comparer();
@@ -72,14 +73,14 @@ namespace NoZ.Graphics
         private List<DrawNode> _nodes = new List<DrawNode>(4096);
         private List<DrawLayer> _layers = new List<DrawLayer>(64);
 
-        private void BuildLayer(ushort layerIndex)
+        private void BuildLayer(ushort layerIndex, in Matrix3 parentTransform)
         {
             var drawLayer = _layers[layerIndex];
             drawLayer.Start = (ushort)_nodes.Count;
 
             // Add all children recursively
             for(int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)
-                AddNode(drawLayer.Node.GetChildAt(i));
+                AddNode(drawLayer.Node.GetChildAt(i), parentTransform);
 
             // Update the layer count to reflect all of the nodes within the layer
             drawLayer.Count = (ushort)(_nodes.Count - drawLayer.Start);
@@ -91,9 +92,14 @@ namespace NoZ.Graphics
             _layers[layerIndex] = drawLayer;
         }
 
-        private void AddNode(Node node) {
+        private void AddNode(Node node, in Matrix3 parentTransform) {
             // Skip nodes and their descendants if they are not visible.
             if (!node.IsVisible) return;
+
+            var transform = Matrix3.Scale(node.Scale); ;
+            transform = Matrix3.Multiply(transform, Matrix3.Rotate(-node.Rotation * MathEx.Deg2Rad));
+            transform = Matrix3.Multiply(transform, Matrix3.Translate(node.Position));
+            transform = Matrix3.Multiply(transform, parentTransform);
 
             var layer = node as ILayer;
             if (null != layer) {
@@ -108,6 +114,7 @@ namespace NoZ.Graphics
                 sd.PaintersIndex = (ushort)_nodes.Count;
                 sd.SortOrder = layer.SortOrder;
                 sd.SortGroup = (ushort)(_layers.Count - 1);
+                sd.Transform = transform;
                 _nodes.Add(sd);
                 return;
             }
@@ -119,11 +126,12 @@ namespace NoZ.Graphics
                 sd.PaintersIndex = (ushort)_nodes.Count;
                 sd.SortOrder = drawable.SortOrder;
                 sd.SortGroup = 0;
+                sd.Transform = transform;
                 _nodes.Add(sd);
             }
 
             for(int i=0, c=node.ChildCount; i<c; i++) {
-                AddNode(node.GetChildAt(i));
+                AddNode(node.GetChildAt(i), transform);
             }
         }
 
@@ -140,7 +148,7 @@ namespace NoZ.Graphics
             // Build all layers.  Note that building a layer may add
             // more layers which is handled by the loop.
             for (int i = 0; i < _layers.Count; i++)
-                BuildLayer((ushort)i);
+                BuildLayer((ushort)i, Matrix3.Identity);
         }
 
         private void Draw (GraphicsContext gc, int layerIndex) {
@@ -159,6 +167,7 @@ namespace NoZ.Graphics
                 }
 
                 var drawable = _nodes[i].Node as IDrawable;
+                gc.SetTransform(_nodes[i].Transform);
                 drawable?.Draw(gc);
             }
 
