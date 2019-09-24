@@ -27,7 +27,6 @@ using System.IO;
 
 namespace NoZ.Graphics
 {
-    [ResourceLoader]
     public abstract class Image : Resource
     {
         /// <summary>
