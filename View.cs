@@ -59,7 +59,7 @@ namespace NoZ
 
             Size = Window.Instance.Size;
             UpdateScene();
-
+            Scene.Update();
             Scene.Present(gc);
         }
 

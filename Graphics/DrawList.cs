@@ -78,8 +78,6 @@ namespace NoZ.Graphics
             drawLayer.Start = (ushort)_nodes.Count;
 
             var node = drawLayer.Node;
-            var frame = node.Rect;
-
 
             // Add all children recursively
             for (int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)

@@ -35,7 +35,7 @@ namespace NoZ
 
         public override bool DoesTransformAffectChildren => false;
 
-        public int SortOrder => 0;
+        public int SortOrder => 10000;
 
         protected override void OnVisibleChanged(bool visible)
         {
@@ -46,7 +46,7 @@ namespace NoZ
                 Scene.Camera = this;
         }
 
-        protected override void OnSceneChanged()
+        protected override void OnSceneChanged(Scene prevScene)
         {
             // Automatically set the camera as the active camera if it is the first one in the scene
             if (Scene != null && Scene.Camera == null)

@@ -50,7 +50,9 @@ namespace NoZ
 
         public SpriteDrawMode DrawMode { get; set; } = SpriteDrawMode.Auto;
 
-        int IDrawable.SortOrder => 0;
+        public int SortOrder { get; set; }
+
+        int IDrawable.SortOrder => SortOrder;
 
         /// <summary>
         /// Image used to render the rectangle.  If no image is given a solid color rectangle 

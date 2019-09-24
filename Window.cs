@@ -46,6 +46,7 @@ namespace NoZ
     {
         public static readonly Event<MouseButton> MouseButtonDownEvent = new Event<MouseButton>();
         public static readonly Event<MouseButton> MouseButtonUpEvent = new Event<MouseButton>();
+        public static readonly Event<Vector2> MouseMoveEvent = new Event<Vector2>();
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
 

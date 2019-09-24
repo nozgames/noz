@@ -46,7 +46,7 @@ namespace NoZ
     }
 
     public class Node : Object
-    {
+    {        
         public static readonly Event<Node> DestroyEvent = new Event<Node>();
 
         private enum Flags
@@ -351,12 +351,13 @@ namespace NoZ
             if (_scene == scene)
                 return;
 
+            var old = _scene;
             _scene = scene;
             if(_children != null)
                 foreach (var child in _children)
                     child.PropegateScene(scene);
 
-            OnSceneChanged();
+            OnSceneChanged(_scene);
         }
 
         /// <summary>
@@ -559,7 +560,7 @@ namespace NoZ
 
         protected virtual void OnParentChanged() { }
 
-        protected virtual void OnSceneChanged() { }
+        protected virtual void OnSceneChanged(Scene oldScene) { }
 
         protected virtual void OnDestroy ()
         {
@@ -596,13 +597,15 @@ namespace NoZ
                 node.RemoveFromParent();
 
                 // Destroy ourself
-                node.OnDestroy();
+            node.OnDestroy();
 
                 // Automatically remove any observers of the node since we know it is no longer
                 // going to be sending events.
                 Event.UnsubscribeAllObservers(node);
             }
         }
+
+        public Matrix3 WindowToLocal => Matrix3.Multiply((Scene?.WindowToScene) ?? Matrix3.Identity, WorldToLocal);
     }
 }
 

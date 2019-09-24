@@ -85,6 +85,7 @@ namespace NoZ
             public void OnKeyUp(KeyCode key) => Input.OnKeyUp(key);
             public void OnMouseButtonDown(MouseButton button) => Input.OnMouseButtonDown(button);
             public void OnMouseButtonUp(MouseButton button) => Input.OnMouseButtonUp(button);
+            public void OnMouseMove(Vector2 pos) => MousePosition = pos;
         }
 
         internal struct KeyEvent
@@ -195,6 +196,7 @@ namespace NoZ
             Window.MouseButtonUpEvent.Subscribe(_eventDelegate.OnMouseButtonUp);
             Window.KeyDownEvent.Subscribe(_eventDelegate.OnKeyDown);
             Window.KeyUpEvent.Subscribe(_eventDelegate.OnKeyUp);
+            Window.MouseMoveEvent.Subscribe(_eventDelegate.OnMouseMove);
 #if false
             window.Subscribe(GameWindow.TouchBegan, OnTouchBegan);
             window.Subscribe(GameWindow.TouchEnded, OnTouchEnded);

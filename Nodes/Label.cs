@@ -1,4 +1,6 @@
-﻿/*
+﻿
+
+/*
   NozEngine Library
 
   Copyright(c) 2015 NoZ Games, LLC
@@ -93,7 +95,9 @@ namespace NoZ
         private int _quadCount;
         private Vector2 _textSize;
 
-        int IDrawable.SortOrder => 0;
+        public int SortOrder { get; set; }
+
+        int IDrawable.SortOrder => SortOrder;
 
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
 
