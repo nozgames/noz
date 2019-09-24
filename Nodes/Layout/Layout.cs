@@ -83,7 +83,7 @@ namespace NoZ
         /// <returns>True if the given float is "Automatic"</returns>
         private static bool IsAuto(float value) => float.IsNaN(value);
 
-        protected override void OnParentFrameChanged(Rect frame)
+        protected override void OnParentRectChanged(Rect frame)
         {
             // If our parent arranges children then wait for the arrange call
             if(Parent != null && Parent.DoesArrangeChildren)
@@ -98,14 +98,14 @@ namespace NoZ
         /// Handle OnFrameChanged to force all of our children to arrange to our frame
         /// </summary>
         /// <param name="frame"></param>
-        protected override void OnFrameChanged(in Rect frame)
+        protected override void OnRectChanged(in Rect frame)
         {
             Measure(frame.Size);
 
             // Force all of our children to arrange 
             foreach(var child in Children)
             {
-                child.Arrange(Frame);
+                child.Arrange(Rect);
             }
         }
 
@@ -182,10 +182,10 @@ namespace NoZ
 
             _arrangredFrame = actualRect.Offset(-Position);
 
-            InvalidateFrame();
+            InvalidateRect();
         }
 
-        protected override Rect CalculateFrame() => _arrangredFrame;
+        protected override Rect CalculateRect() => _arrangredFrame;
 
         public sealed override Vector2 Measure (in Vector2 available)
         {

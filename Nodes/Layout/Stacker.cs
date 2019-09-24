@@ -44,7 +44,7 @@ namespace NoZ
         /// When the stackers frame changes arrange all children in a stack
         /// </summary>
         /// <param name="frame">new frame value</param>
-        protected override void OnFrameChanged(in Rect frame)
+        protected override void OnRectChanged(in Rect frame)
         {
             var measuredSize = Measure(frame.Size);
 

@@ -27,19 +27,79 @@ using System.Collections.Generic;
 
 namespace NoZ
 {
+    public enum NodeVisibility
+    {
+        /// <summary>
+        /// Normally visible
+        /// </summary>
+        Visible,
+
+        /// <summary>
+        /// Occupies space in the layout, but is not visible
+        /// </summary>
+        Hidden,
+
+        /// <summary>
+        /// Not visible and does not occupy any space in the layout.
+        /// </summary>
+        Collapsed
+    }
+
     public class Node : Object
     {
         public static readonly Event<Node> DestroyEvent = new Event<Node>();
 
+        private enum Flags
+        {
+            /// <summary>
+            /// Node is currently visible in the scene
+            /// </summary>
+            Visible = (1 << 0),
+
+            /// <summary>
+            /// Node has been destroyed
+            /// </summary>
+            Destroyed = (1 << 1),
+
+            /// <summary>
+            /// Node will automatically destroy itself if not parented by 
+            /// the end of the frame.
+            /// </summary>
+            AutoDestroy = (1 << 2),
+
+            /// <summary>
+            /// Rect value within the node is dirty
+            /// </summary>
+            RectDirty = (1 << 3),
+
+            /// <summary>
+            /// Transform within node is dirty and must be recalculatd if requested.
+            /// </summary>
+            TransformDirty = (1 << 4),
+
+            /// <summary>
+            /// WorldToLocal matrix is dirty and needs to be recalculated
+            /// </summary>
+            WorldToLocalDirty = (1<<5)
+        }
+
         private static List<Node> _pendingDestroy = new List<Node>();
         private static List<Node> _emptyList = new List<Node>();
         private Vector2 _scale = Vector2.One;
+        private float _rotation = 0.0f;
         private List<Node> _children;
         private Node _parent;
         private Scene _scene;
         private Vector2 _position;
-        private bool _frameIsDirty = true;
-        private Rect _frame;
+        private Rect _rect;
+        private NodeVisibility _visibility;
+        private Flags _flags;
+
+        /// Transform used to convert local coordinates to world coordinates
+        private Matrix3 _localToWorld;
+
+        /// Transform used to convert world coordinates to local coordinates
+        private Matrix3 _worldToLocal;
 
         /// <summary>
         /// The node's parent node
@@ -51,29 +111,118 @@ namespace NoZ
         /// </summary>
         public Scene Scene => _scene;
 
+        /// <summary>
+        /// Current visibility of the node
+        /// </summary>
+        public NodeVisibility Visibility {
+            get => _visibility;
+            set {
+                if (value == _visibility)
+                    return;
+
+                _visibility = value;
+                UpdateVisible();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the node has all of the specified flags set
+        /// </summary>
+        private bool HasAllFlags(Flags flags) => (_flags & flags) == flags;
+
+        /// <summary>
+        /// Returs true if the node has any of the specified flags set
+        /// </summary>
+        private bool HasAnyFlags(Flags flags) => (_flags & flags) != 0;
+
+        /// <summary>
+        /// Set the given flags
+        /// </summary>
+        private void SetFlags(Flags flags) => _flags = _flags | flags;
+
+        /// <summary>
+        /// Unset the given flags
+        /// </summary>
+        /// <param name="flags"></param>
+        private void ClearFlags(Flags flags) => _flags = _flags & (~flags);
+
+        /// <summary>
+        /// Set or unset given flags
+        /// </summary>
+        private void SetFlags(Flags flags, bool value) => _flags = value ? (_flags | flags) : (_flags & (~flags));
+
+
         public IEnumerable<Node> Children => _children ?? _emptyList;
 
-        public bool IsVisible { get; set; } = true;
-        public bool IsDestroyed { get; set; } = false;
+        /// <summary>
+        /// Returns true if the node is currently visibile within its scene.
+        /// </summary>
+        public bool IsVisible => HasAllFlags(Flags.Visible);
 
+        /// <summary>
+        /// Returns true if the node has been destroyed
+        /// </summary>
+        public bool IsDestroyed => HasAllFlags(Flags.Destroyed);
+
+        /// <summary>
+        /// Returns true if the node arranges its children
+        /// </summary>
         public virtual bool DoesArrangeChildren => false;
 
+        /// <summary>
+        /// Position of the node within its parents coordinate space
+        /// </summary>
         public Vector2 Position {
             get => _position;
             set {
-                if(_position != value)
+                if (_position != value)
                 {
                     _position = value;
-                    InvalidateFrame();
+                    InvalidateTransform();
                 }
             }
         }
 
-        public Rect Frame {
+        /// <summary>
+        /// Rectangle of the node within its parents coordinate space
+        /// </summary>
+        public Rect Rect {
             get {
-                if (_frameIsDirty)
-                    UpdateFrame();
-                return _frame;
+                if (HasAllFlags(Flags.RectDirty))
+                    UpdateRect();
+                return _rect;
+            }
+        }
+
+        /// <summary>
+        /// Transforms local node coordinates to world coordinates
+        /// </summary>
+        public Matrix3 LocalToWorld {
+            get {
+                // Transforms are not updated until they are needed to update it now if its dirty
+                if (HasAllFlags(Flags.TransformDirty))
+                    UpdateTransform();
+                return _localToWorld;
+            }
+        }
+
+        /// <summary>
+        /// Transforms world coordinates to local node coordinates
+        /// </summary>
+        public Matrix3 WorldToLocal {
+            get {
+                // Transforms are not updated until they are needed to update it now if its dirty
+                if (HasAllFlags(Flags.TransformDirty))
+                    UpdateTransform();
+
+                // WorldToLocal isnt calulcated unless its needed so calculate it now if its dirty
+                if (HasAllFlags(Flags.WorldToLocalDirty))
+                {
+                    _worldToLocal = _localToWorld.Inverse();
+                    ClearFlags(Flags.WorldToLocalDirty);
+                }                    
+
+                return _worldToLocal;
             }
         }
 
@@ -89,19 +238,41 @@ namespace NoZ
 
         public Vector2 Scale {
             get => _scale;
-            set => _scale = value;
+            set {
+                if (_scale != value)
+                {
+                    _scale = value;
+                    SetFlags(Flags.TransformDirty);
+                }
+            }
         }
         public float ScaleX {
             get => _scale.x;
-            set => _scale.x = value;
+            set => Scale = new Vector2(value, _scale.y);
         }
         public float ScaleY {
             get => _scale.y;
-            set => _scale.y = value;
+            set => Scale = new Vector2(_scale.x, value);
         }
 
+        /// <summary>
+        /// Rotation of the node in degrees
+        /// </summary>
         public float Rotation {
-            get; set;
+            get => _rotation;
+            set {
+                if(_rotation != value)
+                {
+                    _rotation = value;
+                    SetFlags(Flags.TransformDirty);
+                }
+            }
+        }
+
+        public Node ()
+        {
+            _visibility = NodeVisibility.Visible;
+            _flags = Flags.Visible | Flags.AutoDestroy | Flags.RectDirty | Flags.TransformDirty;
         }
 
         /// <summary>
@@ -109,6 +280,9 @@ namespace NoZ
         /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Returns the number of children the node has
+        /// </summary>
         public int ChildCount => _children?.Count ?? 0;
 
         public Node GetChildAt(int index) => _children?[index] ?? null;
@@ -244,76 +418,146 @@ namespace NoZ
         public virtual void Arrange(Rect rect) { }
 
         /// <summary>
-        /// Invalidate the frame an all child frames that are dependant
+        /// Invalidate the transform of the node and the transform of all descendants as well
         /// </summary>
-        public void InvalidateFrame()
+        public void InvalidateTransform ()
         {
-            if (_frameIsDirty)
+            if (HasAllFlags(Flags.TransformDirty))
                 return;
 
-            _frameIsDirty = true;
+            SetFlags(Flags.TransformDirty);
 
-            if (_parent != null && _parent.DoesArrangeChildren)
-                _parent.InvalidateFrame();
-
-            if (_children != null && DoesArrangeChildren)
+            // Invalidate transform of all children as well
+            if (_children != null)
                 foreach (var child in _children)
-                    child.InvalidateFrame();
+                    child.InvalidateTransform();
         }
 
-        private void UpdateFrame()
+        /// <summary>
+        /// Update the nodes transform
+        /// </summary>
+        public void UpdateTransform()
+        {
+            if (!HasAllFlags(Flags.TransformDirty))
+                return;
+
+            // Find our deepest ancestor that has a dirty transform and update them instead.
+            if (_parent != null && _parent.HasAllFlags(Flags.TransformDirty))
+            {
+                _parent.UpdateTransform();
+                return;
+            }
+                
+            ClearFlags(Flags.TransformDirty);
+
+            var mat = Matrix3.Identity;
+            mat = Matrix3.Multiply(mat, Matrix3.Scale(Scale));
+            mat = Matrix3.Multiply(mat, Matrix3.Rotate(Rotation * MathEx.Deg2Rad));
+            mat = Matrix3.Multiply(mat, Matrix3.Translate(Position));
+
+            // Apply the parent transform..
+            if (_parent == null)
+                _localToWorld = mat;
+            else
+                _localToWorld = Matrix3.Multiply(mat, _parent._localToWorld);
+
+            SetFlags(Flags.WorldToLocalDirty);
+        }
+
+        /// <summary>
+        /// Invalidate the frame an all child frames that are dependant
+        /// </summary>
+        public void InvalidateRect()
+        {
+            if(HasAllFlags(Flags.RectDirty))
+                return;
+
+            SetFlags(Flags.RectDirty);
+
+            // If parent arranges children then also invalidate the parent
+            if (_parent != null && _parent.DoesArrangeChildren)
+                _parent.InvalidateRect();
+
+            // Invalidate all children if this node arranges children
+            if (_children != null && DoesArrangeChildren)
+                foreach (var child in _children)
+                    child.InvalidateRect();
+        }
+
+        /// <summary>
+        /// Updates the Rect value for the node
+        /// </summary>
+        public void UpdateRect()
         {
             // Ensure all parents are updated as well
             if (_parent != null)
-                _parent.UpdateFrame();
+                _parent.UpdateRect();
 
-            if (!_frameIsDirty)
+            if (!HasAllFlags(Flags.RectDirty))
                 return;
 
-            _frameIsDirty = false;
+            ClearFlags(Flags.RectDirty);
 
-            var oldFrame = _frame;
-            _frame = CalculateFrame();
+            var oldRect = _rect;
+            _rect = CalculateRect();
             //if (_frame == oldFrame)
               //  return;
 
-            OnFrameChanged(oldFrame);
+            OnRectChanged(oldRect);
 
             // Let all of our children know our frame changed too
             if (_children != null)
-            {
                 foreach (var child in _children)
-                {
-                    child.OnParentFrameChanged(Frame);
-                }
-            }
+                    child.OnParentRectChanged(Rect);
         }
 
-        protected virtual void OnFrameChanged(in Rect frame) { }
+        /// <summary>
+        /// Internal method used to update the Visibile flag within the node and and child nodes.
+        /// </summary>
+        private void UpdateVisible()
+        {
+            // Calculate new visible state.
+            var visible = (Parent == null || Parent.IsVisible) && Visibility == NodeVisibility.Visible;
+            if (IsVisible == visible)
+                return;
 
-        protected virtual void OnParentFrameChanged(Rect frame) { }
+            // Set new visible state
+            SetFlags(Flags.Visible, visible);
+
+            // Propegate to all children
+            if(_children != null)
+                for (var i = _children.Count -1; i >= 0; i--)
+                    _children[i].UpdateVisible();
+        }
+
+        protected virtual void OnRectChanged(in Rect frame) { }
+
+        protected virtual void OnParentRectChanged(Rect frame) { }
 
         protected virtual void OnDestroy ()
         {
             DestroyEvent.Broadcast(this);
         }
 
-        protected virtual Rect CalculateFrame() => new Rect(Position, Vector2.Zero);
+        protected virtual Rect CalculateRect() => new Rect(Position, Vector2.Zero);
 
-        private void DestroyInternal (Node node)
+        /// <summary>
+        /// Destroy a node and all of its children them to be removed from the scene and disposed of.
+        /// </summary>
+        public void Destroy()
         {
             if (IsDestroyed)
                 return;
 
-            IsDestroyed = true;
+            // Flag the node as destroyed and add to the destroy list
+            SetFlags(Flags.Destroyed);
             _pendingDestroy.Add(this);
 
+            // Destroy all children as well
             if (_children != null)
                 for (int i = 0; i < _children.Count; i++)
-                    DestroyInternal(_children[i]);
+                    _children[i].Destroy();
         }
-
-        public void Destroy() => DestroyInternal(this);
 
         public static void ProcessDestroyedNodes ()
         {

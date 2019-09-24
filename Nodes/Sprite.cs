@@ -182,10 +182,10 @@ namespace NoZ
 
             _indexBuffer = null;
 
-            float l = Frame.x;
-            float t = Frame.y;
-            float r = Frame.x + Frame.width;
-            float b = Frame.y + Frame.height;
+            float l = Rect.x;
+            float t = Rect.y;
+            float r = Rect.x + Rect.width;
+            float b = Rect.y + Rect.height;
 
             _vertexBuffer[0] = new Vertex { XY = new Vector2(l, t), UV = Vector2.Zero, Color = Color.White };
             _vertexBuffer[1] = new Vertex { XY = new Vector2(r, t), UV = Vector2.OneZero, Color = Color.White };
@@ -256,8 +256,8 @@ namespace NoZ
 
         private void BuildSlicedMesh(bool filled)
         {
-            var xoffsets = CalcOffsets(Image.Border.left, Image.Border.right, Image.Width, Frame.x, Frame.width, out var xfill);
-            var yoffsets = CalcOffsets(Image.Border.top, Image.Border.bottom, Image.Height, Frame.y, Frame.height, out var yfill);
+            var xoffsets = CalcOffsets(Image.Border.left, Image.Border.right, Image.Width, Rect.x, Rect.width, out var xfill);
+            var yoffsets = CalcOffsets(Image.Border.top, Image.Border.bottom, Image.Height, Rect.y, Rect.height, out var yfill);
 
             int maxVerts = xoffsets.Length * yoffsets.Length;
             int maxTris = (xoffsets.Length - 1) * (yoffsets.Length - 1) * 2;
@@ -332,22 +332,22 @@ namespace NoZ
             get => _size;
             set {
                 _size = value;
-                InvalidateFrame();
+                InvalidateRect();
             }
         }
         public Vector2 Pivot {
             get => _pivot;
             set {
                 _pivot = value;
-                InvalidateFrame();
+                InvalidateRect();
             }
         }
 
-        protected override Rect CalculateFrame() => new Rect(-_size * Pivot, _size);
+        protected override Rect CalculateRect() => new Rect(-_size * Pivot, _size);
 
-        protected override void OnFrameChanged (in Rect old)
+        protected override void OnRectChanged (in Rect old)
         {
-            base.OnFrameChanged(old);
+            base.OnRectChanged(old);
             _meshInvalid = true;
         }
     }

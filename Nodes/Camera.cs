@@ -1,7 +1,7 @@
 ﻿/*
-  NoZ Game Engine
+  NozEngine Library
 
-  Copyright(c) 2019 NoZ Games, LLC
+  Copyright(c) 2015 NoZ Games, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -22,54 +22,18 @@
   SOFTWARE.
 */
 
-using NoZ.Graphics;
 using System;
 
 namespace NoZ
 {
-    public class Scene : Node, ILayer
+    public class Camera : Node
     {
-        private DrawList _drawList;
-        private Vector2Int _size;
+        // TODO: Scale / Rotation / Position should not be transferred to children
 
-        public View View { get; internal set; }
+        // TODO: When set to visible set as current scene camera
 
-        public Vector2Int Size {
-            get => _size;
-            set {
-                if (_size != value) {
-                    _size = value;
-                    InvalidateRect();
-                }
-            }
-        }
+        // TODO: GetVisibleNodes
 
-        public int SortOrder { get; private set; }
-
-        protected override Rect CalculateRect() => new Rect(Position, _size.ToVector2());
-
-        public Scene ()
-        {
-            _drawList = new DrawList();
-        }
-
-        public void Present (GraphicsContext gc)
-        {
-            // TODO: need better way
-            var frame = Rect;
-            _drawList.Build(this);
-            _drawList.Draw(gc);
-            _drawList.Clear();
-        }
-
-        public void BeginLayer(GraphicsContext gc)
-        {
-            
-        }
-
-        public void EndLayer(GraphicsContext gc)
-        {
-            
-        }
+        // TODO: Contains
     }
 }

@@ -38,7 +38,6 @@ namespace NoZ.Graphics
             public ushort SortGroup;
             public int SortOrder;
             public Node Node;
-            public Matrix3 Transform;
 
             public class Comparer : IComparer<DrawNode> {
                 public static Comparer Instance = new Comparer();
@@ -68,8 +67,6 @@ namespace NoZ.Graphics
             /// Number of DrawNode's in the layer.
             /// </summary>
             public ushort Count;
-
-            public Matrix3 Transform;
         }
 
         private List<DrawNode> _nodes = new List<DrawNode>(4096);
@@ -81,16 +78,12 @@ namespace NoZ.Graphics
             drawLayer.Start = (ushort)_nodes.Count;
 
             var node = drawLayer.Node;
-            var frame = node.Frame;
-            var transform = Matrix3.Scale(node.Scale); ;
-            transform = Matrix3.Multiply(transform, Matrix3.Rotate(-node.Rotation * MathEx.Deg2Rad));
-            transform = Matrix3.Multiply(transform, Matrix3.Translate(node.Position));
-            //transform = Matrix3.Multiply(transform, parentTransform);
-            drawLayer.Transform = transform;
+            var frame = node.Rect;
+
 
             // Add all children recursively
             for (int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)
-                AddNode(drawLayer.Node.GetChildAt(i), transform);
+                AddNode(drawLayer.Node.GetChildAt(i));
 
             // Update the layer count to reflect all of the nodes within the layer
             drawLayer.Count = (ushort)(_nodes.Count - drawLayer.Start);
@@ -102,15 +95,9 @@ namespace NoZ.Graphics
             _layers[layerIndex] = drawLayer;
         }
 
-        private void AddNode(Node node, in Matrix3 parentTransform) {
+        private void AddNode(Node node) {
             // Skip nodes and their descendants if they are not visible.
             if (!node.IsVisible) return;
-
-            var frame = node.Frame;
-            var transform = Matrix3.Scale(node.Scale); ;
-            transform = Matrix3.Multiply(transform, Matrix3.Rotate(-node.Rotation * MathEx.Deg2Rad));
-            transform = Matrix3.Multiply(transform, Matrix3.Translate(node.Position));
-            transform = Matrix3.Multiply(transform, parentTransform);
 
             var layer = node as ILayer;
             if (null != layer) {
@@ -125,7 +112,6 @@ namespace NoZ.Graphics
                 sd.PaintersIndex = (ushort)_nodes.Count;
                 sd.SortOrder = layer.SortOrder;
                 sd.SortGroup = (ushort)(_layers.Count - 1);
-                sd.Transform = transform;
                 _nodes.Add(sd);
                 return;
             }
@@ -137,12 +123,11 @@ namespace NoZ.Graphics
                 sd.PaintersIndex = (ushort)_nodes.Count;
                 sd.SortOrder = drawable.SortOrder;
                 sd.SortGroup = 0;
-                sd.Transform = transform;
                 _nodes.Add(sd);
             }
 
             for(int i=0, c=node.ChildCount; i<c; i++) {
-                AddNode(node.GetChildAt(i), transform);
+                AddNode(node.GetChildAt(i));
             }
         }
 
@@ -178,7 +163,7 @@ namespace NoZ.Graphics
                 }
 
                 var drawable = _nodes[i].Node as IDrawable;
-                gc.SetTransform(_nodes[i].Transform);
+                gc.SetTransform(_nodes[i].Node.LocalToWorld);
                 drawable?.Draw(gc);
             }
 
