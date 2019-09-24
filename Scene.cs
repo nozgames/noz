@@ -23,15 +23,18 @@
 */
 
 using NoZ.Graphics;
+using System;
 
 namespace NoZ
 {
     public class Scene : Node, ILayer
     {
         private DrawList _drawList;
-        private Vector2 _size;
+        private Vector2Int _size;
 
-        public Vector2 Size {
+        public View View { get; internal set; }
+
+        public Vector2Int Size {
             get => _size;
             set {
                 if (_size != value) {
@@ -43,18 +46,17 @@ namespace NoZ
 
         public int SortOrder { get; private set; }
 
-        protected override Rect CalculateFrame() => new Rect(Position, Size);
+        protected override Rect CalculateFrame() => new Rect(Position, _size.ToVector2());
 
         public Scene ()
         {
             _drawList = new DrawList();
         }
 
-
         public void Present (GraphicsContext gc)
         {
+            // TODO: need better way
             var frame = Frame;
-            Size = Window.Instance.Size.ToVector2();
             _drawList.Build(this);
             _drawList.Draw(gc);
             _drawList.Clear();

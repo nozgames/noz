@@ -68,19 +68,29 @@ namespace NoZ.Graphics
             /// Number of DrawNode's in the layer.
             /// </summary>
             public ushort Count;
+
+            public Matrix3 Transform;
         }
 
         private List<DrawNode> _nodes = new List<DrawNode>(4096);
         private List<DrawLayer> _layers = new List<DrawLayer>(64);
 
-        private void BuildLayer(ushort layerIndex, in Matrix3 parentTransform)
+        private void BuildLayer(ushort layerIndex)
         {
             var drawLayer = _layers[layerIndex];
             drawLayer.Start = (ushort)_nodes.Count;
 
+            var node = drawLayer.Node;
+            var frame = node.Frame;
+            var transform = Matrix3.Scale(node.Scale); ;
+            transform = Matrix3.Multiply(transform, Matrix3.Rotate(-node.Rotation * MathEx.Deg2Rad));
+            transform = Matrix3.Multiply(transform, Matrix3.Translate(node.Position));
+            //transform = Matrix3.Multiply(transform, parentTransform);
+            drawLayer.Transform = transform;
+
             // Add all children recursively
-            for(int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)
-                AddNode(drawLayer.Node.GetChildAt(i), parentTransform);
+            for (int i = 0, c = drawLayer.Node.ChildCount; i<c; i++)
+                AddNode(drawLayer.Node.GetChildAt(i), transform);
 
             // Update the layer count to reflect all of the nodes within the layer
             drawLayer.Count = (ushort)(_nodes.Count - drawLayer.Start);
@@ -96,6 +106,7 @@ namespace NoZ.Graphics
             // Skip nodes and their descendants if they are not visible.
             if (!node.IsVisible) return;
 
+            var frame = node.Frame;
             var transform = Matrix3.Scale(node.Scale); ;
             transform = Matrix3.Multiply(transform, Matrix3.Rotate(-node.Rotation * MathEx.Deg2Rad));
             transform = Matrix3.Multiply(transform, Matrix3.Translate(node.Position));
@@ -148,7 +159,7 @@ namespace NoZ.Graphics
             // Build all layers.  Note that building a layer may add
             // more layers which is handled by the loop.
             for (int i = 0; i < _layers.Count; i++)
-                BuildLayer((ushort)i, Matrix3.Identity);
+                BuildLayer((ushort)i);
         }
 
         private void Draw (GraphicsContext gc, int layerIndex) {

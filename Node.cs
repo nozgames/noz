@@ -61,8 +61,11 @@ namespace NoZ
         public Vector2 Position {
             get => _position;
             set {
-                _position = value;
-                _frameIsDirty = true;
+                if(_position != value)
+                {
+                    _position = value;
+                    InvalidateFrame();
+                }
             }
         }
 
@@ -245,9 +248,15 @@ namespace NoZ
         /// </summary>
         public void InvalidateFrame()
         {
+            if (_frameIsDirty)
+                return;
+
             _frameIsDirty = true;
 
-            if(_children != null && DoesArrangeChildren)
+            if (_parent != null && _parent.DoesArrangeChildren)
+                _parent.InvalidateFrame();
+
+            if (_children != null && DoesArrangeChildren)
                 foreach (var child in _children)
                     child.InvalidateFrame();
         }
@@ -265,8 +274,8 @@ namespace NoZ
 
             var oldFrame = _frame;
             _frame = CalculateFrame();
-            if (_frame == oldFrame)
-                return;
+            //if (_frame == oldFrame)
+              //  return;
 
             OnFrameChanged(oldFrame);
 
