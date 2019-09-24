@@ -31,8 +31,11 @@ namespace NoZ
     {
         private DrawList _drawList;
         private Vector2Int _size;
+        private Camera _camera;
 
         public View View { get; internal set; }
+
+        public override bool DoesTransformAffectChildren => false;
 
         public Vector2Int Size {
             get => _size;
@@ -41,6 +44,16 @@ namespace NoZ
                     _size = value;
                     InvalidateRect();
                 }
+            }
+        }
+
+        public Camera Camera {
+            get => _camera;
+            set {
+                if (value == _camera)
+                    return;
+
+                _camera = value;
             }
         }
 
@@ -55,11 +68,29 @@ namespace NoZ
 
         public void Present (GraphicsContext gc)
         {
-            // TODO: need better way
-            var frame = Rect;
+            if (Camera != null)
+            {
+                // Generate the camera matrix
+                var mat = Matrix3.Translate(Window.Instance.Size.ToVector2() * 0.5f);
+                mat = Matrix3.Multiply(LocalToWorld, mat);
+
+                var mat2 = Matrix3.Translate(-Camera.Parent.LocalToWorld.MultiplyVector(Camera.Position));
+                mat2 = Matrix3.Multiply(mat2, Matrix3.Scale(Camera.Scale));
+                mat2 = Matrix3.Multiply(mat2, Matrix3.Rotate(Camera.Rotation * MathEx.Deg2Rad));
+                mat = Matrix3.Multiply(mat2, mat);
+
+                gc.PushMatrix(mat);
+            }
+            else
+            {
+                gc.PushMatrix(LocalToWorld);
+            }
+
             _drawList.Build(this);
             _drawList.Draw(gc);
             _drawList.Clear();
+
+            gc.PopMatrix();
         }
 
         public void BeginLayer(GraphicsContext gc)

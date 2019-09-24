@@ -22,18 +22,49 @@
   SOFTWARE.
 */
 
+using NoZ.Graphics;
 using System;
 
 namespace NoZ
 {
-    public class Camera : Node
+    public class Camera : Node, ILayer
     {
-        // TODO: Scale / Rotation / Position should not be transferred to children
-
-        // TODO: When set to visible set as current scene camera
-
         // TODO: GetVisibleNodes
 
         // TODO: Contains
+
+        public override bool DoesTransformAffectChildren => false;
+
+        public int SortOrder => 0;
+
+        protected override void OnVisibleChanged(bool visible)
+        {
+            base.OnVisibleChanged(visible);
+
+            // If this is the first visible camera then set it to active
+            if(Scene != null)
+                Scene.Camera = this;
+        }
+
+        protected override void OnSceneChanged()
+        {
+            // Automatically set the camera as the active camera if it is the first one in the scene
+            if (Scene != null && Scene.Camera == null)
+                Scene.Camera = this;            
+        }
+
+        public void BeginLayer(GraphicsContext gc)
+        {
+            // Render all children of the camera as if they were children of the scene
+            gc.PushMatrix(Scene.LocalToWorld);
+        }
+
+        public void EndLayer(GraphicsContext gc)
+        {
+            gc.PopMatrix();
+        }
+
+        // Cameras rect is the scenes rect
+        protected override Rect CalculateRect() => Scene?.Rect ?? Rect.Empty;
     }
 }

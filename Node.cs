@@ -170,6 +170,12 @@ namespace NoZ
         public virtual bool DoesArrangeChildren => false;
 
         /// <summary>
+        /// True if the transform of this node affects the transform of all of its children. When false
+        /// the parent transform for all children will be identity.
+        /// </summary>
+        public virtual bool DoesTransformAffectChildren => true;
+
+        /// <summary>
         /// Position of the node within its parents coordinate space
         /// </summary>
         public Vector2 Position {
@@ -242,7 +248,7 @@ namespace NoZ
                 if (_scale != value)
                 {
                     _scale = value;
-                    SetFlags(Flags.TransformDirty);
+                    InvalidateTransform();
                 }
             }
         }
@@ -264,7 +270,7 @@ namespace NoZ
                 if(_rotation != value)
                 {
                     _rotation = value;
-                    SetFlags(Flags.TransformDirty);
+                    InvalidateTransform();
                 }
             }
         }
@@ -301,14 +307,18 @@ namespace NoZ
                 node._parent = null;
             }
 
+            _children = _children ?? new List<Node>();
+            _children.Insert(index, node);
+            node._parent = this;
+
             // If this is the scene then make sure the scene value gets 
             // set and propegated through all children.
             if (this is Scene && node._scene != this)
                 node.PropegateScene(this as Scene);
+            else if (Scene != node._scene)
+                node.PropegateScene(Scene);
 
-            _children = _children ?? new List<Node>();
-            _children.Insert(index, node);
-            node._parent = this;
+            OnParentChanged();
         }
 
         public void RemoveFromParent()
@@ -338,9 +348,15 @@ namespace NoZ
 
         private void PropegateScene(Scene scene)
         {
+            if (_scene == scene)
+                return;
+
             _scene = scene;
-            foreach (var child in Children)
-                child.PropegateScene(scene);
+            if(_children != null)
+                foreach (var child in _children)
+                    child.PropegateScene(scene);
+
+            OnSceneChanged();
         }
 
         /// <summary>
@@ -428,7 +444,7 @@ namespace NoZ
             SetFlags(Flags.TransformDirty);
 
             // Invalidate transform of all children as well
-            if (_children != null)
+            if (_children != null && DoesTransformAffectChildren)
                 foreach (var child in _children)
                     child.InvalidateTransform();
         }
@@ -442,11 +458,8 @@ namespace NoZ
                 return;
 
             // Find our deepest ancestor that has a dirty transform and update them instead.
-            if (_parent != null && _parent.HasAllFlags(Flags.TransformDirty))
-            {
+            if (_parent != null && _parent.HasAllFlags(Flags.TransformDirty) && _parent.DoesTransformAffectChildren)
                 _parent.UpdateTransform();
-                return;
-            }
                 
             ClearFlags(Flags.TransformDirty);
 
@@ -456,7 +469,7 @@ namespace NoZ
             mat = Matrix3.Multiply(mat, Matrix3.Translate(Position));
 
             // Apply the parent transform..
-            if (_parent == null)
+            if (_parent == null || !_parent.DoesTransformAffectChildren)
                 _localToWorld = mat;
             else
                 _localToWorld = Matrix3.Multiply(mat, _parent._localToWorld);
@@ -528,11 +541,25 @@ namespace NoZ
             if(_children != null)
                 for (var i = _children.Count -1; i >= 0; i--)
                     _children[i].UpdateVisible();
+
+            // Give the node a chance to handle its own visibility state.
+            OnVisibleChanged(visible);
+
+            // When the visibility changes a parent that arranges children will need 
+            // to adjust its arrangement due to the visibility change.
+            if (Parent != null && Parent.DoesArrangeChildren)
+                Parent.InvalidateRect();
         }
 
         protected virtual void OnRectChanged(in Rect frame) { }
 
         protected virtual void OnParentRectChanged(Rect frame) { }
+
+        protected virtual void OnVisibleChanged(bool visible) { }
+
+        protected virtual void OnParentChanged() { }
+
+        protected virtual void OnSceneChanged() { }
 
         protected virtual void OnDestroy ()
         {

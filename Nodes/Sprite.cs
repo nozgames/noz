@@ -68,12 +68,14 @@ namespace NoZ
         public Sprite (Image image)
         {
             Image = image;
+            Size = Image.Size.ToVector2();
         }
 
         public Sprite (Image image, Color color)
         {
             Image = image;
             Color = color;
+            Size = Image.Size.ToVector2();
         }
 
         public Sprite (Image image, Color color, SpriteDrawMode drawMode)
@@ -81,6 +83,7 @@ namespace NoZ
             Image = image;
             Color = color;
             DrawMode = drawMode;
+            Size = Image.Size.ToVector2();
         }
 
         private Vector2 MeasureSliced()
@@ -88,10 +91,7 @@ namespace NoZ
             return new Vector2(Image.Border.left + Image.Border.right, Image.Border.top + Image.Border.bottom);
         }
 
-        private Vector2 MeasureStretched()
-        {
-            return new Vector2(Image.Width, Image.Height);
-        }
+        private Vector2 MeasureStretched() => Size;
 
         public override Vector2 Measure (in Vector2 available)
         {
