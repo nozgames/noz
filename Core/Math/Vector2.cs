@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
   NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
@@ -189,6 +190,8 @@ namespace NoZ {
 
             return $"{x},{y}";
         }
+
+        public Vector3 ToVector3() => new Vector3(x, y, 0);
 
         public float DistanceToLineSegmentSquared (in Vector2 pt1, in Vector2 pt2) {
             var seg = (pt2 - pt1);

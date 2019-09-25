@@ -81,6 +81,9 @@ namespace NoZ {
             }
         }
 
+        public static Color FromRgb(in Vector3 rgb) => new Color(MakeRgba((byte)(rgb.x * 255), (byte)(rgb.y * 255), (byte)(rgb.z * 255), 255));
+        public static Color FromRgba(in Vector3 rgb, float alpha) => new Color(MakeRgba((byte)(rgb.x * 255), (byte)(rgb.y * 255), (byte)(rgb.z * 255), (byte)(alpha * 255)));
+
         public static Color FromRgba(float red, float green, float blue, float alpha) {
             return new Color(MakeRgba((byte)(red*255), (byte)(green*255), (byte)(blue*255), (byte)(alpha*255)));
         }
@@ -93,13 +96,10 @@ namespace NoZ {
             return new Color(MakeRgba((byte)red, (byte)green, (byte)blue, (byte)alpha));
         }
 
-        public static Color FromRgba(Color from, byte a) {
-            return FromRgba(from.R, from.G, from.B, a);
-        }
+        public static Color FromRgba(Color from, byte a) => FromRgba(from.R, from.G, from.B, a);
+        public static Color FromRgba(Color from, float a) => FromRgba(from.R, from.G, from.B, (byte)(a * 255.0f));
 
-        public static Color FromUInt32 (uint value) {
-            return new Color(value);
-        }
+        public static Color FromUInt32 (uint value) => new Color(value);
 
         private static uint MakeRgba(byte red, byte green, byte blue, byte alpha) {
             return (uint)
@@ -157,7 +157,7 @@ namespace NoZ {
         /// </returns>
         public Color MultiplyAlpha(byte value) {
             return FromRgba(R, G, B, (byte)(((value * A) / 255) & 0xFF));
-        }
+        }        
 
         /// <summary>
         /// Multiply the alpha component of the color by the given alpha value and return
@@ -180,6 +180,11 @@ namespace NoZ {
               (byte)(ilerp * from.B + (lerp * to.B)),
               (byte)(ilerp * from.A + (lerp * to.A))
             );
+        }
+
+        public static Color LerpAlpha(Color color, float from, float to, float lerp)
+        {
+            return FromRgba(color.R, color.G, color.B, (byte)((1.0f - lerp) * from + lerp * to * 255.0f));
         }
 
         private class ColorTypeConverter : TypeConverter {

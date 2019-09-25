@@ -1,7 +1,7 @@
 ﻿/*
-  NoZ Game Engine
+  NozEngine Library
 
-  Copyright(c) 2019 NoZ Games, LLC
+  Copyright(c) 2015 NoZ Games, LLC
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files(the "Software"), to deal
@@ -22,20 +22,30 @@
   SOFTWARE.
 */
 
-namespace NoZ
-{
-    public abstract class Resource : Object
-    {
-        public static bool IsVerbose { get; set; } = true;
+using System.Collections.Generic;
 
-        /// <summary>
-        /// Name of the resource
-        /// </summary>
-        public string Name { get; private set; }
+namespace NoZ {
 
-        public Resource(string name)
-        {
-            Name = name;
+    public class ObjectPool<T> where T : new() {
+        private Stack<T> _items;
+        private int _capacity;
+
+        public ObjectPool (int capacity) {
+            _capacity = capacity;
+            _items = new Stack<T>(capacity);
+        }
+
+        public T Get () {
+            if (_items.Count == 0)
+                return new T();
+
+            return _items.Pop();
+        }
+
+        public void Release(T t) {
+            if (_items.Count == _capacity)
+                return;
+            _items.Push(t);
         }
     }
 }

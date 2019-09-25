@@ -80,6 +80,7 @@ namespace NoZ
             Audio = audio;
             Instance = window;
             Input.Initialize(window);
+            Animation.Initialize();
             window._windowDelegate?.OnCreated();
             return window;
         }
@@ -97,7 +98,12 @@ namespace NoZ
             _windowDelegate?.OnBeginFrame(_gc);
 
             foreach (var view in _views)
-                view.Frame(_gc);
+                view.Update();
+
+            Animation.HandleUpdate(AnimationUpdateMode.Update);
+
+            foreach (var view in _views)
+                view.Draw(_gc);
 
             _windowDelegate?.OnEndFrame(_gc);
 

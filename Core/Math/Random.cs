@@ -23,30 +23,31 @@
   SOFTWARE.
 */
 
-using System;
-
-namespace NoZ  {
-    public struct Random {
+namespace NoZ
+{
+    public static class Random
+    {
         private const double UInt32ToDouble = 1.0 / ((double)int.MaxValue + 1.0);
         private const uint R1 = 842502087;
         private const uint R2 = 3579807591;
         private const uint R3 = 273326509;
 
-        private uint _r0;
-        private uint _r1;
-        private uint _r2;
-        private uint _r3;
-        private int _seed;
+        private static uint _r0;
+        private static uint _r1;
+        private static uint _r2;
+        private static uint _r3;
+        private static int _seed;
 
-        public Random (int seed) {
-            _seed = seed;
+        static Random()
+        {
+            _seed = 1;
             _r0 = (uint)_seed;
             _r1 = R1;
             _r2 = R2;
             _r3 = R3;
         }
 
-        public int Seed {
+        public static int Seed {
             get => _seed;
             set {
                 _seed = value;
@@ -57,7 +58,8 @@ namespace NoZ  {
             }
         }
 
-        public int Next ( ) {
+        public static int Next()
+        {
             uint t = (_r0 ^ (_r0 << 11));
             _r0 = _r1;
             _r1 = _r2;
@@ -78,7 +80,8 @@ namespace NoZ  {
         /// </summary>
         /// <param name="max">The exclusive upper bound of the random value.</param>
         /// <returns>A random integer greater than or equal to zero and less than the maximum value.</returns>
-        public int Next(int max) {
+        public static int Next(int max)
+        {
             return Next() % max;
         }
 
@@ -88,15 +91,17 @@ namespace NoZ  {
         /// <param name="min">The inclusive lower bound of the random value.</param>
         /// <param name="max">The exclusive upper bound of the random value.</param>
         /// <returns>A random integer greater than or equal to the min value and less than the max value.</returns>
-        public int Next(int min, int max) {
-            return min + (Next() % (max-min));
+        public static int Next(int min, int max)
+        {
+            return min + (Next() % (max - min));
         }
 
         /// <summary>
         /// Generates a random double. Values returned are from 0.0 up to but not including 1.0.
         /// </summary>
         /// <returns></returns>
-        public double NextDouble() {
+        public static double NextDouble()
+        {
             uint t = (_r0 ^ (_r0 << 11));
             _r0 = _r1;
             _r1 = _r2;
@@ -113,6 +118,14 @@ namespace NoZ  {
             // System.Random.
             return (UInt32ToDouble * (int)(0x7FFFFFFF & (_r3 = (_r3 ^ (_r3 >> 19)) ^ (t ^ (t >> 8)))));
         }
+
+        /// <summary>
+        /// Returns a float between the minimum and maximum values
+        /// </summary>
+        /// <param name="min">Minimum value (inclusive)</param>
+        /// <param name="max">Maximum value (inclusive)</param>
+        /// <returns>Random value</returns>
+        public static float Range(float min, float max) => min + (float)NextDouble() * (max - min);
     }
 }
 

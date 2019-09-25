@@ -47,6 +47,10 @@ namespace NoZ
             get; private set;
         }
 
+        public static float UnscaledDeltaTime => DeltaTime;
+        public static float FixedUnscaledDeltaTime => DeltaTime;
+        public static float FixedDeltaTime => DeltaTime;
+
         /// <summary>
         /// Time in seconds since the game started.
         /// </summary>

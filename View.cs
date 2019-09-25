@@ -52,7 +52,7 @@ namespace NoZ
             UpdateScene();
         }
 
-        public void Frame (GraphicsContext gc)
+        public void Update ()
         {
             if (null == Scene)
                 return;
@@ -60,6 +60,10 @@ namespace NoZ
             Size = Window.Instance.Size;
             UpdateScene();
             Scene.Update();
+        }
+
+        public void Draw (GraphicsContext gc)
+        {
             Scene.Present(gc);
         }
 

@@ -54,5 +54,16 @@ namespace NoZ {
             return x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
         }
 
+        public static Vector3 operator +(Vector3 lhs, Vector3 rhs) => new Vector3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+        public static Vector3 operator *(Vector3 lhs, Vector3 rhs) => new Vector3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+        public static Vector3 operator -(Vector3 lhs, Vector3 rhs) => new Vector3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+        public static Vector3 operator /(Vector3 lhs, Vector3 rhs) => new Vector3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z);
+        public static Vector3 operator -(Vector3 lhs) => new Vector3(-lhs.x, -lhs.y, -lhs.z);
+        public static Vector3 operator /(Vector3 lhs, float rhs) => new Vector3(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);
+        public static Vector3 operator *(Vector3 lhs, float rhs) => new Vector3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);
+        public static Vector3 operator +(Vector3 lhs, float rhs) => new Vector3(lhs.x + rhs, lhs.y + rhs, lhs.z + rhs);
+        public static Vector3 operator -(Vector3 lhs, float rhs) => new Vector3(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs);
+
+        public Vector2 ToVector2() => new Vector2(x, y);
     }
 }
