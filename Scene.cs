@@ -84,11 +84,15 @@ namespace NoZ
                 mat2 = Matrix3.Multiply(mat2, Matrix3.Rotate(Camera.Rotation * MathEx.Deg2Rad));
                 mat = Matrix3.Multiply(mat2, mat);
 
+                _windowToScene = mat.Inverse();
+
                 gc.PushMatrix(mat);
             }
             else
             {
                 gc.PushMatrix(LocalToWorld);
+
+                _windowToScene = WorldToLocal;
             }
 
             _drawList.Build(this);
@@ -110,10 +114,6 @@ namespace NoZ
 
         public void Update ()
         {
-            _windowToScene = Matrix3.Multiply(
-                LocalToWorld,
-                Matrix3.Translate(Window.Instance.Size.ToVector2() * 0.5f)).Inverse();
-
             OnUpdate();
 
             Broadcast(UpdateEvent);

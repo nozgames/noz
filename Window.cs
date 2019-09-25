@@ -86,6 +86,7 @@ namespace NoZ
 
         public virtual void Frame()
         {
+            Time.Frame();
             Graphics.BeginFrame();
 
             if (null == _gc)
@@ -105,6 +106,8 @@ namespace NoZ
             Graphics.EndFrame();
 
             Node.ProcessDestroyedNodes();
+
+            Input.OnEndFrame();
         }
 
         public void AddView (View view)
