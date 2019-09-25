@@ -27,22 +27,26 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-namespace NoZ {
+namespace NoZ
+{
 
     [StructLayout(LayoutKind.Sequential, Pack = 0)]
     [TypeConverter(typeof(Vector2TypeConverter))]
-    public struct Vector2Int {
+    public struct Vector2Int
+    {
         public static readonly Vector2Int Zero = new Vector2Int();
 
         public int x;
         public int y;
 
-        public Vector2Int(int x, int y) {
+        public Vector2Int(int x, int y)
+        {
             this.x = x;
             this.y = y;
         }
 
-        public Vector2Int(int v) {
+        public Vector2Int(int v)
+        {
             this.x = v;
             this.y = v;
         }
@@ -57,15 +61,18 @@ namespace NoZ {
             }
         }
 
-        public static bool operator == (Vector2Int lhs, Vector2Int rhs) {
+        public static bool operator ==(Vector2Int lhs, Vector2Int rhs)
+        {
             return lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        public static bool operator != (Vector2Int lhs, Vector2Int rhs) {
+        public static bool operator !=(Vector2Int lhs, Vector2Int rhs)
+        {
             return !(lhs.x == rhs.x && lhs.y == rhs.y);
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             if (obj == null || obj.GetType() != GetType())
                 return false;
 
@@ -74,7 +81,8 @@ namespace NoZ {
             return lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return x.GetHashCode() ^ y.GetHashCode();
         }
 
@@ -82,12 +90,14 @@ namespace NoZ {
         public Vector2Double ToVector2Double() => new Vector2Double(x, y);
 
 
-        public static Vector2Int Parse(string value) {
+        public static Vector2Int Parse(string value)
+        {
             string[] parts = value.Split(',');
             if (null == parts || parts.Length == 0)
                 return Zero;
 
-            if (parts.Length == 1) {
+            if (parts.Length == 1)
+            {
                 int.TryParse(parts[0], out var parsed);
                 return new Vector2Int(parsed);
             }
@@ -97,26 +107,31 @@ namespace NoZ {
             return new Vector2Int(parsedX, parsedY);
         }
 
-        public override string ToString () {
+        public override string ToString()
+        {
             if (x == y)
                 return $"{x}";
 
             return $"{x},{y}";
         }
 
-        public static Vector2Int operator +(Vector2Int lhs, Vector2Int rhs) {
+        public static Vector2Int operator +(Vector2Int lhs, Vector2Int rhs)
+        {
             return new Vector2Int(lhs.x + rhs.x, lhs.y + rhs.y);
         }
 
-        public static Vector2Int operator *(Vector2Int lhs, Vector2Int rhs) {
+        public static Vector2Int operator *(Vector2Int lhs, Vector2Int rhs)
+        {
             return new Vector2Int(lhs.x * rhs.x, lhs.y * rhs.y);
         }
 
-        public static Vector2Int operator -(Vector2Int lhs, Vector2Int rhs) {
+        public static Vector2Int operator -(Vector2Int lhs, Vector2Int rhs)
+        {
             return new Vector2Int(lhs.x - rhs.x, lhs.y - rhs.y);
         }
 
-        public static Vector2Int operator /(Vector2Int lhs, Vector2Int rhs) {
+        public static Vector2Int operator /(Vector2Int lhs, Vector2Int rhs)
+        {
             return new Vector2Int(lhs.x / rhs.x, lhs.y / rhs.y);
         }
 
@@ -126,13 +141,16 @@ namespace NoZ {
         public static Vector2Int operator -(Vector2Int lhs, int rhs) => new Vector2Int(lhs.x - rhs, lhs.y - rhs);
 
 
-        private class Vector2TypeConverter : TypeConverter {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+        private class Vector2TypeConverter : TypeConverter
+        {
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+            {
                 if (sourceType == typeof(string)) return true;
                 return base.CanConvertFrom(context, sourceType);
             }
 
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
                 if (value == null) return Zero;
                 if (value is string) return Parse((string)value);
                 return base.ConvertFrom(context, culture, value);

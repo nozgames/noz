@@ -100,7 +100,7 @@ namespace NoZ
             foreach (var view in _views)
                 view.Update();
 
-            Animation.HandleUpdate(AnimationUpdateMode.Update);
+            Animation.Update(AnimationUpdateMode.Update);
 
             foreach (var view in _views)
                 view.Draw(_gc);

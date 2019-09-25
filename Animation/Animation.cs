@@ -51,13 +51,16 @@ namespace NoZ
         EaseInOutElastic,
     }
 
+    /// <summary>
+    /// Plays an animation on a node
+    /// </summary>
     public class Animation
     {
         [Flags]
         private enum Flags : byte
         {
             /// <summary>
-            /// Indicates the tween should process the children as a sequence rather than a group
+            /// Indicates the animation should process the children as a sequence rather than a group
             /// </summary>
             Sequence = (1 << 0),
 
@@ -67,30 +70,39 @@ namespace NoZ
             UnscaledTime = (1 << 1),
 
             /// <summary>
-            /// Loop the tween
+            /// Loop the animation
             /// </summary>
             Loop = (1 << 2),
 
             /// <summary>
-            /// Indicates the tween has been started 
+            /// Indicates the animation has been started 
             /// </summary>
             Started = (1 << 3),
 
             /// <summary>
-            /// Indicates the tween should play itself forward, then backward before stopping
+            /// Indicates the animation should play itself forward, then backward before stopping
             /// </summary>
             PingPong = (1 << 4),
 
+            /// <summary>
+            /// Animation is low priority and can be stopped if necessary
+            /// </summary>
             LowPriority = (1 << 5),
 
+            /// <summary>
+            /// Animation is active
+            /// </summary>
             Active = (1 << 6),
 
+            /// <summary>
+            /// Animation is stopping
+            /// </summary>
             Stopping = (1 << 7)
         }
 
         private delegate float EasingDelegate(float t, float p1, float p2);
-        private delegate bool StartDelegate(Animation tween);
-        private delegate void UpdateDelegate(Animation tween, float normalizedTime);
+        private delegate bool StartDelegate(Animation anim);
+        private delegate void UpdateDelegate(Animation anim, float normalizedTime);
 
         public static bool IsPaused { get; private set; } = true;
 
@@ -122,7 +134,7 @@ namespace NoZ
         #region Static
 
         /// <summary>
-        /// Root tween that manages all active tweens
+        /// Root animation that manages all active animations
         /// </summary>
         private static Animation _root = new Animation();
 
@@ -131,10 +143,11 @@ namespace NoZ
         private static int _countLowPriority = 0;
 
         public static int ActiveCount => _count;
+        public static bool IsLowPriorityActive => _countLowPriority > 0;
         public static bool IsHighPriorityActive => _countHighPriority > 0;
 
         /// <summary>
-        /// Pool of tweens available for use
+        /// Pool of animations available for use
         /// </summary>
         private static ObjectPool<Animation> _pool = new ObjectPool<Animation>(128);
 
@@ -151,7 +164,7 @@ namespace NoZ
         }
 
         /// <summary>
-        /// Stop all tweens running on the given node
+        /// Stop all animations running on the given node
         /// </summary>
         public static void Stop(Node node)
         {
@@ -159,16 +172,16 @@ namespace NoZ
                 return;
 
             Animation next;
-            for (var tween = _root._firstChild; tween != null; tween = next)
+            for (var anim = _root._firstChild; anim != null; anim = next)
             {
-                next = tween._next;
-                if (tween._node == node)
-                    Stop(tween);
+                next = anim._next;
+                if (anim._node == node)
+                    Stop(anim);
             }
         }
 
         /// <summary>
-        /// Stop all tweens on the given node that match the given key.
+        /// Stop all animations on the given node that match the given key.
         /// </summary>
         public static void Stop(Node node, string key)
         {
@@ -176,57 +189,57 @@ namespace NoZ
                 return;
 
             Animation next;
-            for (var tween = _root._firstChild; tween != null; tween = next)
+            for (var anim = _root._firstChild; anim != null; anim = next)
             {
-                next = tween._next;
-                if (tween._node == node && tween._key != null && tween._key == key)
-                    Stop(tween);
+                next = anim._next;
+                if (anim._node == node && anim._key != null && anim._key == key)
+                    Stop(anim);
             }
         }
 
         /// <summary>
-        /// Stop all tweens on all nodes that match the given key
+        /// Stop all animations on all nodes that match the given key
         /// </summary>
         /// <param name="key"></param>
         public static void Stop(string key)
         {
             Animation next;
-            for (var tween = _root._firstChild; tween != null; tween = next)
+            for (var anim = _root._firstChild; anim != null; anim = next)
             {
-                next = tween._next;
-                if (tween._key != null && tween._key == key)
-                    Stop(tween);
+                next = anim._next;
+                if (anim._key != null && anim._key == key)
+                    Stop(anim);
             }
         }
 
         /// <summary>
-        /// Stop the given tween.
+        /// Stop the given animation.
         /// </summary>
-        /// <param name="tween"></param>
-        private static void Stop(Animation tween)
+        /// <param name="anim"></param>
+        private static void Stop(Animation anim)
         {
-            if ((tween._flags & Flags.Stopping) == Flags.Stopping)
+            if ((anim._flags & Flags.Stopping) == Flags.Stopping)
                 return;
 
-            tween._flags |= Flags.Stopping;
+            anim._flags |= Flags.Stopping;
 
             // Stop all children
-            while (tween._firstChild != null)
-                Stop(tween._firstChild);
+            while (anim._firstChild != null)
+                Stop(anim._firstChild);
 
-            tween.SetParent(null);
-            tween.IsActive = false;
+            anim.SetParent(null);
+            anim.IsActive = false;
 
-            var onStop = tween._onStop;
+            var onStop = anim._onStop;
 
-            // Free the tween
-            FreeTween(tween);
+            // Free the animation
+            FreeAnimation(anim);
 
             // Call onStop
             onStop?.Invoke();
         }
 
-        public static void HandleUpdate(AnimationUpdateMode updateMode)
+        public static void Update(AnimationUpdateMode updateMode)
         {
             var elapsedNormal = 0f;
             var elapsedUnscaled = 0f;
@@ -249,67 +262,67 @@ namespace NoZ
             }
 
             Animation next = null;
-            for (var tween = _root._firstChild; tween != null; tween = next)
+            for (var anim = _root._firstChild; anim != null; anim = next)
             {
-                next = tween._next;
+                next = anim._next;
 
-                if (tween._updateMode != updateMode)
+                if (anim._updateMode != updateMode)
                     continue;
 
-                if ((tween._flags & Flags.UnscaledTime) == Flags.UnscaledTime)
-                    tween.Update(elapsedUnscaled);
+                if ((anim._flags & Flags.UnscaledTime) == Flags.UnscaledTime)
+                    anim.UpdateInternal(elapsedUnscaled);
                 else
-                    tween.Update(elapsedNormal);
+                    anim.UpdateInternal(elapsedNormal);
 
-                // If the tween is no longer active then stop it
-                if (!tween.IsActive)
-                    Stop(tween);
+                // If the animation is no longer active then stop it
+                if (!anim.IsActive)
+                    Stop(anim);
             }
 
-            // Disable the tween manager if there are no tweens running
+            // Pause the animation system if none are running
             if (_root._firstChild == null)
                 IsPaused = true;
         }
 
         /// <summary>
-        /// Internal method used to allocate a new tween object from the pool
+        /// Internal method used to allocate a new animation object from the pool
         /// </summary>
         /// <returns></returns>
-        private static Animation AllocTween()
+        private static Animation AllocAnimation()
         {
-            var tween = _pool.Get();
-            tween._delay = 0f;
-            tween._updateMode = AnimationUpdateMode.Update;
-            tween._flags = 0f;
-            tween._elapsed = 0f;
-            tween._duration = 1f;
-            tween.IsActive = false;
-            return tween;
+            var anim = _pool.Get();
+            anim._delay = 0f;
+            anim._updateMode = AnimationUpdateMode.Update;
+            anim._flags = 0f;
+            anim._elapsed = 0f;
+            anim._duration = 1f;
+            anim.IsActive = false;
+            return anim;
         }
 
         /// <summary>
-        /// Internal method used to Free a tween object and return it to the pool
+        /// Internal method used to Free an animation object and return it to the pool
         /// </summary>
-        /// <param name="tween"></param>
-        private static void FreeTween(Animation tween)
+        /// <param name="anim"></param>
+        private static void FreeAnimation(Animation anim)
         {
-            tween.IsActive = false;
-            tween._key = null;
-            tween._onStop = null;
-            tween._onStart = null;
-            tween._object = null;
-            tween._node = null;
-            tween._target = null;
-            tween._targetName = null;
-            tween._easeDelegate = null;
-            tween._delegate = null;
-            tween._startDelegate = null;
-            tween._next = null;
-            tween._prev = null;
-            tween._firstChild = null;
-            tween._lastChild = null;
-            tween._parent = null;
-            _pool.Release(tween);
+            anim.IsActive = false;
+            anim._key = null;
+            anim._onStop = null;
+            anim._onStart = null;
+            anim._object = null;
+            anim._node = null;
+            anim._target = null;
+            anim._targetName = null;
+            anim._easeDelegate = null;
+            anim._delegate = null;
+            anim._startDelegate = null;
+            anim._next = null;
+            anim._prev = null;
+            anim._firstChild = null;
+            anim._lastChild = null;
+            anim._parent = null;
+            _pool.Release(anim);
         }
 
         static Animation()
@@ -338,9 +351,9 @@ namespace NoZ
         public Animation Key(string key) { _key = key; return this; }
 
         /// <summary>
-        /// Enables or disables PingPong mode.  When PingPong mode is enabled the tween
+        /// Enables or disables PingPong mode.  When PingPong mode is enabled the animation
         /// will play itself fully forward and then then in reverse before stopping.  This means that 
-        /// the effective duration of the tween will be doubled. Note that everything is run in reverse 
+        /// the effective duration of the animation will be doubled. Note that everything is run in reverse 
         /// including easing modes.
         /// </summary>
         /// <param name="pingpong">True to enable PingPong mode.</param>
@@ -354,24 +367,30 @@ namespace NoZ
             return this;
         }
 
+        /// <summary>
+        /// Set the loop state of the animation
+        /// </summary>
+        /// <param name="loop">True if the animation should loop</param>
         public Animation Loop(bool loop = true)
         {
-            if (loop)
-                _flags |= Flags.Loop;
-            else
-                _flags &= ~Flags.Loop;
+            _flags = loop ? (_flags | Flags.Loop) : (_flags & ~Flags.Loop);
             return this;
         }
 
+        /// <summary>
+        /// Sets the animation to use unscaled time rather than normal scaled time
+        /// </summary>
+        /// <param name="unscaled">True to use unscaled time</param>
         public Animation UnscaledTime(bool unscaled = true)
         {
-            if (unscaled)
-                _flags |= Flags.UnscaledTime;
-            else
-                _flags &= ~Flags.UnscaledTime;
+            _flags = unscaled ? (_flags | Flags.UnscaledTime) : (_flags & ~Flags.UnscaledTime);
             return this;
         }
 
+        /// <summary>
+        /// Adds a child to a sequence or group
+        /// </summary>
+        /// <param name="child">child to add</param>
         public Animation Child(Animation child)
         {
             if (child._parent != null)
@@ -423,135 +442,135 @@ namespace NoZ
 
         public static Animation ShakePosition(Vector2 intensity)
         {
-            var tween = AllocTween();
-            tween._vector0 = intensity.ToVector3();
-            tween._vector1 = new Vector3(
+            var anim = AllocAnimation();
+            anim._vector0 = intensity.ToVector3();
+            anim._vector1 = new Vector3(
                 Random.Range(0.0f, 100.0f),
                 Random.Range(0.0f, 100.0f), 0);
-            tween._delegate = ShakePositionUpdateDelegate;
-            return tween;
+            anim._delegate = ShakePositionUpdateDelegate;
+            return anim;
         }
 
         public static Animation ShakeRotation(Vector2 intensity)
         {
-            var tween = AllocTween();
-            tween._vector0 = intensity.ToVector3();
-            tween._vector1 = new Vector3(
+            var anim = AllocAnimation();
+            anim._vector0 = intensity.ToVector3();
+            anim._vector1 = new Vector3(
                 Random.Range(0.0f, 100.0f),
                 Random.Range(0.0f, 100.0f),0);
-            tween._delegate = ShakeRotationUpdateDelegate;
-            return tween;
+            anim._delegate = ShakeRotationUpdateDelegate;
+            return anim;
         }
 
         public static Animation Move(Vector2 from, Vector2 to, bool local = true)
         {
-            var tween = AllocTween();
-            tween._vector0 = from.ToVector3();
-            tween._vector1 = to.ToVector3();
-            tween._delegate = local ? MoveUpdateDelegate : MoveWorldUpdate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0 = from.ToVector3();
+            anim._vector1 = to.ToVector3();
+            anim._delegate = local ? MoveUpdateDelegate : MoveWorldUpdate;
+            return anim;
         }
 
         public static Animation MoveTo(Vector2 to)
         {
-            var tween = AllocTween();
-            tween._vector1 = to.ToVector3();
-            tween._delegate = MoveToUpdateDelegate;
-            tween._startDelegate = MoveToStartDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector1 = to.ToVector3();
+            anim._delegate = MoveToUpdateDelegate;
+            anim._startDelegate = MoveToStartDelegate;
+            return anim;
         }
 
         public static Animation Rotate(float from, float to)
         {
-            var tween = AllocTween();
-            tween._vector0 = new Vector3(from, 0, 0);
-            tween._vector1 = new Vector3(to, 0, 0);
-            tween._delegate = RotateUpdateDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0 = new Vector3(from, 0, 0);
+            anim._vector1 = new Vector3(to, 0, 0);
+            anim._delegate = RotateUpdateDelegate;
+            return anim;
         }
 
         public static Animation Scale(Vector2 from, Vector2 to)
         {
-            var tween = AllocTween();
-            tween._vector0 = from.ToVector3();
-            tween._vector1 = to.ToVector3();
-            tween._delegate = ScaleUpdateDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0 = from.ToVector3();
+            anim._vector1 = to.ToVector3();
+            anim._delegate = ScaleUpdateDelegate;
+            return anim;
         }
 
         public static Animation Scale(float from, float to) => Scale(new Vector2(from), new Vector2(to));
 
         public static Animation ScaleTo(Node node, Vector2 to)
         {
-            var tween = AllocTween();
-            tween._node = node;
-            tween._object = node;
-            tween._vector0 = node.Scale.ToVector3();
-            tween._vector1 = to.ToVector3();
-            tween._delegate = ScaleUpdateDelegate;
-            tween._startDelegate = ScaleToStartDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._node = node;
+            anim._object = node;
+            anim._vector0 = node.Scale.ToVector3();
+            anim._vector1 = to.ToVector3();
+            anim._delegate = ScaleUpdateDelegate;
+            anim._startDelegate = ScaleToStartDelegate;
+            return anim;
         }
 
         public static Animation Activate(bool activate = true)
         {
-            var tween = AllocTween();
-            tween._delegate = ActivateUpdateDelegate;
-            tween._vector0.x = activate ? 1f : 0f;
-            tween._duration = 0f;
-            return tween;
+            var anim = AllocAnimation();
+            anim._delegate = ActivateUpdateDelegate;
+            anim._vector0.x = activate ? 1f : 0f;
+            anim._duration = 0f;
+            return anim;
         }
 
         public static Animation Wait(float duration)
         {
-            var tween = AllocTween();
-            tween._duration = duration;
-            tween._delegate = WaitUpdateDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._duration = duration;
+            anim._delegate = WaitUpdateDelegate;
+            return anim;
         }
 
         public static Animation Fade(float from, float to)
         {
-            var tween = AllocTween();
-            tween._vector0.x = from;
-            tween._vector1.x = to;
-            tween._startDelegate = FadeStartDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0.x = from;
+            anim._vector1.x = to;
+            anim._startDelegate = FadeStartDelegate;
+            return anim;
         }
 
         public static Animation Color(Color from, Color to)
         {
-            var tween = AllocTween();
-            tween._vector0 = new Vector3(from.R, from.G, from.B);
-            tween._vector1 = new Vector3(to.R, to.G, to.B);
-            tween._startDelegate = ColorStartDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0 = new Vector3(from.R, from.G, from.B);
+            anim._vector1 = new Vector3(to.R, to.G, to.B);
+            anim._startDelegate = ColorStartDelegate;
+            return anim;
         }
 
         public static Animation Play(AudioClip clip, float volume = 1f, float pitch = 1f)
         {
-            var tween = AllocTween();
-            tween._vector0.x = volume;
-            tween._vector0.y = pitch;
-            tween._object = clip;
-            tween._startDelegate = PlayStartDelegate;
-            tween._delegate = WaitUpdateDelegate;
-            return tween;
+            var anim = AllocAnimation();
+            anim._vector0.x = volume;
+            anim._vector0.y = pitch;
+            anim._object = clip;
+            anim._startDelegate = PlayStartDelegate;
+            anim._delegate = WaitUpdateDelegate;
+            return anim;
         }
 
         public static Animation Group()
         {
-            var tween = AllocTween();
-            tween._duration = 0f;
-            return tween;
+            var anim = AllocAnimation();
+            anim._duration = 0f;
+            return anim;
         }
 
         public static Animation Sequence()
         {
-            var tween = AllocTween();
-            tween._duration = 0f;
-            tween._flags |= Flags.Sequence;
-            return tween;
+            var anim = AllocAnimation();
+            anim._duration = 0f;
+            anim._flags |= Flags.Sequence;
+            return anim;
         }
 
         private void SetParent(Animation parent)
@@ -592,9 +611,13 @@ namespace NoZ
 
         }
 
+        /// <summary>
+        /// Start the animation on the given node
+        /// </summary>
+        /// <param name="node">Node the animation should run on</param>
         public void Start(Node node)
         {
-            // Add the tween to the root tween
+            // Add the animation to the root animation
             _root.Child(this);
 
             _node = node;
@@ -610,7 +633,7 @@ namespace NoZ
                 return;
             }
 
-            // Enable the tween manager if this is the first tween
+            // Unpause the animation system if there are animations to run
             if (_root._firstChild != null)
                 IsPaused = false; 
         }
@@ -629,7 +652,7 @@ namespace NoZ
                     if (!child.ResolveTarget(node))
                     {
                         child.SetParent(null);
-                        FreeTween(child);
+                        FreeAnimation(child);
                     }
                 }
 
@@ -643,7 +666,7 @@ namespace NoZ
                 if (_target == null)
                 {
                     Console.WriteLine($"warning: missing target '{_targetName}'");
-                    FreeTween(this);
+                    FreeAnimation(this);
                     return false;
                 }
             }
@@ -673,19 +696,19 @@ namespace NoZ
                 // First run the start delegate if we have one
                 _startDelegate?.Invoke(this);
 
-                // If no longer active then the tween was stopped by the start method
+                // If no longer active then the animation was stopped by the start method
                 if (!IsActive)
                     return false;
 
                 _onStart?.Invoke();
 
-                Update(0f);
+                UpdateInternal(0f);
             }
 
             return true;
         }
 
-        private float Update(float deltaTime)
+        private float UpdateInternal(float deltaTime)
         {
             // Delay
             if (_elapsed < _delay)
@@ -728,7 +751,7 @@ namespace NoZ
                 return UpdateGroup(deltaTime);
             }
 
-            // All other tweens
+            // All other animations
             var elapsed = _elapsed - _delay;
             var reverse = false;
             if (elapsed >= _duration)
@@ -821,7 +844,7 @@ namespace NoZ
                 }
 
                 // Advance the child
-                remainingTime = MathEx.Min(remainingTime, child.Update(deltaTime));
+                remainingTime = MathEx.Min(remainingTime, child.UpdateInternal(deltaTime));
 
                 done &= !child.IsActive;
 
@@ -847,7 +870,7 @@ namespace NoZ
 
                 // Recursively call ourself to process the rest of the time
                 if (remainingTime > 0)
-                    return Update(remainingTime);
+                    return UpdateInternal(remainingTime);
             }
 
             return remainingTime;
@@ -864,7 +887,7 @@ namespace NoZ
                     continue;
                 }
 
-                deltaTime = child.Update(deltaTime);
+                deltaTime = child.UpdateInternal(deltaTime);
 
                 if (!child.IsActive)
                 {
@@ -1018,12 +1041,12 @@ namespace NoZ
 
 #region Start Delegates
 
-        private static bool ColorStart(Animation tween)
+        private static bool ColorStart(Animation anim)
         {
-            tween._object = tween._target as Sprite;
-            if (null != tween._object)
+            anim._object = anim._target as Sprite;
+            if (null != anim._object)
             {
-                tween._delegate = ColorSpriteUpdate;
+                anim._delegate = ColorSpriteUpdate;
                 return true;
             }
 
@@ -1031,53 +1054,44 @@ namespace NoZ
             return false;
         }
 
-        private static bool MoveToStart(Animation tween)
+        private static bool MoveToStart(Animation anim)
         {
-            tween._object = tween._target;
-            tween._vector0 = (tween._object as Node).Position.ToVector3();
+            anim._object = anim._target;
+            anim._vector0 = (anim._object as Node).Position.ToVector3();
             return true;
         }
 
 
-        private static bool ScaleToStart(Animation tween)
+        private static bool ScaleToStart(Animation anim)
         {
-            tween._vector0 = (tween._object as Node).Scale.ToVector3();
+            anim._vector0 = (anim._object as Node).Scale.ToVector3();
             return true;
         }
 
-        private static bool FadeStart(Animation tween)
+        private static bool FadeStart(Animation anim)
         {
-#if false
-            tween._object = tween._target.GetComponent<CanvasGroup>();
-            if (null != tween._object)
+            anim._object = anim._target as Sprite;
+            if (null != anim._object)
             {
-                tween._delegate = FadeUpdateCanvasGroupDelegate;
-                return true;
-            }
-#endif
-
-            tween._object = tween._target as Sprite;
-            if (null != tween._object)
-            {
-                tween._delegate = FadeUpdateSpriteDelegate;
+                anim._delegate = FadeUpdateSpriteDelegate;
                 return true;
             }
 
-            tween._object = tween._target as Label;
-            if (null != tween._object)
+            anim._object = anim._target as Label;
+            if (null != anim._object)
             {
-                tween._delegate = FadeUpdateLabelDelegate;
+                anim._delegate = FadeUpdateLabelDelegate;
                 return true;
             }
 
             return false;
         }
 
-        private static bool PlayStart(Animation tween)
+        private static bool PlayStart(Animation anim)
         {
-            if (tween._object.GetType() == typeof(AudioClip))
+            if (anim._object.GetType() == typeof(AudioClip))
             {
-                (tween._object as AudioClip).Play(); //  tween._vector0.x, tween._vector0.y);
+                (anim._object as AudioClip).Play(); //  tween._vector0.x, tween._vector0.y);
             }
             return true;
         }
@@ -1092,7 +1106,7 @@ namespace NoZ
 
 #region Update Delegates
 
-        private static void ActivateUpdate(Animation tween, float t)
+        private static void ActivateUpdate(Animation anim, float t)
         {
 #if false
             var active = tween._vector0.x > 0;
@@ -1101,73 +1115,73 @@ namespace NoZ
 #endif
         }
 
-        private static void ShakePositionUpdate(Animation tween, float t)
+        private static void ShakePositionUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Position =
+            (anim._object as Node).Position =
                 new Vector2(
-                    tween._vector0.x * (MathEx.PerlinNoise(tween._vector1.x, t * 20f) - 0.5f) * 2.0f,
-                    tween._vector0.y * (MathEx.PerlinNoise(tween._vector1.y, t * 20f) - 0.5f) * 2.0f
+                    anim._vector0.x * (MathEx.PerlinNoise(anim._vector1.x, t * 20f) - 0.5f) * 2.0f,
+                    anim._vector0.y * (MathEx.PerlinNoise(anim._vector1.y, t * 20f) - 0.5f) * 2.0f
                     ) * (1f - t);
         }
 
-        private static void ShakeRotationUpdate(Animation tween, float t)
+        private static void ShakeRotationUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Rotation =
-                tween._vector0.x * (MathEx.PerlinNoise(tween._vector1.x, t * 20f) - 0.5f) * 2.0f * (1f - t);
+            (anim._object as Node).Rotation =
+                anim._vector0.x * (MathEx.PerlinNoise(anim._vector1.x, t * 20f) - 0.5f) * 2.0f * (1f - t);
         }
 
-        private static void MoveUpdate(Animation tween, float t)
+        private static void MoveUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Position = (tween._vector0 * (1 - t) + tween._vector1 * t).ToVector2();
+            (anim._object as Node).Position = (anim._vector0 * (1 - t) + anim._vector1 * t).ToVector2();
         }
 
-        private static void MoveWorldUpdate(Animation tween, float t)
+        private static void MoveWorldUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Position = (tween._vector0 * (1 - t) + tween._vector1 * t).ToVector2();
+            (anim._object as Node).Position = (anim._vector0 * (1 - t) + anim._vector1 * t).ToVector2();
         }
 
-        private static void MoveToUpdate(Animation tween, float t)
+        private static void MoveToUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Position = (tween._vector0 * (1 - t) + tween._vector1 * t).ToVector2();
+            (anim._object as Node).Position = (anim._vector0 * (1 - t) + anim._vector1 * t).ToVector2();
         }
 
-        private static void ScaleUpdate(Animation tween, float t)
+        private static void ScaleUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Scale = (tween._vector0 * (1 - t) + tween._vector1 * t).ToVector2();
+            (anim._object as Node).Scale = (anim._vector0 * (1 - t) + anim._vector1 * t).ToVector2();
         }
 
-        private static void RotateUpdate(Animation tween, float t)
+        private static void RotateUpdate(Animation anim, float t)
         {
-            (tween._object as Node).Rotation = tween._vector0.x * (1 - t) + tween._vector1.x * t;
+            (anim._object as Node).Rotation = anim._vector0.x * (1 - t) + anim._vector1.x * t;
         }
 
 #if false
-        private static void FadeUpdateCanvasGroup(Animation tween, float t)
+        private static void FadeUpdateCanvasGroup(Animation anim, float t)
         {
-            (tween._object as CanvasGroup).alpha = tween._vector0.x * (1f - t) + tween._vector1.x * t;
+            (anim._object as CanvasGroup).alpha = anim._vector0.x * (1f - t) + anim._vector1.x * t;
         }
 #endif
 
-        private static void FadeUpdateSprite(Animation tween, float t)
+        private static void FadeUpdateSprite(Animation anim, float t)
         {
-            var sprite = (tween._object as Sprite);
-            sprite.Color = NoZ.Color.FromRgba(sprite.Color, (tween._vector0.x * (1f - t) + tween._vector1.x * t));
+            var sprite = (anim._object as Sprite);
+            sprite.Color = NoZ.Color.FromRgba(sprite.Color, (anim._vector0.x * (1f - t) + anim._vector1.x * t));
         }
 
-        private static void FadeUpdateLabel(Animation tween, float t)
+        private static void FadeUpdateLabel(Animation anim, float t)
         {
-            var label = (tween._object as Label);
-            label.Color = NoZ.Color.LerpAlpha(label.Color, tween._vector0.x, tween._vector1.x, t);
+            var label = (anim._object as Label);
+            label.Color = NoZ.Color.LerpAlpha(label.Color, anim._vector0.x, anim._vector1.x, t);
         }
 
-        private static void ColorSpriteUpdate(Animation tween, float t)
+        private static void ColorSpriteUpdate(Animation anim, float t)
         {
-            var sprite = (tween._object as Sprite);
-            var color = tween._vector0 * (1f - t) + tween._vector1 * t;
+            var sprite = (anim._object as Sprite);
+            var color = anim._vector0 * (1f - t) + anim._vector1 * t;
             sprite.Color = NoZ.Color.FromRgba(color.x, color.y, color.z, sprite.Color.A / 255.0f);
         }
 
-        private static void WaitUpdate(Animation tween, float t) { }
+        private static void WaitUpdate(Animation anim, float t) { }
 
         private static readonly UpdateDelegate ActivateUpdateDelegate = ActivateUpdate;
         private static readonly UpdateDelegate MoveUpdateDelegate = MoveUpdate;

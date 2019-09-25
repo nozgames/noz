@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
   NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC

@@ -28,7 +28,7 @@ using System.Collections.Generic;
 namespace NoZ
 {
 #if false
-    public class TweenDefinition 
+    public class AnimationDefinition 
     {
         public enum TweenType
         {

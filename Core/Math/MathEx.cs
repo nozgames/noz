@@ -47,105 +47,45 @@ namespace NoZ
             return value;
         }
 
-        public static double Mix(double a, double b, double weight)
-        {
-            return (1.0 - weight) * a + weight * b;
-        }
+        public static double Mix(double a, double b, double weight) => (1.0 - weight) * a + weight* b;
 
-        public static float Mix(float a, float b, float weight)
-        {
-            return (1.0f - weight) * a + weight * b;
-        }
+        public static float Mix(float a, float b, float weight) => (1.0f - weight) * a + weight * b;
 
-        public static float Min(float a, float b)
-        {
-            return a < b ? a : b;
-        }
+        public static float Min(float a, float b) => a < b ? a : b;
 
-        public static int Min(int a, int b)
-        {
-            return a < b ? a : b;
-        }
+        public static int Min(int a, int b) => a < b ? a : b;
 
-        public static long Min(long a, long b)
-        {
-            return a < b ? a : b;
-        }
+        public static long Min(long a, long b) => a < b ? a : b;
 
-        public static float Max(float a, float b)
-        {
-            return a > b ? a : b;
-        }
+        public static float Max(float a, float b) => a > b ? a : b;
 
-        public static int Max(int a, int b)
-        {
-            return a > b ? a : b;
-        }
+        public static int Max(int a, int b) => a > b ? a : b;
 
-        public static long Max(long a, long b)
-        {
-            return a > b ? a : b;
-        }
+        public static long Max(long a, long b) => a > b? a : b;
 
-        public static double Clamp(double value, double min, double max)
-        {
-            return Math.Max(Math.Min(value, max), min);
-        }
+        public static double Clamp(double value, double min, double max) => Math.Max(Math.Min(value, max), min);
 
-        public static float Clamp(float value, float min, float max)
-        {
-            return Max(Min(value, max), min);
-        }
+        public static float Clamp(float value, float min, float max) => Max(Min(value, max), min);
 
-        public static int Clamp(int value, int min, int max)
-        {
-            return Max(Min(value, max), min);
-        }
+        public static int Clamp(int value, int min, int max) => Max(Min(value, max), min);
 
-        public static long Clamp(long value, long min, long max)
-        {
-            return Max(Min(value, max), min);
-        }
+        public static long Clamp(long value, long min, long max) => Max(Min(value, max), min);
 
-        public static float Cos(float angle)
-        {
-            return (float)Math.Cos(angle);
-        }
+        public static float Cos(float angle) => (float)Math.Cos(angle);
 
-        public static float Sin(float angle)
-        {
-            return (float)Math.Sin(angle);
-        }
+        public static float Sin(float angle) => (float)Math.Sin(angle);
 
-        public static float Pow(float x, float y)
-        {
-            return (float)Math.Pow(x, y);
-        }
+        public static float Pow(float x, float y) => (float)Math.Pow(x, y);
 
-        public static float Exp(float x)
-        {
-            return (float)Math.Exp(x);
-        }
+        public static float Exp(float x) => (float)Math.Exp(x);
 
-        public static float Sqrt(float f)
-        {
-            return (float)Math.Sqrt(f);
-        }
+        public static float Sqrt(float f) => (float)Math.Sqrt(f);
 
-        public static float Floor(float f)
-        {
-            return (float)Math.Floor(f);
-        }
+        public static float Floor(float f) => (float)Math.Floor(f);
 
-        public static float Log(float a, float newBase)
-        {
-            return (float)Math.Log(a, newBase);
-        }
+        public static float Log(float a, float newBase) => (float)Math.Log(a, newBase);
 
-        public static float Log(float f)
-        {
-            return (float)Math.Log(f);
-        }
+        public static float Log(float f) => (float)Math.Log(f);
 
         public static float EvaluateCurve(float t, float val1, float tan1, float val2, float tan2)
         {
@@ -191,28 +131,21 @@ namespace NoZ
 
         };
 
-
-        private static readonly Vector3[] PerlinGradients;
+        private static readonly Vector2[] PerlinGradients;
 
         static MathEx()
         {
-            Vector3[] Grad3 = {
-                new Vector3(1, 1, 0),
-                new Vector3(-1, 1, 0),
-                new Vector3(1, -1, 0),
-                new Vector3(-1, -1, 0),
-                new Vector3(1, 0, 1),
-                new Vector3(-1, 0, 1),
-                new Vector3(1, 0, -1),
-                new Vector3(-1, 0, -1),
-                new Vector3(0, 1, 1),
-                new Vector3(0, -1, 1),
-                new Vector3(0, 1, -1),
-                new Vector3(0, -1, -1)};
+            Vector2[] Grad =
+            {
+                new Vector2( 1,  1),
+                new Vector2(-1,  1),
+                new Vector2( 1, -1),
+                new Vector2(-1, -1)
+            };
 
-            PerlinGradients = new Vector3[512];
+            PerlinGradients = new Vector2[512];
             for (var i = 0; i < 256; i++)
-                PerlinGradients[i] = PerlinGradients[i + 256] = Grad3[PerlinPermutation[i] % 12];
+                PerlinGradients[i] = PerlinGradients[i + 256] = Grad[PerlinPermutation[i] % 4];
         }
 
         static readonly float F2 = 0.5f * (Sqrt(3) - 1);
@@ -220,25 +153,22 @@ namespace NoZ
 
         static public float PerlinNoise(float xin, float yin)
         {
-            float n0, n1, n2; // Noise contributions from the three corners
-                              // Skew the input space to determine which simplex cell we're in
+            // Skew the input space to determine which simplex cell we're in
             var s = (xin + yin) * F2; // Hairy factor for 2D
             var i = (int)Floor(xin + s);
             var j = (int)Floor(yin + s);
             var t = (i + j) * G2;
-            var x0 = xin - i + t; // The x,y distances from the cell origin, unskewed.
+
+            // The x,y distances from the cell origin, unskewed.
+            var x0 = xin - i + t; 
             var y0 = yin - j + t;
-            // For the 2D case, the simplex shape is an equilateral triangle.
-            // Determine which simplex we are in.
-            int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
-            if (x0 > y0)
-            { // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-                i1 = 1; j1 = 0;
-            }
-            else
-            {    // upper triangle, YX order: (0,0)->(0,1)->(1,1)
-                i1 = 0; j1 = 1;
-            }
+
+            // Determine which triangle we are in.
+            // x0 > y0  : lower triangle, XY order: (0,0)->(1,0)->(1,1)
+            // x0 <= y0 : upper triangle, YX order: (0,0)->(0,1)->(1,1)
+            var i1 = x0 > y0 ? 1 : 0;
+            var j1 = x0 > y0 ? 0 : 1;
+
             // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
             // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
             // c = (3-sqrt(3))/6
@@ -246,46 +176,28 @@ namespace NoZ
             var y1 = y0 - j1 + G2;
             var x2 = x0 - 1 + 2 * G2; // Offsets for last corner in (x,y) unskewed coords
             var y2 = y0 - 1 + 2 * G2;
+            
             // Work out the hashed gradient indices of the three simplex corners
             i &= 255;
             j &= 255;
+
             var gi0 = PerlinGradients[i + PerlinPermutation[j]];
             var gi1 = PerlinGradients[i + i1 + PerlinPermutation[j + j1]];
             var gi2 = PerlinGradients[i + 1 + PerlinPermutation[j + 1]];
+
             // Calculate the contribution from the three corners
             var t0 = 0.5f - x0 * x0 - y0 * y0;
-            if (t0 < 0)
-            {
-                n0 = 0;
-            }
-            else
-            {
-                t0 *= t0;
-                n0 = t0 * t0 * Vector2.Dot(gi0.ToVector2(), new Vector2(x0, y0));  // (x,y) of grad3 used for 2D gradient
-            }
+            var n0 = t0 < 0 ? 0 : t0 * t0 * t0 * t0 * Vector2.Dot(gi0, new Vector2(x0, y0));
+
             var t1 = 0.5f - x1 * x1 - y1 * y1;
-            if (t1 < 0)
-            {
-                n1 = 0;
-            }
-            else
-            {
-                t1 *= t1;
-                n1 = t1 * t1 * Vector2.Dot(gi1.ToVector2(), new Vector2(x1, y1));
-            }
+            var n1 = t1 < 0 ? 0 : t1 * t1 * t1 * t1 * Vector2.Dot(gi1, new Vector2(x1, y1));
+
             var t2 = 0.5f - x2 * x2 - y2 * y2;
-            if (t2 < 0)
-            {
-                n2 = 0;
-            }
-            else
-            {
-                t2 *= t2;
-                n2 = t2 * t2 * Vector2.Dot(gi2.ToVector2(), new Vector2(x2, y2));
-            }
+            var n2 = t2 < 0 ?  0 : t2 * t2 * t2 * t2 * Vector2.Dot(gi2, new Vector2(x2, y2));
+
             // Add contributions from each corner to get the final noise value.
             // The result is scaled to return values in the interval [-1,1].
-            return 70 * (n0 + n1 + n2);
+            return 70.0f * (n0 + n1 + n2);
         }
     }
 }
