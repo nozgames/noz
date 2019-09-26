@@ -30,6 +30,8 @@ namespace NoZ
     {
         private static Stopwatch _stopwatch;
         private static long _elapsed;
+        private static float _deltaTime;
+        private static float _unscaledDeltaTime;
         private const float MillisecondsToSeconds = 1.0f / 1000.0f;
 
         static Time()
@@ -37,26 +39,43 @@ namespace NoZ
             _stopwatch = Stopwatch.StartNew();
             _elapsed = 0;
             TotalTime = 0;
-            DeltaTime = 0.0f;
+            _deltaTime = 0.0f;
         }
 
         /// <summary>
-        /// Time in seconds it took to complete the last frame
+        /// Scale at which time runs
         /// </summary>
-        public static float DeltaTime {
-            get; private set;
-        }
+        public static float TimeScale { get; set; } = 1.0f;
 
-        public static float UnscaledDeltaTime => DeltaTime;
-        public static float FixedUnscaledDeltaTime => DeltaTime;
-        public static float FixedDeltaTime => DeltaTime;
+        /// <summary>
+        /// True if a fixed time step is being run
+        /// </summary>
+        public static bool InFixedTimeStep { get; private set; } = false;
+
+        /// <summary>
+        /// Time in seconds it took to complete the last frame scaled by the timescale
+        /// </summary>
+        public static float DeltaTime => InFixedTimeStep ? FixedDeltaTime : _deltaTime;
+
+        /// <summary>
+        /// Time in seconds it took to complete the last frame.
+        /// </summary>
+        public static float UnscaledDeltaTime => InFixedTimeStep ? FixedUnscaledDeltaTime : _unscaledDeltaTime;
+
+        /// <summary>
+        /// Time in seconds for an unscaled time step
+        /// </summary>
+        public static float FixedUnscaledDeltaTime { get; set; } = 1.0f / 60.0f;
+
+        /// <summary>
+        /// Time in seconds for the current scaled fixed time
+        /// </summary>
+        public static float FixedDeltaTime { get; private set; }
 
         /// <summary>
         /// Time in seconds since the game started.
         /// </summary>
-        public static float TotalTime {
-            get; private set;
-        }
+        public static float TotalTime { get; private set; }
 
         internal static void Frame()
         {
@@ -64,8 +83,31 @@ namespace NoZ
             var delta = temp - _elapsed;
             _elapsed = temp;
 
-            DeltaTime = ((int)delta) * MillisecondsToSeconds;
+            // Unscaled delta time is the time before timescale is applied
+            _unscaledDeltaTime = ((int)delta) * MillisecondsToSeconds;
+
+            // Apply timescale
+            _deltaTime = _unscaledDeltaTime * TimeScale;
+
+            // Keep try of total time since game started
             TotalTime = ((int)_elapsed) * MillisecondsToSeconds;
+        }
+
+        /// <summary>
+        /// Begin a new fixed time step
+        /// </summary>
+        internal static void BeginFixedTimeStep ()
+        {
+            InFixedTimeStep = true;
+            FixedDeltaTime = TimeScale * FixedUnscaledDeltaTime;
+        }
+
+        /// <summary>
+        /// End a a fixed time step
+        /// </summary>
+        internal static void EndFixedTimeStep ()
+        {
+            InFixedTimeStep = false;
         }
     }
 }

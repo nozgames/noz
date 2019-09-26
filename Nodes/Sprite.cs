@@ -54,6 +54,24 @@ namespace NoZ
 
         int IDrawable.SortOrder => SortOrder;
 
+        private Vector2 _size;
+        private Vector2 _pivot = Vector2.Half;
+
+        public Vector2 Size {
+            get => _size;
+            set {
+                _size = value;
+                InvalidateRect();
+            }
+        }
+        public Vector2 Pivot {
+            get => _pivot;
+            set {
+                _pivot = value;
+                InvalidateRect();
+            }
+        }
+
         /// <summary>
         /// Image used to render the rectangle.  If no image is given a solid color rectangle 
         /// will be rendered instead by using a solid white texture.
@@ -325,24 +343,6 @@ namespace NoZ
             Position = new Vector2(
                 frame.x + frame.width * Pivot.x,
                 frame.y + frame.height * Pivot.y);
-        }
-
-        private Vector2 _size;
-        private Vector2 _pivot = Vector2.Half;
-
-        public Vector2 Size {
-            get => _size;
-            set {
-                _size = value;
-                InvalidateRect();
-            }
-        }
-        public Vector2 Pivot {
-            get => _pivot;
-            set {
-                _pivot = value;
-                InvalidateRect();
-            }
         }
 
         protected override Rect CalculateRect() => new Rect(-_size * Pivot, _size);

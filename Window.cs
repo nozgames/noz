@@ -51,7 +51,7 @@ namespace NoZ
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
 
-        private View[] _views;
+        private List<View> _views = new List<View>();
 
         public abstract IntPtr GetNativeHandle();
 
@@ -61,8 +61,6 @@ namespace NoZ
         public static IAudioDriver Audio { get; private set; }
         public static IPhysicsDriver Physics { get; private set; }
 
-        public static View[] Views => Instance._views;
-
         public WindowDelegate _windowDelegate;
 
         private GraphicsContext _gc;
@@ -71,7 +69,6 @@ namespace NoZ
 
         public Window ()
         {
-            _views = new View[] { };
         }
 
         public static T Create<T>(
@@ -105,6 +102,8 @@ namespace NoZ
 
             _windowDelegate?.OnBeginFrame(_gc);
 
+            Input.BroadcastEvents();
+
             foreach (var view in _views)
                 view.Update();
 
@@ -121,13 +120,25 @@ namespace NoZ
 
             Node.ProcessDestroyedNodes();
 
-            Input.OnEndFrame();
+            Input.EndFrame();
         }
 
         public void AddView (View view)
         {
-            Array.Resize(ref _views, _views.Length + 1);
-            _views[_views.Length - 1] = view;
+            if (view.IsVisible)
+                return;
+
+            _views.Add(view);
+            view.IsVisible = true;
+        }
+        
+        public void RemoveView(View view)
+        {
+            if (!view.IsVisible)
+                return;
+
+            _views.Remove(view);
+            view.IsVisible = false;
         }
     }
 }

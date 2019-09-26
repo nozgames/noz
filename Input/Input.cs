@@ -62,6 +62,9 @@ namespace NoZ
 
     public static class Input
     {
+        public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
+        public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
+
         private const int MaxTouchCount = 8;
 
         [Flags]
@@ -208,7 +211,7 @@ namespace NoZ
         /// <summary>
         /// Handle the ending of a frame 
         /// </summary>
-        internal static void OnEndFrame()
+        internal static void EndFrame()
         {
             // Now that the frame is over we can update the button states 
             // to account for all the button actions that happened in the frame.
@@ -452,7 +455,7 @@ namespace NoZ
                 MousePosition = position;
         }
 
-        private static void OnMouseButtonDown (MouseButton button)
+        private static void OnMouseButtonDown(MouseButton button)
         {
             ref var info = ref GetMouseButton(button);
             if (info.state.HasAllFlags(ButtonState.Pressed))
@@ -532,6 +535,17 @@ namespace NoZ
             // If the touch is the touch simulating the mouse then update the mouse position
             if (touchId == _mouseTouchId)
                 MousePosition = position;
+        }
+
+        public static void BroadcastEvents()
+        {
+            foreach (var ke in KeyEvents)
+            {
+                if (ke.IsDown)
+                    KeyDownEvent.Broadcast(ke.KeyCode);
+                else
+                    KeyUpEvent.Broadcast(ke.KeyCode);
+            }
         }
     }
 }

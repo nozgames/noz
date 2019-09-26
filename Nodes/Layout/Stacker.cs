@@ -51,8 +51,11 @@ namespace NoZ
             // The U axis is the axis which content grows
             var u_axis = Orientation == Orientation.Vertical ? 1 : 0;
 
+            // The V axis is the axis which will have a fixed size
+            var v_axis = u_axis ^ 1;
+
             // Arrange all children that are not collapsed
-            var childFrame = frame.Offset(-Position);
+            var childFrame = frame;
             childFrame[u_axis + 2] = 0;
 
             for(int i=0, c=ChildCount; i<c; i++)
@@ -61,6 +64,7 @@ namespace NoZ
                 if (!child.IsVisible)
                     continue;
 
+                childFrame[v_axis + 2] = _measures[i][v_axis];
                 childFrame[u_axis + 2] = _measures[i][u_axis];
                 child.Arrange(childFrame);
                 childFrame[u_axis] += (childFrame[u_axis + 2] + Spacing);

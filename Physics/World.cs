@@ -44,18 +44,17 @@ namespace NoZ.Physics
         public IBody CreateKinematicBody() => _world.CreateKinematicBody();
         public IBody CreateStaticBody() => _world.CreateStaticBody();
 
-        private const float FixedTime = 1.0f / 60.0f;
-
-        public void Step(float deltaTime)
+        public void Step()
         {
-            _accumulatedTime += deltaTime;
-            while(_accumulatedTime > FixedTime)
+            _accumulatedTime += Time.DeltaTime;
+            while(_accumulatedTime > Time.FixedUnscaledDeltaTime)
             {
-                UpdateEvent.Broadcast(this, FixedTime);
-                _world.Step(FixedTime);
-                _accumulatedTime -= FixedTime;
+                Time.BeginFixedTimeStep();
+                UpdateEvent.Broadcast(this, Time.FixedDeltaTime);
+                _world.Step(Time.FixedDeltaTime);
+                Time.EndFixedTimeStep();
+                _accumulatedTime -= Time.FixedUnscaledDeltaTime;
             }
-
         }
 
         public void DrawDebug(GraphicsContext gc)

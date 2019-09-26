@@ -29,13 +29,38 @@ namespace NoZ
 {
     public class Scene : Node, ILayer
     {
+        public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
+        public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event UpdateEvent = new Event();
 
         private DrawList _drawList;
         private Vector2Int _size;
         private Camera _camera;
+        private bool _paused = true;
         private Matrix3 _windowToScene;
         private Physics.World _world;
+
+        public bool IsPaused {
+            get => _paused;
+            set {
+                if (_paused == value)
+                    return;
+
+                _paused = value;
+
+                if (_paused)
+                {
+                    Input.KeyDownEvent.UnsubscribeAll(this);
+                    OnPause();
+                }
+                else
+                {
+                    Input.KeyDownEvent.Subscribe(OnKeyDown);
+                    Input.KeyDownEvent.Subscribe(OnKeyUp);
+                    OnResume();
+                }
+            }
+        }
 
         /// <summary>
         /// Physics world associated with the scene
@@ -128,15 +153,24 @@ namespace NoZ
 
         public void Update ()
         {
+            if (IsPaused)
+                return;
+
             OnUpdate();
 
             Broadcast(UpdateEvent);
 
-            World?.Step(Time.FixedDeltaTime);
+            World?.Step();
         }
 
         protected virtual void OnUpdate() { }
+        protected virtual void OnPause() { }
+        protected virtual void OnResume() { }
 
         public Matrix3 WindowToScene => _windowToScene;
+
+        protected virtual void OnKeyDown(KeyCode keyCode) => Broadcast(KeyDownEvent, keyCode);
+
+        protected virtual void OnKeyUp(KeyCode keyCode) => Broadcast(KeyUpEvent, keyCode);
     }
 }

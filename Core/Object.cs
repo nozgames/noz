@@ -28,10 +28,10 @@ namespace NoZ
 {
     public class Object : IDisposable
     {
-        public void Subscribe(Event e, Event.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
-        public void Subscribe<Arg1>(Event<Arg1> e, Event<Arg1>.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
-        public void Subscribe<Arg1, Arg2>(Event<Arg1, Arg2> e, Event<Arg1, Arg2>.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
-        public void Subscribe<Arg1, Arg2, Arg3>(Event<Arg1, Arg2, Arg3> e, Event<Arg1, Arg2, Arg3>.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
+        public void Subscribe(Event e, Event.EventDelegate d, bool oneShot = false) => e.Subscribe(this, d, oneShot);
+        public void Subscribe<Arg1>(Event<Arg1> e, Event<Arg1>.EventDelegate d, bool oneShot = false) => e.Subscribe(this, d, oneShot);
+        public void Subscribe<Arg1, Arg2>(Event<Arg1, Arg2> e, Event<Arg1, Arg2>.EventDelegate d, bool oneShot = false) => e.Subscribe(this, d, oneShot);
+        public void Subscribe<Arg1, Arg2, Arg3>(Event<Arg1, Arg2, Arg3> e, Event<Arg1, Arg2, Arg3>.EventDelegate d, bool oneShot = false) => e.Subscribe(this, d, oneShot);
 
         public void Unsubscribe(Event e, Object target) => e.UnsubscribeAll(target);
         public void Unsubscribe<Arg1>(Event<Arg1> e, Object target) => e.UnsubscribeAll(target);

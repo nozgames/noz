@@ -44,7 +44,7 @@ namespace NoZ
         /// <summary>
         /// True if an event is currently being broadcast
         /// </summary>
-        private static bool _isBroadcasting = false;
+        private static int _isBroadcasting = 0;
 
         /// <summary>
         /// Next unique identifier for identifier generation
@@ -163,7 +163,7 @@ namespace NoZ
         {
             _handlersDirty = true;
 
-            if (_isBroadcasting)
+            if (_isBroadcasting > 0)
             {
                 _handlers[index]._target = null;
             }                
@@ -183,15 +183,15 @@ namespace NoZ
         /// <param name="broadcastDelegate"></param>
         protected void Broadcast (Object source, BroadcastDelegate broadcastDelegate)
         {
-            var isFirst = !_isBroadcasting;
+            var isFirst = _isBroadcasting == 0;
             if (isFirst)
             {
                 UpdateHandlers();
-                _isBroadcasting = true;
+                _isBroadcasting = _handlers.Count;
             }
 
             // Iterate over all of the handlers, any new ones added during call will be ignored
-            for (int i = 0, c = _handlers.Count; i < c; i++)
+            for (int i = 0, c = _isBroadcasting; i < c; i++)
             {
                 var handler = _handlers[i];
                 var remove = false;
@@ -212,7 +212,7 @@ namespace NoZ
                 }
 
                 // Get the target
-                if (handler._target.TryGetTarget(out var target))                    
+                if (handler._target != null && handler._target.TryGetTarget(out var target))                    
                     broadcastDelegate(handler._delegate, target);
                 else
                     remove = true;
@@ -221,7 +221,8 @@ namespace NoZ
                     RemoveHandler(i);
             }
 
-            _isBroadcasting = !isFirst;
+            if (isFirst)
+                _isBroadcasting = 0;
         }
     }
 

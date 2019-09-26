@@ -62,7 +62,7 @@ namespace NoZ.Physics
 
         protected virtual bool OnCollisionEnter(Collision collision)
         {
-            CollisionEnterEvent.Broadcast(this, collision);
+            Broadcast(CollisionEnterEvent, collision);
             return true;
         }
 

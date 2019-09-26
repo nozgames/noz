@@ -131,6 +131,7 @@ namespace NoZ
                     _text = value;
                     if (_text == null)
                         _text = "";
+                    InvalidateRect();
                     InvalidateMesh();
                 }
             }

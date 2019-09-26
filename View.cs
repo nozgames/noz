@@ -42,12 +42,15 @@ namespace NoZ
 
         public int SortOrder => 0;
 
+        public bool IsVisible { get; internal set; }
+
         public void PresentScene (Scene scene, Transition transition = null)
         {
             // TODO: transition
             Scene = scene;
 
             Size = Window.Instance.Size;
+            Scene.IsPaused = false;
         
             UpdateScene();
         }
@@ -64,6 +67,7 @@ namespace NoZ
 
         public void Draw (GraphicsContext gc)
         {
+            var rect= Scene.Rect;
             Scene.Present(gc);
         }
 
