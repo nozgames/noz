@@ -37,5 +37,10 @@ namespace NoZ.Physics
         /// Sets the layers the collider can collide with
         /// </summary>
         PhysicsLayer CollidesWithLayers { get; set; }
+
+        /// <summary>
+        /// Collider node that owns the collider implementation
+        /// </summary>
+        Collider Node { get; set; }
     }
 }

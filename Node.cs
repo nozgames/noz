@@ -362,13 +362,33 @@ namespace NoZ
                 return;
 
             var old = _scene;
+            if (old != null)
+                OnLeaveScene(old);
+
             _scene = scene;
 
             OnSceneChanged(old);
 
+            if (_scene != null)
+                OnEnterScene(_scene);
+
             if(_children != null)
                 foreach (var child in _children)
                     child.PropegateScene(scene);
+        }
+
+        /// <summary>
+        /// Find first parent that matches the given type
+        /// </summary>
+        /// <typeparam name="T">Type to search for</typeparam>
+        /// <returns>Node that matches the given type</returns>
+        public T FindParent<T>() where T : Node
+        {
+            T result = null;
+            for (var parent = Parent; result == null && parent != null; parent = parent.Parent)
+                result = parent as T;
+
+            return result;
         }
 
         /// <summary>
@@ -393,14 +413,14 @@ namespace NoZ
         /// </summary>
         /// <typeparam name="T">Type to search for</typeparam>
         /// <returns>Node that matches the given type</returns>
-        public Node FindChild<T> () where T : Node
+        public T FindChild<T> () where T : Node
         {
             if (_children == null)
                 return null;
 
-            Node result = null;
+            T result = null;
             for (int i = 0, c = _children.Count; i < c && null == result; i++)
-                result = typeof(T).IsAssignableFrom(_children[i].GetType()) ? _children[i] : _children[i].FindChild<T>();
+                result = (_children[i] as T) ?? _children[i].FindChild<T>();
 
             return result;
         }
@@ -574,6 +594,10 @@ namespace NoZ
         protected virtual void OnAnscestorChanged () { }
 
         protected virtual void OnSceneChanged(Scene oldScene) { }
+
+        protected virtual void OnEnterScene (Scene entering) { }
+
+        protected virtual void OnLeaveScene (Scene leaving) { }
 
         protected virtual void OnDestroy ()
         {

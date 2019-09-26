@@ -26,7 +26,7 @@ namespace NoZ.Physics
 {
     public abstract class PhysicsNode : Node
     {
-        public static readonly Event OnCollisionEnterEvent = new Event();
+        public static readonly Event<Collision> CollisionEnterEvent = new Event<Collision>();
 
         public bool IsEnabled { get; private set; }
 

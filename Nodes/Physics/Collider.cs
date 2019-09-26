@@ -74,6 +74,7 @@ namespace NoZ.Physics
                 return;
             }
 
+            _collider.Node = this;
             _collider.Layers = Layers;
             _collider.CollidesWithLayers = CollidesWithLayers;
         }

@@ -31,7 +31,6 @@ namespace NoZ.Physics
 
         public bool IsKinematic { get; set; }
 
-
         public Vector2 LinearVelocity {
             get => _linearVelocity;
             set {
@@ -61,9 +60,9 @@ namespace NoZ.Physics
             _body = null;
         }
 
-        protected virtual bool OnCollisionEnter()
+        protected virtual bool OnCollisionEnter(Collision collision)
         {
-            OnCollisionEnterEvent.Broadcast(this);
+            CollisionEnterEvent.Broadcast(this, collision);
             return true;
         }
 

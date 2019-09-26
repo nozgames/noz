@@ -26,12 +26,12 @@ using System;
 
 namespace NoZ.Physics
 {
-    public delegate bool CollisionEnterDelegate ( );
+    public delegate bool CollisionEnterDelegate (Collision collission);
 
     public interface IBody : IDisposable
     {
         CollisionEnterDelegate OnCollisionEnter { set; }
-
+        
         PhysicsLayer Layers { set; }
 
         PhysicsLayer CollidesWithLayers { set; }
@@ -43,5 +43,7 @@ namespace NoZ.Physics
         Vector2 LinearVelocity { get; set; }
 
         Vector2 Position { get; set; }
+
+        Object UserData { get; set; }
     }
 }
