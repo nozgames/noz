@@ -88,6 +88,38 @@ namespace NoZ
         }
 
         /// <summary>
+        /// Load a named asseet
+        /// </summary>
+        /// <typeparam name="T">Type of asset expected</typeparam>
+        /// <param name="name">Name of asset</param>
+        public static T Load<T>(string name) where T : Resource
+        {
+            // Cached?
+            if(_cache.TryGetValue(name, out var cached))
+            {
+                var result = cached as T;
+                if(null == result)
+                    throw new InvalidOperationException($"{name}: type mismatch '{typeof(T).FullName}' / '{result.GetType().FullName}'");
+
+                return result;
+            }
+
+            // Open a stream to the input file.
+            using (var stream = OpenRead(name, null))
+            using (var reader = new BinaryReader(stream))
+            {
+                var typeName = reader.ReadString();
+                if (typeof(T).FullName != typeName)
+                    throw new InvalidOperationException($"{name}: type mismatch '{typeof(T).FullName}' / '{typeName}'");
+
+                var resource = CreateResource(name, typeName, reader);
+                _cache.Add(name, resource);
+
+                return resource as T;
+            }
+        }
+
+        /// <summary>
         /// Load assets from static fields in the given type
         /// </summary>
         /// <param name="type"></param>

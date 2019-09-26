@@ -23,7 +23,8 @@
 */
 
 using System;
-
+using System.Collections.Generic;
+using System.IO;
 using NoZ.Graphics;
 
 namespace NoZ
@@ -36,10 +37,38 @@ namespace NoZ
         SlicedNoFill
     }
 
+    public class SpriteAnimation : Resource
+    {
+        public List<Image> Frames { get; private set; } = new List<Image>();
+        public int FramesPerSecond = 30;
+        public bool Looping { get; set; } = true;
+
+        public SpriteAnimation(string name) : base (name)
+        {
+        }
+
+        public static SpriteAnimation Create(string name, BinaryReader reader)
+        {
+            var anim = new SpriteAnimation(name);
+            anim.FramesPerSecond = reader.ReadInt32();
+            anim.Looping = reader.ReadBoolean();
+            var frameCount = reader.ReadInt32();
+            anim.Frames.Capacity = frameCount;
+            for (int i = 0; i < frameCount; i++)
+                anim.Frames.Add(ResourceDatabase.Load<Image>(reader.ReadString()));
+
+            return anim;
+        }
+    }
+
     public class Sprite : Node, IDrawable
     {
         private Vertex[] _vertexBuffer;
         private short[] _indexBuffer;
+        private SpriteAnimation _animation;
+        private int _animationFrame = -1;
+        private float _animationTime;
+        private Image _image;
 
         /// <summary>
         /// True if the vertex buffer and index buffer need to be updated.
@@ -51,6 +80,11 @@ namespace NoZ
         public SpriteDrawMode DrawMode { get; set; } = SpriteDrawMode.Auto;
 
         public int SortOrder { get; set; }
+
+        /// <summary>
+        /// True if the sprite has an active SpriteAnimation
+        /// </summary>
+        public bool IsAnimating => _animationFrame >= 0;
 
         int IDrawable.SortOrder => SortOrder;
 
@@ -76,7 +110,45 @@ namespace NoZ
         /// Image used to render the rectangle.  If no image is given a solid color rectangle 
         /// will be rendered instead by using a solid white texture.
         /// </summary>
-        public Image Image { get; set; }
+        public Image Image {
+            get => _image;
+            set {
+                if (_image == value)
+                    return;
+
+                Animation = null;
+                _image = value;
+                InvalidateRect();
+            }
+        }
+
+        /// <summary>
+        /// Current animation playing on the sprite
+        /// </summary>
+        public SpriteAnimation Animation {
+            get => _animation;
+            set {
+                var hadAnimation = _animation != null;
+
+                _animation = value;
+                _animationFrame = 0;
+                _animationTime = 0;
+
+                var hasAnimation = _animation != null;
+                if(hasAnimation)
+                {
+                    _image = _animation.Frames[0];
+                }
+
+                if(hasAnimation && !hadAnimation && Scene != null)
+                    Scene.Subscribe(Scene.UpdateEvent, OnAnimationUpdate);
+                else if (!hasAnimation && hadAnimation && Scene != null)
+                {
+                    Scene.Unsubscribe(Scene.UpdateEvent, this);
+                    _animationFrame = -1;
+                }                    
+            }
+        }
 
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
 
@@ -87,20 +159,20 @@ namespace NoZ
 
         public Sprite (Image image)
         {
-            Image = image;
+            _image = image;
             Size = Image.Size.ToVector2();
         }
 
         public Sprite (Image image, Color color)
         {
-            Image = image;
+            _image = image;
             Color = color;
             Size = Image.Size.ToVector2();
         }
 
         public Sprite (Image image, Color color, SpriteDrawMode drawMode)
         {
-            Image = image;
+            _image = image;
             Color = color;
             DrawMode = drawMode;
             Size = Image.Size.ToVector2();
@@ -351,6 +423,48 @@ namespace NoZ
         {
             base.OnRectChanged(old);
             _meshInvalid = true;
+        }
+
+        protected override void OnEnterScene(Scene scene)
+        {
+            base.OnEnterScene(scene);
+
+            if (_animation != null && _animationFrame >= 0)
+                Scene.Subscribe(Scene.UpdateEvent, OnAnimationUpdate);
+        }
+
+        protected override void OnLeaveScene(Scene leaving)
+        {
+            base.OnLeaveScene(leaving);
+
+            // If animating then we need to unsubscribe
+            if (IsAnimating)
+                Scene.Unsubscribe(Scene.UpdateEvent, this);
+        }
+
+        private void OnAnimationUpdate ()
+        {
+            _animationTime += Time.DeltaTime;
+            var timePerFrame = 1.0f / _animation.FramesPerSecond;
+            var frameAdvance = (int)(_animationTime / timePerFrame);
+            if (frameAdvance == 0)
+                return;
+
+            _animationTime -= frameAdvance * timePerFrame;
+            _animationFrame += frameAdvance;
+            if(_animation.Looping)
+            {
+                _animationFrame = (_animationFrame % _animation.Frames.Count);
+            }
+            else if (_animationFrame >= _animation.Frames.Count)
+            {
+                _animationFrame = -1;
+                _image = _animation.Frames[_animation.Frames.Count - 1];
+                Scene.Unsubscribe(Scene.UpdateEvent, this);
+                return;
+            }
+
+            _image = _animation.Frames[_animationFrame];
         }
     }
 }
