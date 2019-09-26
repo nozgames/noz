@@ -102,16 +102,16 @@ namespace NoZ
         /// Unsubscribe from all handlers matching the given target.
         /// </summary>
         /// <param name="target"></param>
-        public void Unsubscribe(Object target)
+        public void UnsubscribeAll(Object target)
         {
             for (var i = _handlers.Count - 1; i >= 0; i--)
-                if (_handlers[i]._target != null)
+                if (_handlers[i]._target != null && _handlers[i]._event.Id == Id)
                     if (!_handlers[i]._target.TryGetTarget(out var handlerTarget) || ReferenceEquals(handlerTarget, target))
                         RemoveHandler(i);
         }
 
         /// <summary>
-        /// Unsubscribe all overservers of events on the given source object
+        /// Unsubscribe all observers of events on the given source object
         /// </summary>
         /// <param name="source"></param>
         public static void UnsubscribeAllObservers(Object source)

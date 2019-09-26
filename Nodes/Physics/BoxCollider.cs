@@ -22,51 +22,37 @@
   SOFTWARE.
 */
 
-using System;
-
 namespace NoZ.Physics
 {
-    public class World : Object, IDisposable
+    public class BoxCollider : Collider
     {
-        public static readonly Event<float> UpdateEvent = new Event<float>();
-        
-        private IWorld _world;
-        private float _accumulatedTime;
+        private Vector2 _size;
 
-        public PhysicsLayer DebugVisualizationLayers { get; set; } 
+        public Vector2 Size {
+            get => _size;
+            set {
+                if (_size == value)
+                    return;
 
-        public World ()
-        {
-            _world = Window.Physics.CreateWorld();
-        }
-
-        public IBody CreateRigidBody() => _world.CreateRigidBody();
-        public IBody CreateKinematicBody() => _world.CreateKinematicBody();
-        public IBody CreateStaticBody() => _world.CreateStaticBody();
-
-        private const float FixedTime = 1.0f / 60.0f;
-
-        public void Step(float deltaTime)
-        {
-            _accumulatedTime += deltaTime;
-            while(_accumulatedTime > FixedTime)
-            {
-                UpdateEvent.Broadcast(this, FixedTime);
-                _world.Step(FixedTime);
-                _accumulatedTime -= FixedTime;
+                _size = value;                
             }
-
         }
 
-        public void DrawDebug(GraphicsContext gc)
+        public BoxCollider()
         {
-            if(DebugVisualizationLayers != PhysicsLayer.None)
-                _world.DrawDebug(gc, DebugVisualizationLayers);
         }
 
-        public virtual void Dispose()
+        public BoxCollider (Vector2 size)
         {
+            Size = size;
+        }
+
+        protected override ICollider CreateCollider (IBody body)
+        {
+            if (Size == Vector2.Zero)
+                return null;
+
+            return body.AddBoxCollider(Vector2.Zero, Size);
         }
     }
 }
-

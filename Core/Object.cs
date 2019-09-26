@@ -33,10 +33,10 @@ namespace NoZ
         public void Subscribe<Arg1, Arg2>(Event<Arg1, Arg2> e, Event<Arg1, Arg2>.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
         public void Subscribe<Arg1, Arg2, Arg3>(Event<Arg1, Arg2, Arg3> e, Event<Arg1, Arg2, Arg3>.EventDelegate d, bool oneShot = false) => e.Subscribe(d, oneShot);
 
-        public void Unsubscribe(Event e, Object target) => e.Unsubscribe(target);
-        public void Unsubscribe<Arg1>(Event<Arg1> e, Object target) => e.Unsubscribe(target);
-        public void Unsubscribe<Arg1,Arg2>(Event<Arg1, Arg2> e, Object target) => e.Unsubscribe(target);
-        public void Unsubscribe<Arg1, Arg2, Arg3>(Event<Arg1, Arg2, Arg3> e, Object target) => e.Unsubscribe(target);
+        public void Unsubscribe(Event e, Object target) => e.UnsubscribeAll(target);
+        public void Unsubscribe<Arg1>(Event<Arg1> e, Object target) => e.UnsubscribeAll(target);
+        public void Unsubscribe<Arg1,Arg2>(Event<Arg1, Arg2> e, Object target) => e.UnsubscribeAll(target);
+        public void Unsubscribe<Arg1, Arg2, Arg3>(Event<Arg1, Arg2, Arg3> e, Object target) => e.UnsubscribeAll(target);
 
         public void UnsubscribeAll() => EventBase.UnsubscribeAllObservers(this);
 

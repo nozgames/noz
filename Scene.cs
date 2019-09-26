@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
   NoZ Game Engine
 
   Copyright(c) 2019 NoZ Games, LLC
@@ -36,6 +35,19 @@ namespace NoZ
         private Vector2Int _size;
         private Camera _camera;
         private Matrix3 _windowToScene;
+        private Physics.World _world;
+
+        /// <summary>
+        /// Physics world associated with the scene
+        /// </summary>
+        public Physics.World World {
+            get {
+                if (_world == null)
+                    _world = new Physics.World();
+
+                return _world;
+            }
+        }
 
         public View View { get; internal set; }
 
@@ -99,6 +111,8 @@ namespace NoZ
             _drawList.Draw(gc);
             _drawList.Clear();
 
+            _world.DrawDebug(gc);
+
             gc.PopMatrix();
         }
 
@@ -117,6 +131,8 @@ namespace NoZ
             OnUpdate();
 
             Broadcast(UpdateEvent);
+
+            World?.Step(Time.FixedDeltaTime);
         }
 
         protected virtual void OnUpdate() { }

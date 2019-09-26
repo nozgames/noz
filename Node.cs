@@ -318,7 +318,17 @@ namespace NoZ
             else if (Scene != node._scene)
                 node.PropegateScene(Scene);
 
-            OnParentChanged();
+            node.OnParentChanged();
+
+            void NotifyAnscestorChanged(Node notify)
+            {
+                notify.OnAnscestorChanged();
+                if (notify._children != null)
+                    foreach (var child in notify._children)
+                        child.OnAnscestorChanged();
+            }
+
+            NotifyAnscestorChanged(node);
         }
 
         public void RemoveFromParent()
@@ -353,11 +363,12 @@ namespace NoZ
 
             var old = _scene;
             _scene = scene;
+
+            OnSceneChanged(old);
+
             if(_children != null)
                 foreach (var child in _children)
                     child.PropegateScene(scene);
-
-            OnSceneChanged(_scene);
         }
 
         /// <summary>
@@ -560,6 +571,8 @@ namespace NoZ
 
         protected virtual void OnParentChanged() { }
 
+        protected virtual void OnAnscestorChanged () { }
+
         protected virtual void OnSceneChanged(Scene oldScene) { }
 
         protected virtual void OnDestroy ()
@@ -576,6 +589,8 @@ namespace NoZ
         {
             if (IsDestroyed)
                 return;
+
+            UnsubscribeAll();
 
             // Flag the node as destroyed and add to the destroy list
             SetFlags(Flags.Destroyed);
@@ -597,7 +612,7 @@ namespace NoZ
                 node.RemoveFromParent();
 
                 // Destroy ourself
-            node.OnDestroy();
+                node.OnDestroy();
 
                 // Automatically remove any observers of the node since we know it is no longer
                 // going to be sending events.

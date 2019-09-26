@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 
 using NoZ.Graphics;
+using NoZ.Physics;
 
 namespace NoZ
 {
@@ -58,6 +59,7 @@ namespace NoZ
 
         public static IGraphicsDriver Graphics { get; private set; }
         public static IAudioDriver Audio { get; private set; }
+        public static IPhysicsDriver Physics { get; private set; }
 
         public static View[] Views => Instance._views;
 
@@ -72,12 +74,18 @@ namespace NoZ
             _views = new View[] { };
         }
 
-        public static T Create<T>(WindowDelegate windowDelegate, IGraphicsDriver graphics, IAudioDriver audio) where T : Window
+        public static T Create<T>(
+            WindowDelegate windowDelegate,
+            IGraphicsDriver graphics,
+            IAudioDriver audio,
+            IPhysicsDriver physics
+            ) where T : Window
         {
             var window = Activator.CreateInstance<T>();
             window._windowDelegate = windowDelegate;
             Graphics = graphics;
             Audio = audio;
+            Physics = physics;
             Instance = window;
             Input.Initialize(window);
             Animation.Initialize();

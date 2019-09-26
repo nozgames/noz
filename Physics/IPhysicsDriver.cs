@@ -6,6 +6,7 @@ namespace NoZ.Physics
 {
     public interface IPhysicsDriver
     {
+        IWorld CreateWorld();
     }
 }
 
