@@ -22,9 +22,36 @@
   SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Text;
+
 namespace NoZ.UI
 {
-    public class Button : UINode
+    public enum ClickMode
     {
+        /// <summary>
+        /// Issue a Click on mouse down
+        /// </summary>
+        Press,
+
+        /// <summary>
+        /// Issue a click on mouse up
+        /// </summary>
+		Release
+    };
+
+    public class BaseButton : UINode
+    {
+        public static readonly Event<BaseButton> PressedEvent = new Event<BaseButton>();
+        public static readonly Event<BaseButton> ReleaseEvent = new Event<BaseButton>();
+        public static readonly Event<BaseButton> ClickedEvent = new Event<BaseButton>();
+
+        public BaseButton()
+        {
+            IsInteractive = true;
+        }
+
+        public ClickMode ClickMode { get; set; } = ClickMode.Release;
     }
 }

@@ -163,6 +163,68 @@ namespace NoZ
             World?.Step();
         }
 
+
+        /// <summary>
+        /// Returns the top most interactive node at the given position within the scene
+        /// </summary>
+        /// <param name="position">Position to test at</param>
+        /// <param name="type">Optional filter of node type</param>
+        /// <returns>Top most node under the given mouse position</returns>
+        private static Node GetNodeAtPointInternal(Node root, in Vector2 position, Type type = null)
+        {
+            var result = root.HitTest(position);
+            if (result == HitTestResult.Ignore)
+                return null;
+
+            for (int i = root.ChildCount - 1; i >= 0; i--)
+            {
+                Node hit = GetNodeAtPointInternal(root.GetChildAt(i), position, type);
+                if (null != hit)
+                    return hit;
+            }
+
+            if (result == HitTestResult.Hit)
+            {
+                if (type != null)
+                    while (root != null && !(type.IsAssignableFrom(root.GetType())))
+                        root = root.Parent;
+
+                return root;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the top most interactive node at the given position within the scene
+        /// </summary>
+        /// <param name="position">Position to test at</param>
+        /// <param name="type">Optional filter of node type</param>
+        /// <returns>Top most node under the given mouse position</returns>
+        public Node GetNodeAtPoint(Node root, in Vector2 position, Type type = null)
+        {
+            if (root == null)
+            {
+                for (int i = ChildCount - 1; i >= 0; i--)
+                {
+                    var hit = GetNodeAtPointInternal(GetChildAt(i), position, type);
+                    if (null != hit)
+                        return hit;
+                }
+
+                return null;
+            }
+            else if (root.Scene != this)
+                return null;
+
+            return GetNodeAtPointInternal(root, position, type);
+        }
+
+        public T GetNodeAtPoint<T>(Node root, in Vector2 worldPosition) where T : Node
+        {
+            return GetNodeAtPoint(root, worldPosition, typeof(T)) as T;
+        }
+
         protected virtual void OnUpdate() { }
         protected virtual void OnPause() { }
         protected virtual void OnResume() { }

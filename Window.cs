@@ -67,9 +67,18 @@ namespace NoZ
 
         public abstract Vector2Int Size { get; }
 
+        public int ViewCount => _views.Count;
+
         public Window ()
         {
         }
+
+        /// <summary>
+        /// Return the view at the given index
+        /// </summary>
+        /// <param name="index">Index of view</param>
+        /// <returns>View</returns>
+        public View GetViewAt(int index) => _views[index];
 
         public static T Create<T>(
             WindowDelegate windowDelegate,
@@ -102,7 +111,10 @@ namespace NoZ
 
             _windowDelegate?.OnBeginFrame(_gc);
 
-            Input.BroadcastEvents();
+            // Update the mouse overs for all nodes in the scenes container.            
+            Input.BeginFrame();
+
+            // TODO: generate input events for all interactive nodes
 
             foreach (var view in _views)
                 view.Update();
@@ -139,6 +151,69 @@ namespace NoZ
 
             _views.Remove(view);
             view.IsVisible = false;
+        }
+
+        private void GenerateEvents()
+        {
+            // TODO: Determine which node the mouse is over
+
+#if false
+            // Mouse over
+            GenerateMouseOverEvent();
+
+            // Mouse buttons ?
+            GenerateMouseButtonEvent(MouseButton.Left);
+            GenerateMouseButtonEvent(MouseButton.Right);
+            GenerateMouseButtonEvent(MouseButton.Middle);
+
+            // Mouse wheel
+            GenerateMouseWheelEvent();
+
+            // Keyboard envents
+            GenerateKeyboardEvents();
+#endif
+        }
+
+        private void GenerateMouseButtonEvent(MouseButton button)
+        {
+            if (Input.WasButtonPressed(button))
+                GenerateMouseButtonEvent(button, true);
+
+            if (Input.WasButtonReleased(button))
+                GenerateMouseButtonEvent(button, false);
+        }
+
+        private void GenerateMouseButtonEvent(MouseButton button, bool down)
+        {
+#if false
+            _mouseButtonEvent.Reset();
+            _mouseButtonEvent.Button = button;
+            _mouseButtonEvent.IsDown = down;
+            _mouseButtonEvent.Position = Input.MousePosition;
+
+            if (Node.GetCapture() != null)
+            {
+                if (down)
+                    Node.GetCapture().OnMouseDown(_mouseButtonEvent);
+                else
+                    Node.GetCapture().OnMouseUp(_mouseButtonEvent);
+            }
+            else
+            {
+                for (Node node = Input.MouseOver;
+                    node != null && !_mouseButtonEvent.IsHandled;
+                    node = node.VisualParent)
+                {
+                    if (down)
+                        node.OnMouseDown(_mouseButtonEvent);
+                    else
+                        node.OnMouseUp(_mouseButtonEvent);
+                }
+            }
+
+            if (!_mouseButtonEvent.IsHandled)
+                OnMouseButton(_mouseButtonEvent);
+#endif
         }
     }
 }

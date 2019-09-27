@@ -43,6 +43,8 @@ namespace NoZ
     public class Layout : Node
     {
         public override bool DoesArrangeChildren => true;
+        public override bool DoesArrangeToParent => true;
+
         private Rect _arrangredFrame;
         private Vector2 _size;
         private Vector2 _minSize;

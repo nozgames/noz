@@ -142,6 +142,8 @@ namespace NoZ {
             return $"#{R.ToString("X2")}{G.ToString("X2")}{B.ToString("X2")}{A.ToString("X2")}";
         }
 
+        public Vector3 ToVector3() => new Vector3(R / 255.0f, G / 255.0f, B / 255.0f);
+
         public Color Scale (float value) {
             return FromRgba((byte)(R * value), (byte)(G * value), (byte)(B * value), (byte)(A * value));
         }

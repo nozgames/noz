@@ -22,6 +22,7 @@
   SOFTWARE.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace NoZ
@@ -42,6 +43,24 @@ namespace NoZ
         /// Not visible and does not occupy any space in the layout.
         /// </summary>
         Collapsed
+    }
+
+    public enum HitTestResult
+    {
+        /// <summary>
+        /// Indicates that the node was not hit 
+        /// </summary>
+        NotHit,
+
+        /// <summary>
+        /// Indicates that the node was hit
+        /// </summary>
+        Hit,
+
+        /// <summary>
+        /// Indicates that this node and all of its descendents should be ignored for hit testing.
+        /// </summary>
+        Ignore
     }
 
     public class Node : Object
@@ -79,7 +98,17 @@ namespace NoZ
             /// <summary>
             /// WorldToLocal matrix is dirty and needs to be recalculated
             /// </summary>
-            WorldToLocalDirty = (1<<5)
+            WorldToLocalDirty = (1<<5),
+
+            /// <summary>
+            /// Mouse cursor is currently over this node
+            /// </summary>
+            MouseOver = (1<<6),
+
+            /// <summary>
+            /// Node should receive input events 
+            /// </summary>
+            Interactive = (1<<7)
         }
 
         private static List<Node> _pendingDestroy = new List<Node>();
@@ -159,6 +188,11 @@ namespace NoZ
         public bool IsVisible => HasAllFlags(Flags.Visible);
 
         /// <summary>
+        /// Returns true if the mouse was over the node at the beginning of the frame
+        /// </summary>
+        public bool IsMouseOver => HasAllFlags(Flags.MouseOver);
+
+        /// <summary>
         /// Returns true if the node has been destroyed
         /// </summary>
         public bool IsDestroyed => HasAllFlags(Flags.Destroyed);
@@ -173,6 +207,21 @@ namespace NoZ
         /// the parent transform for all children will be identity.
         /// </summary>
         public virtual bool DoesTransformAffectChildren => true;
+
+        /// <summary>
+        /// True if the node arranges itself to its parent rect
+        /// </summary>
+        public virtual bool DoesArrangeToParent => false;
+
+        /// <summary>
+        /// True if the node should receive input events
+        /// </summary>
+        public bool IsInteractive {
+            get => HasAllFlags(Flags.Interactive);
+            set {
+                SetFlags(Flags.Interactive, value);
+            }
+        }
 
         /// <summary>
         /// Position of the node within its parents coordinate space
@@ -231,15 +280,15 @@ namespace NoZ
             }
         }
 
+        public Matrix3 WindowToLocal => Matrix3.Multiply((Scene?.WindowToScene) ?? Matrix3.Identity, WorldToLocal);
+
         public Rect AccumulatedFrame {
             get {
                 return new Rect();
             }
         }
 
-        public float Alpha {
-            get; set;
-        } = 1.0f;
+        public float Alpha { get; set; } = 1.0f;
 
         public Vector2 Scale {
             get => _scale;
@@ -523,9 +572,16 @@ namespace NoZ
                 _parent.InvalidateRect();
 
             // Invalidate all children if this node arranges children
-            if (_children != null && DoesArrangeChildren)
-                foreach (var child in _children)
-                    child.InvalidateRect();
+            if (_children != null)
+            {
+                if (DoesArrangeChildren)
+                    foreach (var child in _children)
+                        child.InvalidateRect();
+                else
+                    foreach (var child in _children)
+                        if (child.DoesArrangeToParent)
+                            child.InvalidateRect();
+            }
         }
 
         /// <summary>
@@ -598,6 +654,10 @@ namespace NoZ
 
         protected virtual void OnLeaveScene (Scene leaving) { }
 
+        protected virtual void OnMouseEnter() { }
+
+        protected virtual void OnMouseLeave() { }
+
         protected virtual void OnDestroy ()
         {
             DestroyEvent.Broadcast(this);
@@ -643,7 +703,68 @@ namespace NoZ
             }
         }
 
-        public Matrix3 WindowToLocal => Matrix3.Multiply((Scene?.WindowToScene) ?? Matrix3.Identity, WorldToLocal);
+        /// <summary>
+        /// Determines if the given worldPosition is is within the boundaries of the 
+        /// nodes rectangle.
+        /// </summary>
+        /// <param name="worldPosition"></param>
+        /// <returns>True if the position is within the node's bounds.</returns>
+        public virtual HitTestResult HitTest(in Vector2 worldPosition)
+        {
+            if(!IsInteractive || !IsVisible)
+                return HitTestResult.Ignore;
+
+            var position = WorldToLocal.MultiplyVector(worldPosition);
+            if (Rect.Contains(position))
+                return HitTestResult.Hit;
+
+            return HitTestResult.NotHit;
+        }
+
+        /// <summary>
+        /// Update all mouse over flags for the node and all of its descendants
+        /// and return the top most node that the mouse is over.
+        /// </summary>
+        /// <returns></returns>
+        internal static Node UpdateMouseOvers()
+        {
+            Node oldMouseOver = Input.MouseOver;
+            Node newMouseOver = null;
+            for (int i=Window.Instance.ViewCount-1; i>=0 && null == newMouseOver; i--)
+            {
+                var view = Window.Instance.GetViewAt(i);
+                var pos = view.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
+
+                newMouseOver = view.Scene.GetNodeAtPoint(null, pos);
+            }
+
+            // No change?
+            if (oldMouseOver == newMouseOver)
+                return newMouseOver;
+
+            // Turn on the mouse over flag for the new mouse over node and any parents until
+            // we run out of nodes or hit a node that already has the parent set.
+            var node = newMouseOver;
+            while (node != null && !node.IsMouseOver)
+            {
+                node.SetFlags(Flags.MouseOver);
+                node.OnMouseEnter();
+                node = node.Parent;
+            }
+
+            // Walk up the parent list of the old mouse over and clear the flag until we hit
+            // either the node common between the old and new or run out of nodes.
+            if (oldMouseOver != null && node != oldMouseOver)
+            {
+                for (; oldMouseOver != node; oldMouseOver = oldMouseOver.Parent)
+                {
+                    oldMouseOver.ClearFlags(Flags.MouseOver);
+                    oldMouseOver.OnMouseLeave();
+                }
+            }
+
+            return newMouseOver;
+        }
     }
 }
 

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Folder Include="Transitions\" />
+    <Folder Include="UI\" />
   </ItemGroup>
 
 </Project>

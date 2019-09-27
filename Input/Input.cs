@@ -159,10 +159,14 @@ namespace NoZ
             }
         }
 
-        public static Node MouseOver {
-            get; private set;
-        }
+        /// <summary>
+        /// Current top most node the mouse is over
+        /// </summary>
+        public static Node MouseOver { get; private set; }
 
+        /// <summary>
+        /// Delta mouse movement this frame
+        /// </summary>
         public static Vector2 MouseDelta { get; private set; }
 
 
@@ -355,20 +359,26 @@ namespace NoZ
         }
 
         /// <summary>
-        /// Internal method used to update the current mouse over node.
+        /// Begin an input frame
         /// </summary>
-        /// <param name="root">Root node of all nodes to check for mouse over</param>
-        internal static void UpdateMouseOver(Node root)
+        internal static void BeginFrame()
         {
-            Node oldMouseOver = MouseOver;
-            //MouseOver = root.UpdateMouseOvers();
+            // Update the mouse over node
+            var oldMouseOver = MouseOver;
+            MouseOver = Node.UpdateMouseOvers();
             if (!ReferenceEquals(oldMouseOver, MouseOver))
-            {
                 MouseOverChanged(oldMouseOver, MouseOver);
 
-                //if(MouseOver!=null) Console.WriteLine($"{MouseOver.Name} / {MouseOver.GetType()}");
+            // Broadcast key events
+            foreach (var ke in KeyEvents)
+            {
+                if (ke.IsDown)
+                    KeyDownEvent.Broadcast(ke.KeyCode);
+                else
+                    KeyUpEvent.Broadcast(ke.KeyCode);
             }
         }
+
 
         public static char KeyCodeToChar(KeyCode code, bool shift = false)
         {
@@ -535,17 +545,6 @@ namespace NoZ
             // If the touch is the touch simulating the mouse then update the mouse position
             if (touchId == _mouseTouchId)
                 MousePosition = position;
-        }
-
-        public static void BroadcastEvents()
-        {
-            foreach (var ke in KeyEvents)
-            {
-                if (ke.IsDown)
-                    KeyDownEvent.Broadcast(ke.KeyCode);
-                else
-                    KeyUpEvent.Broadcast(ke.KeyCode);
-            }
         }
     }
 }

@@ -474,8 +474,8 @@ namespace NoZ
         public static Animation Color(Color from, Color to)
         {
             var anim = AllocAnimation();
-            anim._vector0 = new Vector3(from.R, from.G, from.B);
-            anim._vector1 = new Vector3(to.R, to.G, to.B);
+            anim._vector0 = from.ToVector3();
+            anim._vector1 = to.ToVector3();
             anim._startDelegate = ColorStartDelegate;
             return anim;
         }
