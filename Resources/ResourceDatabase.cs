@@ -132,7 +132,7 @@ namespace NoZ
             // Only check for static fields
             foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
             {
-                var import = field.GetCustomAttribute<ImportAttribute>();
+                var import = field.GetCustomAttribute<ResourceAttribute>();
                 if (null == import)
                     continue;
 

@@ -29,6 +29,8 @@ namespace NoZ {
 
         AudioClip CreateClip(int samples, AudioChannelFormat channelFormat, int frequency);
 
+        float Volume { get; set; }
+
         Voice Play(AudioClip clip);
 
         bool IsPlaying(Voice voice);

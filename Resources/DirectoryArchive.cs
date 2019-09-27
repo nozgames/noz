@@ -43,7 +43,7 @@ namespace NoZ
 
         public override Stream OpenRead(string name, FieldInfo fieldInfo)
         {
-            return File.Create(Path.Combine(Directory.FullName, name));
+            return File.OpenRead(Path.Combine(Directory.FullName, name));
         }
     }
 }

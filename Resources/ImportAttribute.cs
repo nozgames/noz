@@ -30,11 +30,11 @@ namespace NoZ
     /// Binds a resource to a field
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
-    public class ImportAttribute : Attribute
+    public class ResourceAttribute : Attribute
     {
         public string Name { get; private set; }
 
-        public ImportAttribute(string name)
+        public ResourceAttribute(string name)
         {
             Name = name;
         }
