@@ -27,6 +27,7 @@ using System.Collections.Generic;
 
 using NoZ.Graphics;
 using NoZ.Physics;
+using NoZ.UI;
 
 namespace NoZ
 {
@@ -50,6 +51,11 @@ namespace NoZ
         public static readonly Event<Vector2> MouseMoveEvent = new Event<Vector2>();
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
+
+        private MouseOverEvent _mouseOverEvent = new MouseOverEvent();
+        private MouseButtonEvent _mouseButtonEvent = new MouseButtonEvent();
+        private MouseWheelEvent _mouseWheelEvent = new MouseWheelEvent();
+        private KeyboardEvent _keyboardEvent = new KeyboardEvent();
 
         private List<View> _views = new List<View>();
 
@@ -114,7 +120,7 @@ namespace NoZ
             // Update the mouse overs for all nodes in the scenes container.            
             Input.BeginFrame();
 
-            // TODO: generate input events for all interactive nodes
+            GenerateEvents();
 
             foreach (var view in _views)
                 view.Update();
@@ -160,12 +166,14 @@ namespace NoZ
 #if false
             // Mouse over
             GenerateMouseOverEvent();
+#endif
 
             // Mouse buttons ?
             GenerateMouseButtonEvent(MouseButton.Left);
             GenerateMouseButtonEvent(MouseButton.Right);
             GenerateMouseButtonEvent(MouseButton.Middle);
 
+#if false
             // Mouse wheel
             GenerateMouseWheelEvent();
 
@@ -185,24 +193,23 @@ namespace NoZ
 
         private void GenerateMouseButtonEvent(MouseButton button, bool down)
         {
-#if false
             _mouseButtonEvent.Reset();
             _mouseButtonEvent.Button = button;
             _mouseButtonEvent.IsDown = down;
             _mouseButtonEvent.Position = Input.MousePosition;
 
-            if (Node.GetCapture() != null)
+            if (Control.GetCapture() != null)
             {
                 if (down)
-                    Node.GetCapture().OnMouseDown(_mouseButtonEvent);
+                    Control.GetCapture().OnMouseDown(_mouseButtonEvent);
                 else
-                    Node.GetCapture().OnMouseUp(_mouseButtonEvent);
+                    Control.GetCapture().OnMouseUp(_mouseButtonEvent);
             }
             else
             {
-                for (Node node = Input.MouseOver;
+                for (var node = Input.MouseOver;
                     node != null && !_mouseButtonEvent.IsHandled;
-                    node = node.VisualParent)
+                    node = node.Parent)
                 {
                     if (down)
                         node.OnMouseDown(_mouseButtonEvent);
@@ -210,10 +217,6 @@ namespace NoZ
                         node.OnMouseUp(_mouseButtonEvent);
                 }
             }
-
-            if (!_mouseButtonEvent.IsHandled)
-                OnMouseButton(_mouseButtonEvent);
-#endif
         }
     }
 }

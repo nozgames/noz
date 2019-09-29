@@ -367,7 +367,10 @@ namespace NoZ
             var oldMouseOver = MouseOver;
             MouseOver = Node.UpdateMouseOvers();
             if (!ReferenceEquals(oldMouseOver, MouseOver))
+            {
                 MouseOverChanged(oldMouseOver, MouseOver);
+                //Console.WriteLine($"{MouseOver?.GetType().Name ?? "null"}");
+            }
 
             // Broadcast key events
             foreach (var ke in KeyEvents)

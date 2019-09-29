@@ -601,9 +601,9 @@ namespace NoZ
             var oldRect = _rect;
             _rect = CalculateRect();
             //if (_frame == oldFrame)
-              //  return;
+            //  return;
 
-            OnRectChanged(oldRect);
+            OnRectChanged(_rect);
 
             // Let all of our children know our frame changed too
             if (_children != null)
@@ -638,9 +638,9 @@ namespace NoZ
                 Parent.InvalidateRect();
         }
 
-        protected virtual void OnRectChanged(in Rect frame) { }
+        protected virtual void OnRectChanged(in Rect rect) { }
 
-        protected virtual void OnParentRectChanged(Rect frame) { }
+        protected virtual void OnParentRectChanged(in Rect rect) { }
 
         protected virtual void OnVisibleChanged(bool visible) { }
 
@@ -657,6 +657,10 @@ namespace NoZ
         protected virtual void OnMouseEnter() { }
 
         protected virtual void OnMouseLeave() { }
+
+        protected internal virtual void OnMouseDown(MouseButtonEvent e) { }
+
+        protected internal virtual void OnMouseUp(MouseButtonEvent e) { }
 
         protected virtual void OnDestroy ()
         {
@@ -711,12 +715,15 @@ namespace NoZ
         /// <returns>True if the position is within the node's bounds.</returns>
         public virtual HitTestResult HitTest(in Vector2 worldPosition)
         {
-            if(!IsInteractive || !IsVisible)
+            if(!IsVisible)
                 return HitTestResult.Ignore;
 
-            var position = WorldToLocal.MultiplyVector(worldPosition);
-            if (Rect.Contains(position))
-                return HitTestResult.Hit;
+            if (IsInteractive)
+            {
+                var position = WorldToLocal.MultiplyVector(worldPosition);
+                if (Rect.Contains(position))
+                    return HitTestResult.Hit;
+            }
 
             return HitTestResult.NotHit;
         }
@@ -736,6 +743,10 @@ namespace NoZ
                 var pos = view.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
 
                 newMouseOver = view.Scene.GetNodeAtPoint(null, pos);
+
+                // If a scene is marked interactive then it blocks all input below it
+                if (newMouseOver == null && view.Scene.IsInteractive)
+                    newMouseOver = view.Scene;
             }
 
             // No change?

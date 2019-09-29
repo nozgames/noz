@@ -150,6 +150,8 @@ namespace NoZ
             }
         }
 
+        public float AnimationSpeed { get; set; } = 1.0f;
+
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
 
 
@@ -444,7 +446,7 @@ namespace NoZ
 
         private void OnAnimationUpdate ()
         {
-            _animationTime += Time.DeltaTime;
+            _animationTime += (Time.DeltaTime * AnimationSpeed);
             var timePerFrame = 1.0f / _animation.FramesPerSecond;
             var frameAdvance = (int)(_animationTime / timePerFrame);
             if (frameAdvance == 0)
@@ -455,6 +457,8 @@ namespace NoZ
             if(_animation.Looping)
             {
                 _animationFrame = (_animationFrame % _animation.Frames.Count);
+                if (_animationFrame < 0)
+                    _animationFrame = _animation.Frames.Count + _animationFrame;
             }
             else if (_animationFrame >= _animation.Frames.Count)
             {

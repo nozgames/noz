@@ -30,6 +30,8 @@ namespace NoZ
 {
     public class View : ILayer
     {
+        private bool _visible;
+
         public Scene Scene { get; private set; }
 
         public Rect Rect { get; private set; }
@@ -42,7 +44,23 @@ namespace NoZ
 
         public int SortOrder => 0;
 
-        public bool IsVisible { get; internal set; }
+        public bool IsVisible {
+            get => _visible;
+            set {
+                if (_visible == value)
+                    return;
+
+                _visible = value;
+                if (_visible && Scene != null)
+                {
+                    UpdateScene();
+                    Scene.InvalidateRect();
+                    Scene.InvalidateTransform();
+                    Scene.UpdateRect();
+                    Scene.UpdateTransform();
+                }
+            }
+        }
 
         public void PresentScene (Scene scene, Transition transition = null)
         {
@@ -67,7 +85,8 @@ namespace NoZ
 
         public void Draw (GraphicsContext gc)
         {
-            var rect= Scene.Rect;
+            Scene.UpdateRect();
+            Scene.UpdateTransform();
             Scene.Present(gc);
         }
 
