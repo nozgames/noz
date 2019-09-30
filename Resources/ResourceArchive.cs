@@ -56,7 +56,7 @@ namespace NoZ
             Mode = mode;
         }
 
-        public abstract Stream OpenRead(string name, FieldInfo fieldInfo);
+        public abstract Stream OpenRead(string name);
 
         public virtual void Dispose() { }
     }

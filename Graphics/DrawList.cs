@@ -24,7 +24,7 @@
 
 using System.Collections.Generic;
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     /// <summary>
     /// List of all nodes that will be drawn sorted by their layer and sort order.  The draw list has a 

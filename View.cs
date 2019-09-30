@@ -24,8 +24,6 @@
 
 using System;
 
-using NoZ.Graphics;
-
 namespace NoZ
 {
     public class View : ILayer
@@ -67,7 +65,7 @@ namespace NoZ
             // TODO: transition
             Scene = scene;
 
-            Size = Window.Instance.Size;
+            Size = Window.Size;
             Scene.IsPaused = false;
         
             UpdateScene();
@@ -78,7 +76,7 @@ namespace NoZ
             if (null == Scene)
                 return;
 
-            Size = Window.Instance.Size;
+            Size = Window.Size;
             UpdateScene();
             Scene.Update();
         }

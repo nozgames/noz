@@ -22,22 +22,34 @@
   SOFTWARE.
 */
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     public interface IGraphicsDriver
     {
+        /// <summary>
+        /// Create a new graphics context
+        /// </summary>
+        /// <returns></returns>
         GraphicsContext CreateContext();
 
         /// <summary>
-        /// Called to bind the graphics driver to a window
+        /// Create a new image
         /// </summary>
-        /// <param name="window"></param>
-        void Bind(Window window);
-
+        /// <param name="name">Name of the image</param>
+        /// <param name="width">Width of the image</param>
+        /// <param name="height">Height of the image</param>
+        /// <param name="format">Format of the image</param>
+        /// <returns>Image</returns>
         Image CreateImage(string name, int width, int height, PixelFormat format);
 
+        /// <summary>
+        /// Start a new frame
+        /// </summary>
         void BeginFrame();
 
+        /// <summary>
+        /// End the current frame
+        /// </summary>
         void EndFrame();
     }
 }

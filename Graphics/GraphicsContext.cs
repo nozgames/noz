@@ -25,17 +25,18 @@
 using System;
 using System.Collections.Generic;
 
-using NoZ.Graphics;
-
-namespace NoZ {
-    public enum PrimitiveType {
+namespace NoZ
+{
+    public enum PrimitiveType
+    {
         TriangleList,
         TriangleStrip,
         LineList,
         LineStrip
     }
 
-    public enum MaskMode {
+    public enum MaskMode
+    {
         /// <summary>
         /// Indicates that masks should be ignored.
         /// </summary>
@@ -57,8 +58,10 @@ namespace NoZ {
         Outside
     }
 
-    public abstract class GraphicsContext {
-        public struct State {
+    public abstract class GraphicsContext
+    {
+        public struct State
+        {
             public int maskCount;
             public Color color;
             public float alpha;
@@ -67,19 +70,22 @@ namespace NoZ {
         private Stack<State> _state;
         private Stack<Matrix3> _worldToScreen;
 
-        public static GraphicsContext Create() => Window.Graphics.CreateContext();
+        public static GraphicsContext Create() => Graphics.Driver.CreateContext();
 
-        protected GraphicsContext() {
+        protected GraphicsContext()
+        {
             _state = new Stack<State>(4);
             _worldToScreen = new Stack<Matrix3>(4);
             _worldToScreen.Push(Matrix3.Identity);
         }
 
-        public virtual void Begin(Vector2Int size, Color backgroundColor) {
+        public virtual void Begin(Vector2Int size, Color backgroundColor)
+        {
             _state.Clear();
         }
 
-        public virtual void End() {
+        public virtual void End()
+        {
         }
 
         private State CurrentState {
@@ -88,21 +94,28 @@ namespace NoZ {
             }
         }
 
-        public void PushState() {
-            if (_state.Count > 0) {
-                _state.Push(new State() {
+        public void PushState()
+        {
+            if (_state.Count > 0)
+            {
+                _state.Push(new State()
+                {
                     color = CurrentState.color,
                     alpha = CurrentState.alpha
                 });
-            } else {
-                _state.Push(new State() {
+            }
+            else
+            {
+                _state.Push(new State()
+                {
                     color = Color.White,
                     alpha = 1f
                 });
             }
         }
 
-        public void PopState() {
+        public void PopState()
+        {
             State state = CurrentState;
 
             // Pop any outstanding masks
@@ -138,11 +151,13 @@ namespace NoZ {
 
         public abstract void Draw(Quad[] quad, int count);
 
-        public void PushMatrix (in Matrix3 worldToScreen) {
+        public void PushMatrix(in Matrix3 worldToScreen)
+        {
             _worldToScreen.Push(worldToScreen);
         }
 
-        public void PopMatrix () {
+        public void PopMatrix()
+        {
             if (_worldToScreen.Count > 1)
                 _worldToScreen.Pop();
         }

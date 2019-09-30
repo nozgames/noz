@@ -79,7 +79,7 @@ namespace NoZ
         {
             foreach (var archive in _archives)
             {
-                var stream = archive.OpenRead(name, info);
+                var stream = archive.OpenRead(name + ".resource");
                 if (null != stream)
                     return stream;
             }
@@ -112,6 +112,7 @@ namespace NoZ
                 if (typeof(T).FullName != typeName)
                     throw new InvalidOperationException($"{name}: type mismatch '{typeof(T).FullName}' / '{typeName}'");
 
+                var version = reader.ReadInt32();
                 var resource = CreateResource(name, typeName, reader);
                 _cache.Add(name, resource);
 
@@ -147,6 +148,7 @@ namespace NoZ
                     if (field.FieldType.FullName!= typeName)
                         throw new InvalidOperationException($"{field.Name}: type mismatch '{field.FieldType.FullName}' / '{typeName}'");
 
+                    var version = reader.ReadInt32();
                     var resource = CreateResource(import.Name, typeName, reader);
                     _cache.Add(import.Name, resource);
                     field.SetValue(null, resource);

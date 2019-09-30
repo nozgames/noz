@@ -77,7 +77,7 @@ namespace NoZ
         /// </summary>
         public static float TotalTime { get; private set; }
 
-        internal static void Frame()
+        internal static void Step()
         {
             var temp = _stopwatch.ElapsedMilliseconds;
             var delta = temp - _elapsed;

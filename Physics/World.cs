@@ -37,7 +37,7 @@ namespace NoZ.Physics
 
         public World ()
         {
-            _world = Window.Physics.CreateWorld();
+            _world = Physics.CreateWorld();
         }
 
         public IBody CreateRigidBody() => _world.CreateRigidBody();
@@ -63,8 +63,9 @@ namespace NoZ.Physics
                 _world.DrawDebug(gc, DebugVisualizationLayers);
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
         }
     }
 }

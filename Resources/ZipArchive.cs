@@ -62,7 +62,7 @@ namespace NoZ
             }
         }
 
-        public override Stream OpenRead(string name, FieldInfo info)
+        public override Stream OpenRead(string name)
         {
             var entry = _archive.GetEntry(name);
             if (null == entry)

@@ -25,26 +25,22 @@
 using System;
 using System.Collections.Generic;
 
-using NoZ.Graphics;
-using NoZ.Physics;
 using NoZ.UI;
 
 namespace NoZ
 {
-    public class WindowDelegate : Object
+    public interface IWindowDriver
     {
-        public virtual void OnCreated() { }
+        Vector2Int Size { get; }
 
-        public virtual void OnBecomeActive() { }
+        void Show();
 
-        public virtual void OnResignActive() { }
+        void DrawBegin();
 
-        public virtual void OnBeginFrame(GraphicsContext context) { }
-
-        public virtual void OnEndFrame(GraphicsContext context) { }
+        void DrawEnd();
     }
 
-    public abstract class Window
+    public static class Window
     {
         public static readonly Event<MouseButton> MouseButtonDownEvent = new Event<MouseButton>();
         public static readonly Event<MouseButton> MouseButtonUpEvent = new Event<MouseButton>();
@@ -52,96 +48,74 @@ namespace NoZ
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
 
-        private MouseOverEvent _mouseOverEvent = new MouseOverEvent();
-        private MouseButtonEvent _mouseButtonEvent = new MouseButtonEvent();
-        private MouseWheelEvent _mouseWheelEvent = new MouseWheelEvent();
-        private KeyboardEvent _keyboardEvent = new KeyboardEvent();
+        private static List<View> _views = new List<View>();
 
-        private List<View> _views = new List<View>();
+        private static GraphicsContext _gc;
 
-        public abstract IntPtr GetNativeHandle();
+        private static IWindowDriver _driver;
 
-        public static Window Instance { get; private set; }
-
-        public static IGraphicsDriver Graphics { get; private set; }
-        public static IAudioDriver Audio { get; private set; }
-        public static IPhysicsDriver Physics { get; private set; }
-
-        public WindowDelegate _windowDelegate;
-
-        private GraphicsContext _gc;
-
-        public abstract Vector2Int Size { get; }
-
-        public int ViewCount => _views.Count;
-
-        public Window ()
-        {
+        public static IWindowDriver Driver {
+            get => _driver;
+            set {
+                _driver = value;
+                _gc = GraphicsContext.Create();
+            }
         }
+
+        /// <summary>
+        /// Size of the window in pixels
+        /// </summary>
+        public static Vector2Int Size => Driver.Size;
+
+        /// <summary>
+        /// Background color of window
+        /// </summary>
+        public static Color BackgroundColor = Color.Transparent;
+
+        /// <summary>
+        /// Number of views in the view stack
+        /// </summary>
+        public static int ViewCount => _views.Count;
 
         /// <summary>
         /// Return the view at the given index
         /// </summary>
         /// <param name="index">Index of view</param>
         /// <returns>View</returns>
-        public View GetViewAt(int index) => _views[index];
+        public static View GetViewAt(int index) => _views[index];
 
-        public static T Create<T>(
-            WindowDelegate windowDelegate,
-            IGraphicsDriver graphics,
-            IAudioDriver audio,
-            IPhysicsDriver physics
-            ) where T : Window
+        public static GraphicsContext DrawBegin()
         {
-            var window = Activator.CreateInstance<T>();
-            window._windowDelegate = windowDelegate;
-            Graphics = graphics;
-            Audio = audio;
-            Physics = physics;
-            Instance = window;
-            Input.Initialize(window);
-            Animation.Initialize();
-            window._windowDelegate?.OnCreated();
-            return window;
+            Driver.DrawBegin();
+
+            // Begin a graphics frame
+            Graphics.Driver.BeginFrame();
+
+            _gc.Begin(Size, BackgroundColor);
+
+            return _gc;
         }
 
-        public virtual void Frame()
+        public static void Draw()
         {
-            Time.Frame();
-            Graphics.BeginFrame();
+            for (var i = 0; i < ViewCount; i++)
+                GetViewAt(i).Draw(_gc);
+        }
 
-            if (null == _gc)
-                _gc = Graphics.CreateContext();
-
-            _gc.Begin(Size, Color.Red);
-
-            _windowDelegate?.OnBeginFrame(_gc);
-
-            // Update the mouse overs for all nodes in the scenes container.            
-            Input.BeginFrame();
-
-            GenerateEvents();
-
-            foreach (var view in _views)
-                view.Update();
-
-            Animation.Update(AnimationUpdateMode.Update);
-
-            foreach (var view in _views)
-                view.Draw(_gc);
-
-            _windowDelegate?.OnEndFrame(_gc);
-
+        public static void DrawEnd()
+        {
             _gc.End();
 
-            Graphics.EndFrame();
+            Graphics.Driver.EndFrame();
 
-            Node.ProcessDestroyedNodes();
-
-            Input.EndFrame();
+            Driver.DrawEnd();
         }
 
-        public void AddView (View view)
+        /// <summary>
+        /// Add a view to the top of the view stack
+        /// </summary>
+        /// <param name="view">View to add</param>
+        public static void AddView (View view)
         {
             if (view.IsVisible)
                 return;
@@ -150,73 +124,17 @@ namespace NoZ
             view.IsVisible = true;
         }
         
-        public void RemoveView(View view)
+        /// <summary>
+        /// Remove a view from the view stack
+        /// </summary>
+        /// <param name="view">View to remove</param>
+        public static void RemoveView(View view)
         {
             if (!view.IsVisible)
                 return;
 
             _views.Remove(view);
             view.IsVisible = false;
-        }
-
-        private void GenerateEvents()
-        {
-            // TODO: Determine which node the mouse is over
-
-#if false
-            // Mouse over
-            GenerateMouseOverEvent();
-#endif
-
-            // Mouse buttons ?
-            GenerateMouseButtonEvent(MouseButton.Left);
-            GenerateMouseButtonEvent(MouseButton.Right);
-            GenerateMouseButtonEvent(MouseButton.Middle);
-
-#if false
-            // Mouse wheel
-            GenerateMouseWheelEvent();
-
-            // Keyboard envents
-            GenerateKeyboardEvents();
-#endif
-        }
-
-        private void GenerateMouseButtonEvent(MouseButton button)
-        {
-            if (Input.WasButtonPressed(button))
-                GenerateMouseButtonEvent(button, true);
-
-            if (Input.WasButtonReleased(button))
-                GenerateMouseButtonEvent(button, false);
-        }
-
-        private void GenerateMouseButtonEvent(MouseButton button, bool down)
-        {
-            _mouseButtonEvent.Reset();
-            _mouseButtonEvent.Button = button;
-            _mouseButtonEvent.IsDown = down;
-            _mouseButtonEvent.Position = Input.MousePosition;
-
-            if (Control.GetCapture() != null)
-            {
-                if (down)
-                    Control.GetCapture().OnMouseDown(_mouseButtonEvent);
-                else
-                    Control.GetCapture().OnMouseUp(_mouseButtonEvent);
-            }
-            else
-            {
-                for (var node = Input.MouseOver;
-                    node != null && !_mouseButtonEvent.IsHandled;
-                    node = node.Parent)
-                {
-                    if (down)
-                        node.OnMouseDown(_mouseButtonEvent);
-                    else
-                        node.OnMouseUp(_mouseButtonEvent);
-                }
-            }
         }
     }
 }

@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     /// <summary>
     /// Interface that indicates a node is a drawable node

@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using NoZ.Graphics;
 
 namespace NoZ
 {
@@ -55,7 +54,15 @@ namespace NoZ
             var frameCount = reader.ReadInt32();
             anim.Frames.Capacity = frameCount;
             for (int i = 0; i < frameCount; i++)
+            {
                 anim.Frames.Add(ResourceDatabase.Load<Image>(reader.ReadString()));
+                var duration = reader.ReadSingle();
+            }
+
+            // TODO: remove
+            if (anim.FramesPerSecond == 0)
+                anim.FramesPerSecond = 10;
+            anim.Looping = true;
 
             return anim;
         }
@@ -86,15 +93,19 @@ namespace NoZ
         /// </summary>
         public bool IsAnimating => _animationFrame >= 0;
 
+        public bool IsLooping { get; set; } = true;
+
         int IDrawable.SortOrder => SortOrder;
 
-        private Vector2 _size;
+        private Vector2 _size = Vector2.NaN;
+        private Vector2 _actualSize;
         private Vector2 _pivot = Vector2.Half;
 
         public Vector2 Size {
             get => _size;
             set {
                 _size = value;
+                UpdateActualSize();
                 InvalidateRect();
             }
         }
@@ -118,6 +129,7 @@ namespace NoZ
 
                 Animation = null;
                 _image = value;
+                UpdateActualSize();
                 InvalidateRect();
             }
         }
@@ -138,6 +150,7 @@ namespace NoZ
                 if(hasAnimation)
                 {
                     _image = _animation.Frames[0];
+                    UpdateActualSize();
                 }
 
                 if(hasAnimation && !hadAnimation && Scene != null)
@@ -161,31 +174,33 @@ namespace NoZ
 
         public Sprite (Image image)
         {
-            _image = image;
-            Size = Image.Size.ToVector2();
+            Image = image;
         }
 
         public Sprite (Image image, Color color)
         {
-            _image = image;
+            Image = image;
             Color = color;
-            Size = Image.Size.ToVector2();
         }
 
         public Sprite (Image image, Color color, SpriteDrawMode drawMode)
         {
-            _image = image;
+            Image = image;
             Color = color;
             DrawMode = drawMode;
-            Size = Image.Size.ToVector2();
         }
+
+        private void UpdateActualSize() => _actualSize = new Vector2(
+            float.IsNaN(_size.x) ? (Image?.Size.x ?? 0) : _size.x,
+            float.IsNaN(_size.y) ? (Image?.Size.y ?? 0) : _size.y
+            );
 
         private Vector2 MeasureSliced()
         {
             return new Vector2(Image.Border.left + Image.Border.right, Image.Border.top + Image.Border.bottom);
         }
 
-        private Vector2 MeasureStretched() => Size;
+        private Vector2 MeasureStretched() => _actualSize;
 
         public override Vector2 Measure (in Vector2 available)
         {
@@ -419,7 +434,7 @@ namespace NoZ
                 frame.y + frame.height * Pivot.y);
         }
 
-        protected override Rect CalculateRect() => new Rect(-_size * Pivot, _size);
+        protected override Rect CalculateRect() => new Rect(-_actualSize * Pivot, _actualSize);
 
         protected override void OnRectChanged (in Rect old)
         {
@@ -454,7 +469,7 @@ namespace NoZ
 
             _animationTime -= frameAdvance * timePerFrame;
             _animationFrame += frameAdvance;
-            if(_animation.Looping)
+            if(IsLooping)
             {
                 _animationFrame = (_animationFrame % _animation.Frames.Count);
                 if (_animationFrame < 0)
@@ -464,11 +479,13 @@ namespace NoZ
             {
                 _animationFrame = -1;
                 _image = _animation.Frames[_animation.Frames.Count - 1];
+                UpdateActualSize();
                 Scene.Unsubscribe(Scene.UpdateEvent, this);
                 return;
             }
 
             _image = _animation.Frames[_animationFrame];
+            UpdateActualSize();
         }
     }
 }

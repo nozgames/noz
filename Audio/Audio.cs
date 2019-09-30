@@ -22,17 +22,32 @@
   SOFTWARE.
 */
 
-using System;
+namespace NoZ
+{
+    public static class Audio
+    {
+        public static IAudioDriver Driver { get; set; }
 
-namespace NoZ {
-
-    public static class Audio {
-        public static Voice Play(AudioClip clip) {
-            return Window.Audio?.Play(clip) ?? Voice.Error;
+        /// <summary>
+        /// Get/Set the main volume
+        /// </summary>
+        public static float Volume {
+            get => Driver.Volume;
+            set => Driver.Volume = value;
         }
 
-        public static bool IsPlaying(Voice voice) {
-            return Window.Audio.IsPlaying(voice);
-        }
+        /// <summary>
+        /// Play the given audio clip
+        /// </summary>
+        /// <param name="clip">Clip to play</param>
+        /// <returns>Unique voice that represents the playing clip</returns>
+        public static Voice Play(AudioClip clip) => Driver.Play(clip);
+
+        /// <summary>
+        /// Returns true if the give voice is playing
+        /// </summary>
+        /// <param name="voice">Voice</param>
+        /// <returns>True if playing</returns>
+        public static bool IsPlaying(Voice voice) => Driver.IsPlaying(voice);
     }
 }

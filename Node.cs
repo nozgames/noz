@@ -737,9 +737,9 @@ namespace NoZ
         {
             Node oldMouseOver = Input.MouseOver;
             Node newMouseOver = null;
-            for (int i=Window.Instance.ViewCount-1; i>=0 && null == newMouseOver; i--)
+            for (int i=Window.ViewCount-1; i>=0 && null == newMouseOver; i--)
             {
-                var view = Window.Instance.GetViewAt(i);
+                var view = Window.GetViewAt(i);
                 var pos = view.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
 
                 newMouseOver = view.Scene.GetNodeAtPoint(null, pos);

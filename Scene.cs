@@ -22,7 +22,6 @@
   SOFTWARE.
 */
 
-using NoZ.Graphics;
 using System;
 
 namespace NoZ
@@ -112,7 +111,7 @@ namespace NoZ
             if (Camera != null)
             {
                 // Generate the camera matrix
-                var mat = Matrix3.Translate(Window.Instance.Size.ToVector2() * 0.5f);
+                var mat = Matrix3.Translate(Window.Size.ToVector2() * 0.5f);
                 mat = Matrix3.Multiply(LocalToWorld, mat);
 
 

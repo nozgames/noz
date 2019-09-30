@@ -239,7 +239,7 @@ namespace NoZ
             onStop?.Invoke();
         }
 
-        public static void Update(AnimationUpdateMode updateMode)
+        public static void Step(AnimationUpdateMode updateMode)
         {
             var elapsedNormal = 0f;
             var elapsedUnscaled = 0f;

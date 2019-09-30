@@ -22,9 +22,10 @@
   SOFTWARE.
 */
 
-namespace NoZ {
-
-    public interface IAudioDriver {
+namespace NoZ
+{
+    public interface IAudioDriver
+    {
         AudioClip CreateClip();
 
         AudioClip CreateClip(int samples, AudioChannelFormat channelFormat, int frequency);

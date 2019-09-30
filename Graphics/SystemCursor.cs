@@ -22,32 +22,13 @@
   SOFTWARE.
 */
 
-namespace NoZ {
-
-    public enum SystemCursor {
+namespace NoZ
+{
+    public enum SystemCursor
+    {
         None,
         Default,
         Arrow,
         IBeam
     }
-
-#if false
-    [SystemResource]
-    [SerializedType(Allocator = typeof(Allocator))]
-    public sealed class ArrowCursor : Cursor {
-        private ArrowCursor() { }
-        private static class Allocator {
-            public static object CreateInstance() => Game.GraphicsDriver.CreateCursor(SystemCursor.Arrow);
-        }
-    }
-
-    [SystemResource]
-    [SerializedType(Allocator = typeof(Allocator))]
-    public sealed class IBeamCursor : Cursor {
-        private IBeamCursor() { }
-        private static class Allocator {
-            public static object CreateInstance() => Game.GraphicsDriver.CreateCursor(SystemCursor.IBeam);
-        }
-    }
-#endif
 }

@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     public class Font : Resource
     { 

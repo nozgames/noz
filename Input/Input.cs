@@ -170,7 +170,7 @@ namespace NoZ
         public static Vector2 MouseDelta { get; private set; }
 
 
-        internal static void Initialize(Window window)
+        internal static void Initialize()
         {
             // Already initialized?
             if (_keys != null)
@@ -204,12 +204,6 @@ namespace NoZ
             Window.KeyDownEvent.Subscribe(_eventDelegate.OnKeyDown);
             Window.KeyUpEvent.Subscribe(_eventDelegate.OnKeyUp);
             Window.MouseMoveEvent.Subscribe(_eventDelegate.OnMouseMove);
-#if false
-            window.Subscribe(GameWindow.TouchBegan, OnTouchBegan);
-            window.Subscribe(GameWindow.TouchEnded, OnTouchEnded);
-            window.Subscribe(GameWindow.TouchCancelled, OnTouchCancelled);
-            window.Subscribe(GameWindow.TouchMoved, OnTouchMoved);
-#endif
         }
 
         /// <summary>

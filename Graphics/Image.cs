@@ -25,7 +25,7 @@
 using System;
 using System.IO;
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     public abstract class Image : Resource
     {
@@ -38,7 +38,7 @@ namespace NoZ.Graphics
         /// <param name="format">Format of image</param>
         /// <returns>Created image</returns>
         public static Image Create (string name, int width, int height, PixelFormat format) {
-            return Window.Graphics.CreateImage(name, width, height, format);
+            return Graphics.Driver.CreateImage(name, width, height, format);
         }
 
         /// <summary>

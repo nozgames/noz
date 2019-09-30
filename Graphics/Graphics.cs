@@ -24,11 +24,10 @@
 
 namespace NoZ
 {
-    public struct Quad
+    public static class Graphics
     {
-        public Vertex TL;
-        public Vertex TR;
-        public Vertex BL;
-        public Vertex BR;
+        public static IGraphicsDriver Driver { get; set; }
+
+        public static GraphicsContext CreateContext() => Driver.CreateContext();
     }
 }

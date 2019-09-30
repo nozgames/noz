@@ -23,7 +23,6 @@
 */
 
 using System;
-using System.Reflection;
 using System.IO;
 
 namespace NoZ
@@ -41,7 +40,7 @@ namespace NoZ
             Directory = new DirectoryInfo(path);
         }
 
-        public override Stream OpenRead(string name, FieldInfo fieldInfo)
+        public override Stream OpenRead(string name)
         {
             return File.OpenRead(Path.Combine(Directory.FullName, name));
         }

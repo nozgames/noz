@@ -22,13 +22,19 @@
   SOFTWARE.
 */
 
-namespace NoZ
+namespace NoZ.Physics
 {
-    public struct Quad
+    public static class Physics
     {
-        public Vertex TL;
-        public Vertex TR;
-        public Vertex BL;
-        public Vertex BR;
+        /// <summary>
+        /// Current physics driver
+        /// </summary>
+        public static IPhysicsDriver Driver { get; set; }
+
+        /// <summary>
+        /// Create a new physics world
+        /// </summary>
+        /// <returns>Created world</returns>
+        public static IWorld CreateWorld() => Driver.CreateWorld();
     }
 }

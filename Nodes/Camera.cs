@@ -22,9 +22,6 @@
   SOFTWARE.
 */
 
-using NoZ.Graphics;
-using System;
-
 namespace NoZ
 {
     public class Camera : Node, ILayer

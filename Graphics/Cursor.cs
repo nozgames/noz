@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NoZ {
+namespace NoZ
+{
 
 #if false
     [SerializedType]

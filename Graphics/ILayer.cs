@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-namespace NoZ.Graphics
+namespace NoZ
 {
     /// <summary>
     /// Defines a drawable layer.
