@@ -23,8 +23,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace NoZ
 {
@@ -36,45 +34,11 @@ namespace NoZ
         SlicedNoFill
     }
 
-    public class SpriteAnimation : Resource
-    {
-        public List<Image> Frames { get; private set; } = new List<Image>();
-        public int FramesPerSecond = 30;
-        public bool Looping { get; set; } = true;
-
-        public SpriteAnimation(string name) : base (name)
-        {
-        }
-
-        public static SpriteAnimation Create(string name, BinaryReader reader)
-        {
-            var anim = new SpriteAnimation(name);
-            anim.FramesPerSecond = reader.ReadInt32();
-            anim.Looping = reader.ReadBoolean();
-            var frameCount = reader.ReadInt32();
-            anim.Frames.Capacity = frameCount;
-            for (int i = 0; i < frameCount; i++)
-            {
-                anim.Frames.Add(ResourceDatabase.Load<Image>(reader.ReadString()));
-                var duration = reader.ReadSingle();
-            }
-
-            // TODO: remove
-            if (anim.FramesPerSecond == 0)
-                anim.FramesPerSecond = 10;
-            anim.Looping = true;
-
-            return anim;
-        }
-    }
 
     public class Sprite : Node, IDrawable
     {
         private Vertex[] _vertexBuffer;
         private short[] _indexBuffer;
-        private SpriteAnimation _animation;
-        private int _animationFrame = -1;
-        private float _animationTime;
         private Image _image;
 
         /// <summary>
@@ -87,13 +51,6 @@ namespace NoZ
         public SpriteDrawMode DrawMode { get; set; } = SpriteDrawMode.Auto;
 
         public int SortOrder { get; set; }
-
-        /// <summary>
-        /// True if the sprite has an active SpriteAnimation
-        /// </summary>
-        public bool IsAnimating => _animationFrame >= 0;
-
-        public bool IsLooping { get; set; } = true;
 
         int IDrawable.SortOrder => SortOrder;
 
@@ -121,49 +78,18 @@ namespace NoZ
         /// Image used to render the rectangle.  If no image is given a solid color rectangle 
         /// will be rendered instead by using a solid white texture.
         /// </summary>
-        public Image Image {
+        public virtual Image Image {
             get => _image;
             set {
                 if (_image == value)
                     return;
 
-                Animation = null;
                 _image = value;
                 UpdateActualSize();
                 InvalidateRect();
             }
         }
 
-        /// <summary>
-        /// Current animation playing on the sprite
-        /// </summary>
-        public SpriteAnimation Animation {
-            get => _animation;
-            set {
-                var hadAnimation = _animation != null;
-
-                _animation = value;
-                _animationFrame = 0;
-                _animationTime = 0;
-
-                var hasAnimation = _animation != null;
-                if(hasAnimation)
-                {
-                    _image = _animation.Frames[0];
-                    UpdateActualSize();
-                }
-
-                if(hasAnimation && !hadAnimation && Scene != null)
-                    Scene.Subscribe(Scene.UpdateEvent, OnAnimationUpdate);
-                else if (!hasAnimation && hadAnimation && Scene != null)
-                {
-                    Scene.Unsubscribe(Scene.UpdateEvent, this);
-                    _animationFrame = -1;
-                }                    
-            }
-        }
-
-        public float AnimationSpeed { get; set; } = 1.0f;
 
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
 
@@ -190,7 +116,7 @@ namespace NoZ
             DrawMode = drawMode;
         }
 
-        private void UpdateActualSize() => _actualSize = new Vector2(
+        protected void UpdateActualSize() => _actualSize = new Vector2(
             float.IsNaN(_size.x) ? (Image?.Size.x ?? 0) : _size.x,
             float.IsNaN(_size.y) ? (Image?.Size.y ?? 0) : _size.y
             );
@@ -440,52 +366,6 @@ namespace NoZ
         {
             base.OnRectChanged(old);
             _meshInvalid = true;
-        }
-
-        protected override void OnEnterScene(Scene scene)
-        {
-            base.OnEnterScene(scene);
-
-            if (_animation != null && _animationFrame >= 0)
-                Scene.Subscribe(Scene.UpdateEvent, OnAnimationUpdate);
-        }
-
-        protected override void OnLeaveScene(Scene leaving)
-        {
-            base.OnLeaveScene(leaving);
-
-            // If animating then we need to unsubscribe
-            if (IsAnimating)
-                Scene.Unsubscribe(Scene.UpdateEvent, this);
-        }
-
-        private void OnAnimationUpdate ()
-        {
-            _animationTime += (Time.DeltaTime * AnimationSpeed);
-            var timePerFrame = 1.0f / _animation.FramesPerSecond;
-            var frameAdvance = (int)(_animationTime / timePerFrame);
-            if (frameAdvance == 0)
-                return;
-
-            _animationTime -= frameAdvance * timePerFrame;
-            _animationFrame += frameAdvance;
-            if(IsLooping)
-            {
-                _animationFrame = (_animationFrame % _animation.Frames.Count);
-                if (_animationFrame < 0)
-                    _animationFrame = _animation.Frames.Count + _animationFrame;
-            }
-            else if (_animationFrame >= _animation.Frames.Count)
-            {
-                _animationFrame = -1;
-                _image = _animation.Frames[_animation.Frames.Count - 1];
-                UpdateActualSize();
-                Scene.Unsubscribe(Scene.UpdateEvent, this);
-                return;
-            }
-
-            _image = _animation.Frames[_animationFrame];
-            UpdateActualSize();
         }
     }
 }
