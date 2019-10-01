@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace NoZ
 {
@@ -39,6 +40,15 @@ namespace NoZ
             var shorts = new short[count];
             Buffer.BlockCopy(bytes, 0, shorts, 0, bytes.Length);
             return shorts;
+        }
+
+        public static void ReadStruct<T> (this BinaryReader reader, out T value) where T : struct
+        {
+            value = new T();
+            byte[] bytes = reader.ReadBytes(Marshal.SizeOf(typeof(T)));
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            value = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
         }
     }
 }

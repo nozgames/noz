@@ -747,6 +747,5 @@ namespace NoZ
                 frame.x + frame.width * 0.5f,
                 frame.y + frame.height * 0.5f);
         }
-
     }
 }

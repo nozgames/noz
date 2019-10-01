@@ -593,9 +593,15 @@ namespace NoZ
             if (_parent != null)
                 _parent.UpdateRect();
 
+            // Dont update if rect isnt invalid
             if (!HasAllFlags(Flags.RectDirty))
                 return;
 
+            // If arranging to parent then arrange now
+            if (DoesArrangeToParent && Parent != null)
+                Arrange(Parent.Rect);
+
+            // Clear flags after arrange since arrange can invalidate the rect
             ClearFlags(Flags.RectDirty);
 
             var oldRect = _rect;

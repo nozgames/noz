@@ -22,6 +22,8 @@
   SOFTWARE.
 */
 
+using System;
+
 namespace NoZ
 {
     public class AnimatedSprite : Sprite
@@ -69,42 +71,9 @@ namespace NoZ
         /// </summary>
         public ImageAnimation Animation => _animation;
 
-#if false
-        /// <summary>
-        /// Current animation playing playing
-        /// </summary>
-        public ImageAnimation Animation => _animation;
-            get => _animation;
-            set {
-                var hadAnimation = _animation != null;
-
-                _animation = value;
-                _animationFrame = 0;
-                _animationTime = 0;
-
-                var hasAnimation = _animation != null;
-                if (hasAnimation)
-                {
-                    _image = _animation.Frames[0];
-                    UpdateActualSize();
-                }
-
-                if (hasAnimation && !hadAnimation && Scene != null)
-                    Scene.Subscribe(Scene.UpdateEvent, OnAnimationUpdate);
-                else if (!hasAnimation && hadAnimation && Scene != null)
-                {
-                    Scene.Unsubscribe(Scene.UpdateEvent, this);
-                    _animationFrame = -1;
-                }
-            }
-        }
-#endif
-
         public float AnimationSpeed { get; set; } = 1.0f;
 
-        public AnimatedSprite()
-        {
-        }
+        public AnimatedSprite() { }
 
         public AnimatedSprite(ImageAnimation animation) => Play(animation);
 
@@ -125,7 +94,7 @@ namespace NoZ
                 Scene.Subscribe(Scene.UpdateEvent, Step);
 
             _animationFrame = 0;
-            base.Image = _animation.Frames[0];
+            base.Image = _animation.Frames[0].Image;
         }
 
         /// <summary>
@@ -172,31 +141,30 @@ namespace NoZ
         /// </summary>
         private void Step()
         {
-            _animationTime += (Time.DeltaTime * AnimationSpeed);
-            var timePerFrame = 1.0f / _animation.FramesPerSecond;
-            var frameAdvance = (int)(_animationTime / timePerFrame);
-            if (frameAdvance == 0)
-                return;
-
-            _animationTime -= frameAdvance * timePerFrame;
-            _animationFrame += frameAdvance;
-            if (IsLooping)
+            // Determine where in the animation we are
+            if(IsLooping)
             {
-                _animationFrame = (_animationFrame % _animation.Frames.Count);
-                if (_animationFrame < 0)
-                    _animationFrame = _animation.Frames.Count + _animationFrame;
+                _animationTime = (_animationTime + Time.DeltaTime * AnimationSpeed) % _animation.Duration;
             }
-            else if (_animationFrame >= _animation.Frames.Count)
+            else 
             {
-                _animationFrame = -1;
-                base.Image = _animation.Frames[_animation.Frames.Count - 1];
-                UpdateActualSize();
-                Scene.Unsubscribe(Scene.UpdateEvent, this);
-                return;
+                _animationTime += (Time.DeltaTime * AnimationSpeed);
+                if (_animationTime > _animation.Duration)
+                {
+                    _animationTime = _animation.Duration;
+                    _animationFrame = -1;
+                    base.Image = _animation.Frames[_animation.Frames.Length - 1].Image;
+                    Scene.Unsubscribe(Scene.UpdateEvent, this);
+                    return;
+                }                
             }
 
-            base.Image = _animation.Frames[_animationFrame];
-            UpdateActualSize();
+            var frame = _animation.GetFrameIndex(_animationTime, _animationFrame);
+            if(_animationFrame != frame)
+            {
+                _animationFrame = frame;
+                base.Image = _animation.Frames[_animationFrame].Image;
+            }                
         }
     }
 }

@@ -85,23 +85,12 @@ namespace NoZ
         /// <returns>True if the given float is "Automatic"</returns>
         private static bool IsAuto(float value) => float.IsNaN(value);
 
-        protected override void OnParentRectChanged(in Rect frame)
-        {
-            // If our parent arranges children then wait for the arrange call
-            if(Parent != null && Parent.DoesArrangeChildren)
-                return;
-
-            // Since our parent frame changed and our parent isnt a layout we have to
-            // assume arrange wont be called so call it using the entire parent frame.
-            Arrange(frame);
-        }
-
         /// <summary>
         /// Handle OnFrameChanged to force all of our children to arrange to our frame
         /// </summary>
         /// <param name="frame"></param>
         protected override void OnRectChanged(in Rect rect)
-        {            
+        {
             // Force all of our children to arrange 
             foreach(var child in Children)
                 child.Arrange(rect);

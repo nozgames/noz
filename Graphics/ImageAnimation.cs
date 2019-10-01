@@ -29,9 +29,19 @@ namespace NoZ
 {
     public class ImageAnimation : Resource
     {
-        public List<Image> Frames { get; private set; } = new List<Image>();
-        public int FramesPerSecond = 30;
-        public bool Looping { get; set; } = true;
+        public struct Frame
+        {
+            public float Start;
+            public float Duration;
+            public Image Image;
+        }
+
+        public Frame[] Frames { get; private set; }
+
+        /// <summary>
+        /// Total duration of the image animation
+        /// </summary>
+        public float Duration { get; private set; }
 
         public ImageAnimation(string name) : base(name)
         {
@@ -40,22 +50,42 @@ namespace NoZ
         public static ImageAnimation Create(string name, BinaryReader reader)
         {
             var anim = new ImageAnimation(name);
-            anim.FramesPerSecond = reader.ReadInt32();
-            anim.Looping = reader.ReadBoolean();
             var frameCount = reader.ReadInt32();
-            anim.Frames.Capacity = frameCount;
+            anim.Frames = new Frame[frameCount];
+            var duration = 0.0f;
             for (int i = 0; i < frameCount; i++)
             {
-                anim.Frames.Add(ResourceDatabase.Load<Image>(reader.ReadString()));
-                var duration = reader.ReadSingle();
+                var frame = new Frame();
+                frame.Image = ResourceDatabase.Load<Image>(reader.ReadString());
+                frame.Duration = reader.ReadSingle();
+                frame.Start = duration;
+                anim.Frames[i] = frame;
+                duration += frame.Duration;
             }
 
-            // TODO: remove
-            if (anim.FramesPerSecond == 0)
-                anim.FramesPerSecond = 10;
-            anim.Looping = true;
+            anim.Duration = duration;
 
             return anim;
+        }
+
+        /// <summary>
+        /// Get the frame index for the given frame time
+        /// </summary>
+        /// <param name="time">Frame time</param>
+        /// <param name="hint">Hint frame</param>
+        /// <returns>Frame index</returns>
+        public int GetFrameIndex (float time, int hint=-1)
+        {
+            // Past end?
+            if (time >= Duration)
+                return Frames.Length - 1;
+
+            hint = hint >= 0 ? hint : 0;
+
+            // Hint?
+            while (hint < Frames.Length - 1 && time >= Frames[hint+1].Start) hint++;
+            while (hint > 0 && time < Frames[hint].Start) hint--;
+            return hint;
         }
     }
 }
