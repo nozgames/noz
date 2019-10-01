@@ -75,7 +75,7 @@ namespace NoZ
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private static Stream OpenRead(string name, FieldInfo info)
+        private static Stream OpenRead(string name)
         {
             foreach (var archive in _archives)
             {
@@ -105,7 +105,7 @@ namespace NoZ
             }
 
             // Open a stream to the input file.
-            using (var stream = OpenRead(name, null))
+            using (var stream = OpenRead(name))
             using (var reader = new BinaryReader(stream))
             {
                 var typeName = reader.ReadString();
@@ -141,7 +141,7 @@ namespace NoZ
                     throw new InvalidOperationException($"resource '{field.Name}' already loaded");
 
                 // Open a stream to the input file.
-                using (var stream = OpenRead(import.Name, field))
+                using (var stream = OpenRead(import.Name))
                 using (var reader = new BinaryReader(stream)) 
                 {
                     var typeName = reader.ReadString();
