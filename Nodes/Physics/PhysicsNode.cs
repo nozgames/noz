@@ -30,9 +30,9 @@ namespace NoZ.Physics
 
         public bool IsEnabled { get; private set; }
 
-        public PhysicsLayer Layers { get; set; } = PhysicsLayer.All;
+        public uint CollisionMask { get; set; } = Physics.CollisionMaskAll;
 
-        public PhysicsLayer CollidesWithLayers { get; set; } = PhysicsLayer.All;
+        public uint CollidesWithMask { get; set; } = Physics.CollisionMaskAll;
 
         protected override void OnSceneChanged(Scene oldScene)
         {

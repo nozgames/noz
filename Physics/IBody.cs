@@ -32,13 +32,15 @@ namespace NoZ.Physics
     {
         CollisionEnterDelegate OnCollisionEnter { set; }
         
-        PhysicsLayer Layers { set; }
+        uint CollisionMask { set; }
 
-        PhysicsLayer CollidesWithLayers { set; }
+        uint CollidesWithMask { set; }
 
         ICollider AddBoxCollider(in Vector2 position, in Vector2 size);
 
-        ICollider AddCircleCollider(in Vector2 position, float radius);
+        ICollider AddCircleCollider (in Vector2 position, float radius);
+
+        ICollider AddPolygonCollider (in Vector2 position, in Vector2[] points);
 
         Vector2 LinearVelocity { get; set; }
 

@@ -23,18 +23,35 @@
 */
 
 using System;
+using System.IO;
 
-namespace NoZ.Physics
+namespace NoZ
 {
-    [Flags]
-    public enum PhysicsLayer
+    public class TileSet : Resource
     {
-        None = 0,
-        All = int.MaxValue,
-        Layer1 = 1,
-        Layer2 = 2,
-        Layer3 = 4,
-        Layer4 = 8,
-        Layer5 = 16,
+        public Tile[] Tiles { get; private set; }
+        public Vector2Int TileSize { get; private set; }
+
+        protected TileSet(string name) : base(name) { }
+
+        public static TileSet Create(string name, BinaryReader reader)
+        {
+            var tilemap = new TileSet(name);
+            tilemap.TileSize = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
+
+            // Read in all tiles
+            tilemap.Tiles = new Tile[reader.ReadUInt16()];
+            var tileCount = reader.ReadUInt16();
+            for(int tileIndex = 0; tileIndex < tileCount; tileIndex++)
+            {
+                var tile = Tile.Create(reader);
+                if (tile == null)
+                    continue;
+
+                tilemap.Tiles[tile.Id] = tile;
+            }
+
+            return tilemap;
+        }
     }
 }

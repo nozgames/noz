@@ -38,7 +38,7 @@ namespace NoZ.Physics
 
         void RemoveRigidBody(IBody body);
 
-        void DrawDebug(GraphicsContext gc, PhysicsLayer layers);
+        void DrawDebug(GraphicsContext gc, uint mask=Physics.CollisionMaskAll);
     }
 }
 

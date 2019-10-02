@@ -167,7 +167,6 @@ namespace NoZ
 
             gc.SetColor(Color);
             gc.SetImage(Image);
-            //gc.SetTransform(transform);
             gc.SetMaskMode(MaskMode);
 
             if (_indexBuffer == null)

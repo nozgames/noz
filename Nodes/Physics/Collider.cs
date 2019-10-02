@@ -58,8 +58,8 @@ namespace NoZ.Physics
             {
                 // Create a new body
                 _body = Scene.World.CreateStaticBody();
-                _body.CollidesWithLayers = CollidesWithLayers;
-                _body.Layers = Layers;
+                _body.CollidesWithMask = CollidesWithMask;
+                _body.CollisionMask = CollisionMask;
                 _collider = CreateCollider(_body);
             }
             else
@@ -75,8 +75,8 @@ namespace NoZ.Physics
             }
 
             _collider.Node = this;
-            _collider.Layers = Layers;
-            _collider.CollidesWithLayers = CollidesWithLayers;
+            _collider.CollisionMask = CollisionMask;
+            _collider.CollidesWithMask = CollidesWithMask;
         }
 
         protected override void OnDisable ()

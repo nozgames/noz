@@ -48,8 +48,8 @@ namespace NoZ.Physics
             _body.OnCollisionEnter = OnCollisionEnter;
             _body.Position = LocalToWorld.MultiplyVector(Vector2.Zero);
             _body.LinearVelocity = _linearVelocity;
-            _body.Layers = Layers;
-            _body.CollidesWithLayers = CollidesWithLayers;
+            _body.CollisionMask = CollisionMask;
+            _body.CollidesWithMask = CollidesWithMask;
         }
 
         protected override void OnDisable()

@@ -26,6 +26,9 @@ namespace NoZ.Physics
 {
     public static class Physics
     {
+        public const uint CollisionMaskNone = 0;
+        public const uint CollisionMaskAll = 0xFFFFFFFF;
+
         /// <summary>
         /// Current physics driver
         /// </summary>
@@ -36,5 +39,75 @@ namespace NoZ.Physics
         /// </summary>
         /// <returns>Created world</returns>
         public static IWorld CreateWorld() => Driver.CreateWorld();
+
+        /// <summary>
+        /// Layer names
+        /// </summary>
+        private static string[] LayerNames = new string[32] {
+            "Layer0",
+            "Layer1",
+            "Layer2",
+            "Layer3",
+            "Layer4",
+            "Layer5",
+            "Layer6",
+            "Layer7",
+            "Layer8",
+            "Layer9",
+            "Layer10",
+            "Layer11",
+            "Layer12",
+            "Layer13",
+            "Layer14",
+            "Layer15",
+            "Layer16",
+            "Layer17",
+            "Layer18",
+            "Layer19",
+            "Layer20",
+            "Layer21",
+            "Layer22",
+            "Layer23",
+            "Layer24",
+            "Layer25",
+            "Layer26",
+            "Layer27",
+            "Layer28",
+            "Layer29",
+            "Layer30",
+            "Layer31",
+            };
+
+        /// <summary>
+        /// Set the name of a layer
+        /// </summary>
+        public static void SetLayerName(int layer, string name) => LayerNames[layer] = name;
+
+        /// <summary>
+        /// Return the layer name for a given layer index
+        /// </summary>
+        public static string LayerToName(int layer) => LayerNames[layer];
+
+        /// <summary>
+        /// Convert a layer to a layer mask
+        /// </summary>
+        public static uint LayerToMask(int layer) => (uint)(1 << layer);
+
+        /// <summary>
+        /// Convert a layer name to a layer index
+        /// </summary>
+        public static int NameToLayer(string name)
+        {
+            for (int i = 0; i < LayerNames.Length; i++)
+                if (LayerNames[i] == name)
+                    return i;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Convert a layer name to a layer index
+        /// </summary>
+        public static uint NameToLayerMask(string name) => LayerToMask(NameToLayer(name));
     }
 }

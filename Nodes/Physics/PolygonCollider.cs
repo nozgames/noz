@@ -22,25 +22,21 @@
   SOFTWARE.
 */
 
-using System;
-
 namespace NoZ.Physics
 {
-    public interface ICollider : IDisposable
+    public class PolygonCollider : Collider
     {
-        /// <summary>
-        /// Sets the collision mask for the collider 
-        /// </summary>
-        uint CollisionMask { get; set; }
+        public Vector2[] Points { get; set; }
 
-        /// <summary>
-        /// Sets the mask that the collider collides with
-        /// </summary>
-        uint CollidesWithMask { get; set; }
+        public PolygonCollider()
+        {
+        }
 
-        /// <summary>
-        /// Collider node that owns the collider implementation
-        /// </summary>
-        Collider Node { get; set; }
+        public PolygonCollider(Vector2[] points)
+        {
+            Points = points;
+        }
+
+        protected override ICollider CreateCollider(IBody body) => body.AddPolygonCollider(Vector2.Zero, Points);
     }
 }

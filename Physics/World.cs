@@ -33,7 +33,7 @@ namespace NoZ.Physics
         private IWorld _world;
         private float _accumulatedTime;
 
-        public PhysicsLayer DebugVisualizationLayers { get; set; } 
+        public uint DebugVisualizationMask { get; set; } 
 
         public World ()
         {
@@ -59,8 +59,8 @@ namespace NoZ.Physics
 
         public void DrawDebug(GraphicsContext gc)
         {
-            if(DebugVisualizationLayers != PhysicsLayer.None)
-                _world.DrawDebug(gc, DebugVisualizationLayers);
+            if(DebugVisualizationMask != Physics.CollisionMaskNone)
+                _world.DrawDebug(gc, DebugVisualizationMask);
         }
 
         public override void Dispose()
