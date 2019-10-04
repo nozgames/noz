@@ -25,13 +25,13 @@
 using System;
 using System.Collections.Generic;
 
-using NoZ.UI;
-
 namespace NoZ
 {
     public interface IWindowDriver
     {
         Vector2Int Size { get; }
+
+        bool IsCursorVisible { get; set; }
 
         void Show();
 
@@ -54,11 +54,23 @@ namespace NoZ
 
         private static IWindowDriver _driver;
 
+        private static Node _activeCursor;
+        private static View _cursorView;
+        private static Node _cursorNode;
+        private static Node _cursorPosition;
+
         public static IWindowDriver Driver {
             get => _driver;
             set {
                 _driver = value;
                 _gc = GraphicsContext.Create();
+
+
+                _cursorView = new View();
+                _cursorView.PresentScene(new Scene());
+
+                _cursorPosition = new Node();
+                _cursorView.Scene.AddChild(_cursorPosition);
             }
         }
 
@@ -76,6 +88,16 @@ namespace NoZ
         /// Number of views in the view stack
         /// </summary>
         public static int ViewCount => _views.Count;
+
+        public static int ReferenceSize { get; set; }
+
+        public static Orientation ReferenceOrientation { get; set; } = Orientation.Horizontal;
+
+        /// <summary>
+        /// Global cursor used by the game.  This cursor will be used as long
+        /// as no overriding cursor is returned via MouseOver.
+        /// </summary>
+        public static Node Cursor { get; set; }
 
         /// <summary>
         /// Return the view at the given index
@@ -100,6 +122,9 @@ namespace NoZ
         {
             for (var i = 0; i < ViewCount; i++)
                 GetViewAt(i).Draw(_gc);
+
+            _cursorView.Update();            
+            _cursorView.Draw(_gc);
         }
 
         public static void DrawEnd()
@@ -135,6 +160,40 @@ namespace NoZ
 
             _views.Remove(view);
             view.IsVisible = false;
+        }
+
+        /// <summary>
+        /// Handle mouse over event for the entire window
+        /// </summary>
+        /// <param name="e"></param>
+        internal static void OnMouseOver(MouseOverEvent e)
+        {
+            // Update the cursor position
+            _cursorPosition.Position = _cursorView.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
+
+            // Cursor for this frame is either the cursor in the event or the window cursor
+            var cursor = e.Cursor ?? Cursor;
+
+            // Nothing to do if cursor hasnt changed
+            if (_activeCursor == cursor)
+                return;
+
+            // If there was an existing cursor then remove it from its parent 
+            if (null != _activeCursor)
+                _activeCursor.RemoveFromParent();
+
+            // Set the new active cursor
+            _activeCursor = cursor;
+
+            if (_activeCursor != null)
+            {
+                _cursorPosition.AddChild(_activeCursor);
+                _cursorPosition.Visibility = NodeVisibility.Visible;
+            }
+            else
+            {
+                _cursorPosition.Visibility = NodeVisibility.Collapsed;
+            }
         }
     }
 }

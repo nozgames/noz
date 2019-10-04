@@ -33,6 +33,7 @@ namespace NoZ.Physics
         private IWorld _world;
         private float _accumulatedTime;
         private Rect _bounds;
+        private IBody _boundsBody;
         private ICollider _boundsCollider;
 
         public uint DebugVisualizationMask { get; set; } 
@@ -87,10 +88,19 @@ namespace NoZ.Physics
             _boundsCollider?.Dispose();
             _boundsCollider = null;
 
+            _boundsBody?.Dispose();
+            _boundsBody = null;
+
             if (_bounds == Rect.Empty)
                 return;
 
-            // tODO: CREATE bounds collider with edge, collide with all
+            _boundsBody = CreateStaticBody();
+            _boundsBody.AddEdgeCollider(Physics.PixelsToMeters(Bounds.TopLeft), Physics.PixelsToMeters(Bounds.BottomLeft));
+            _boundsBody.AddEdgeCollider(Physics.PixelsToMeters(Bounds.TopLeft), Physics.PixelsToMeters(Bounds.TopRight));
+            _boundsBody.AddEdgeCollider(Physics.PixelsToMeters(Bounds.TopRight), Physics.PixelsToMeters(Bounds.BottomRight));
+            _boundsBody.AddEdgeCollider(Physics.PixelsToMeters(Bounds.BottomRight), Physics.PixelsToMeters(Bounds.BottomLeft));
+            _boundsBody.CollidesWithMask = Physics.CollisionMaskAll;
+            _boundsBody.CollisionMask = Physics.CollisionMaskAll;
         }
     }
 }

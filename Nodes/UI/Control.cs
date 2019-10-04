@@ -42,6 +42,11 @@ namespace NoZ.UI
         public bool HasCapture => ReferenceEquals(_capture, this);
 
         /// <summary>
+        /// Cursor to display when the mouse is over this control
+        /// </summary>
+        public Node Cursor { get; set; }
+
+        /// <summary>
         /// After called all input events will be sent directly to the node until
         /// a subsequent ReleaseCapture is called.  Note that it is possible for capture
         /// to be interrupted and if it is the OnReleaseCapture method will be called
@@ -105,5 +110,11 @@ namespace NoZ.UI
         protected override void OnMouseEnter() => Broadcast(MouseEnterEvent, this);
 
         protected override void OnMouseLeave() => Broadcast(MouseLeaveEvent, this);
+
+        protected internal override void OnMouseOver(MouseOverEvent e)
+        {
+            base.OnMouseOver(e);
+            e.Cursor = Cursor;
+        }
     }
 }

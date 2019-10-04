@@ -106,10 +106,8 @@ namespace NoZ
         {
             // TODO: Determine which node the mouse is over
 
-#if false
             // Mouse over
             GenerateMouseOverEvent();
-#endif
 
             // Mouse buttons ?
             GenerateMouseButtonEvent(MouseButton.Left);
@@ -123,6 +121,29 @@ namespace NoZ
             // Keyboard envents
             GenerateKeyboardEvents();
 #endif
+        }
+
+        private static void GenerateMouseOverEvent()
+        {
+            _mouseOverEvent.Reset();
+            _mouseOverEvent.Position = Input.MousePosition;
+            _mouseOverEvent.Delta = Input.MouseDelta;
+
+            if (Control.GetCapture() != null)
+            {
+                Control.GetCapture().OnMouseOver(_mouseOverEvent);
+            }
+            else
+            {
+                for (Node node = Input.MouseOver;
+                    node != null && !_mouseOverEvent.IsHandled;
+                    node = node.Parent)
+                {
+                    node.OnMouseOver(_mouseOverEvent);
+                }
+            }
+
+            Window.OnMouseOver(_mouseOverEvent);
         }
 
         private static void GenerateMouseButtonEvent(MouseButton button)

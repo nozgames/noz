@@ -358,6 +358,8 @@ namespace NoZ
             _children = _children ?? new List<Node>();
             _children.Insert(index, node);
             node._parent = this;
+            node.InvalidateRect();
+            node.InvalidateTransform();
 
             // If this is the scene then make sure the scene value gets 
             // set and propegated through all children.
@@ -663,6 +665,8 @@ namespace NoZ
         protected virtual void OnMouseEnter() { }
 
         protected virtual void OnMouseLeave() { }
+
+        protected internal virtual void OnMouseOver(MouseOverEvent e) { }
 
         protected internal virtual void OnMouseDown(MouseButtonEvent e) { }
 

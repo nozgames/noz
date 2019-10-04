@@ -94,6 +94,7 @@ namespace NoZ
                 Scene.Subscribe(Scene.UpdateEvent, Step);
 
             _animationFrame = 0;
+            _animationTime = 0.0f;
             base.Image = _animation.Frames[0].Image;
         }
 

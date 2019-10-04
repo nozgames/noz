@@ -51,9 +51,8 @@ namespace NoZ
         public Vector2 Position { get; internal set; } = Vector2.Zero;
         public Vector2 Delta { get; internal set; } = Vector2.Zero;
 
-#if false
-        private Cursor _cursor;
-        public Cursor Cursor {
+        private Node _cursor;
+        public Node Cursor {
             get => _cursor;
             set {
                 // The first call to setting a cursor will set the cursor all others
@@ -67,7 +66,6 @@ namespace NoZ
             base.Reset();
             _cursor = null;
         }
-#endif
     }
 
     public class MouseWheelEvent : InputEvent {

@@ -22,36 +22,40 @@
   SOFTWARE.
 */
 
-using System;
-
 namespace NoZ.Physics
 {
-    public delegate bool CollisionEnterDelegate (Collision collission);
-
-    public interface IBody : IDisposable
+    public class EdgeCollider : Collider
     {
-        CollisionEnterDelegate OnCollisionEnter { set; }
-        
-        uint CollisionMask { set; }
+        public Vector2[] Points { get; set; }
 
-        uint CollidesWithMask { set; }
+        public bool IsLoop { get; set; }
 
-        ICollider AddBoxCollider(in Vector2 position, in Vector2 size);
+        public EdgeCollider()
+        {
+        }
 
-        ICollider AddCircleCollider (in Vector2 position, float radius);
+        public EdgeCollider(Vector2 start, Vector2 end)
+        {
+            Points = new Vector2[] { start, end };
+        }
 
-        ICollider AddPolygonCollider (in Vector2 position, in Vector2[] points);
+        public EdgeCollider(Vector2[] points, bool loop=false)
+        {
+            Points = points;
+            IsLoop = loop;
+        }
 
-        ICollider AddEdgeCollider (in Vector2 start, in Vector2 end);
+        protected override ICollider CreateCollider(IBody body)
+        {
+            if (Points.Length < 2)
+                return null;
 
-        ICollider AddChainCollider (in Vector2 position, Vector2[] points, bool loop);
+            if(Points.Length == 2)
+                return body.AddEdgeCollider (
+                    Physics.PixelsToMeters(Position + Points[0]), 
+                    Physics.PixelsToMeters(Position + Points[1]));
 
-        bool IsBullet { get; set; }
-
-        Vector2 LinearVelocity { get; set; }
-
-        Vector2 Position { get; set; }
-
-        Object UserData { get; set; }
+            return body.AddChainCollider(Position, Points, IsLoop);
+        }
     }
 }

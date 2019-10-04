@@ -39,6 +39,8 @@ namespace NoZ
         private Matrix3 _windowToScene;
         private Physics.World _world;
 
+        public Node Cursor { get; set; }
+
         public bool IsPaused {
             get => _paused;
             set {
@@ -233,5 +235,11 @@ namespace NoZ
         protected virtual void OnKeyDown(KeyCode keyCode) => Broadcast(KeyDownEvent, keyCode);
 
         protected virtual void OnKeyUp(KeyCode keyCode) => Broadcast(KeyUpEvent, keyCode);
+
+        protected internal override void OnMouseOver(MouseOverEvent e)
+        {
+            base.OnMouseOver(e);
+            e.Cursor = Cursor;
+        }
     }
 }

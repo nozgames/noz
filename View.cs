@@ -36,10 +36,6 @@ namespace NoZ
 
         public Vector2Int Size { get; private set; }
 
-        public int ReferenceSize { get; set; }
-
-        public Orientation ReferenceOrientation { get; set; } = Orientation.Horizontal;
-
         public int SortOrder => 0;
 
         public bool IsVisible {
@@ -105,17 +101,17 @@ namespace NoZ
 
             Scene.View = this;
 
-            if (ReferenceSize > 0)
+            if (Window.ReferenceSize > 0)
             {
-                if (ReferenceOrientation == Orientation.Horizontal)
+                if (Window.ReferenceOrientation == Orientation.Horizontal)
                 {
-                    Scene.Scale = new Vector2(Size.x / (float)ReferenceSize);
-                    Scene.Size = new Vector2Int(ReferenceSize, (int)(Size.y * (ReferenceSize / (float)Size.x)));
+                    Scene.Scale = new Vector2(Size.x / (float)Window.ReferenceSize);
+                    Scene.Size = new Vector2Int(Window.ReferenceSize, (int)(Size.y * (Window.ReferenceSize / (float)Size.x)));
                 }
                 else
                 {
-                    Scene.Scale = new Vector2(Size.y / (float)ReferenceSize);
-                    Scene.Size = new Vector2Int((int)(Size.x * (ReferenceSize / (float)Size.y)), ReferenceSize);
+                    Scene.Scale = new Vector2(Size.y / (float)Window.ReferenceSize);
+                    Scene.Size = new Vector2Int((int)(Size.x * (Window.ReferenceSize / (float)Size.y)), Window.ReferenceSize);
                 }
             }
             else
