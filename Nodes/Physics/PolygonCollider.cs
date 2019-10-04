@@ -37,6 +37,13 @@ namespace NoZ.Physics
             Points = points;
         }
 
-        protected override ICollider CreateCollider(IBody body) => body.AddPolygonCollider(Vector2.Zero, Points);
+        protected override ICollider CreateCollider(IBody body)
+        {
+            var pointsInMeters = new Vector2[Points.Length];
+            for (int i = 0; i < Points.Length; i++)
+                pointsInMeters[i] = Physics.PixelsToMeters(Points[i]);
+
+            return body.AddPolygonCollider(Physics.PixelsToMeters(Position), pointsInMeters);
+        }
     }
 }

@@ -29,9 +29,14 @@ namespace NoZ
 {
     public class TileMap : Resource
     {
-        protected TileMap(string name) : base(name) { }
-
+        /// <summary>
+        /// Tiles in the tile map
+        /// </summary>
         public Tile[] Tiles { get; private set; }
+
+        /// <summary>
+        /// Tile sets used in the tile map
+        /// </summary>
         public TileSet[] TileSets { get; private set; }
 
         /// <summary>
@@ -43,6 +48,14 @@ namespace NoZ
         /// Size of a single tile
         /// </summary>
         public Vector2Int TileSize { get; private set; }
+
+        /// <summary>
+        /// Number of tiles in the tile map (excludes empty tiles)
+        /// </summary>
+        public int TileCount { get; private set; }
+
+        protected TileMap(string name) : base(name) { }
+
 
         public static TileMap Create (string name, BinaryReader reader)
         {
@@ -57,8 +70,8 @@ namespace NoZ
 
             // Load all tiles
             tilemap.Tiles = new Tile[tilemap.Size.x * tilemap.Size.y];
-            var tileCount = reader.ReadUInt16();
-            for(var tileIndex = 0; tileIndex < tilemap.Tiles.Length; tileIndex++)
+            tilemap.TileCount = reader.ReadUInt16();
+            for(var tileIndex = 0; tileIndex < tilemap.TileCount; tileIndex++)
             {
                 var tileSetIndex = reader.ReadUInt16();
                 if (tileSetIndex == 0xFFFF)

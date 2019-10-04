@@ -29,8 +29,21 @@ namespace NoZ
 {
     public class TileSet : Resource
     {
+        /// <summary>
+        /// All tiles available in the tile set
+        /// </summary>
         public Tile[] Tiles { get; private set; }
+
+        /// <summary>
+        /// Size of a tile in the tile set
+        /// </summary>
         public Vector2Int TileSize { get; private set; }
+
+        /// <summary>
+        /// Image that contains all tiles
+        /// </summary>
+        public Image Image { get; private set; }
+
 
         protected TileSet(string name) : base(name) { }
 
@@ -38,13 +51,15 @@ namespace NoZ
         {
             var tilemap = new TileSet(name);
             tilemap.TileSize = new Vector2Int(reader.ReadInt16(), reader.ReadInt16());
-
-            // Read in all tiles
             tilemap.Tiles = new Tile[reader.ReadUInt16()];
             var tileCount = reader.ReadUInt16();
-            for(int tileIndex = 0; tileIndex < tileCount; tileIndex++)
+
+            tilemap.Image = Image.Create(null, reader);
+
+            // Read in all tiles
+            for (int tileIndex = 0; tileIndex < tileCount; tileIndex++)
             {
-                var tile = Tile.Create(reader);
+                var tile = Tile.Create(reader, tilemap.TileSize);
                 if (tile == null)
                     continue;
 

@@ -135,13 +135,13 @@ namespace NoZ
         /// </summary>
         public abstract void PopMask();
 
-        public abstract void SetMaskMode(MaskMode mode);
+        public abstract MaskMode MaskMode { get;  set; }
 
-        public abstract void SetColor(Color color);
+        public abstract Color Color { get; set; }
 
-        public abstract void SetTransform(in Matrix3 transform);
+        public abstract Image Image { get; set; }
 
-        public abstract void SetImage(in Image image);
+        public abstract Matrix3 Transform { get; set; }
 
         public abstract void Draw(PrimitiveType primitive, Vertex[] vertexBuffer, int vertexCount, short[] indexBuffer, int indexCount);
 

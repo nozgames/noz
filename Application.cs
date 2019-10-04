@@ -73,6 +73,9 @@ namespace NoZ
             // Advance time
             Time.Step();
 
+            if (Time.DeltaTime <= 0.0f)
+                return;
+
             // Update the mouse overs for all nodes in the scenes container.            
             Input.BeginFrame();
 

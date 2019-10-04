@@ -372,6 +372,17 @@ namespace NoZ
         public bool IsStarted => (_flags & Flags.Started) == Flags.Started;
         public bool IsLowPriority => (_flags & Flags.LowPriority) == Flags.LowPriority;
 
+        public static Animation Shake(Vector2 positionalIntensity, float rotationalIntensity)
+        {
+            var anim = AllocAnimation();
+            anim._vector0 = new Vector3(positionalIntensity.x, positionalIntensity.y, rotationalIntensity);
+            anim._vector1 = new Vector3(
+                Random.Range(0.0f, 100.0f),
+                Random.Range(0.0f, 100.0f),
+                Random.Range(0.0f, 100.0f));
+            anim._delegate = ShakeUpdateDelegate;
+            return anim;
+        }
 
         public static Animation ShakePosition(Vector2 intensity)
         {
@@ -384,13 +395,11 @@ namespace NoZ
             return anim;
         }
 
-        public static Animation ShakeRotation(Vector2 intensity)
+        public static Animation ShakeRotation(float intensity)
         {
             var anim = AllocAnimation();
-            anim._vector0 = intensity.ToVector3();
-            anim._vector1 = new Vector3(
-                Random.Range(0.0f, 100.0f),
-                Random.Range(0.0f, 100.0f),0);
+            anim._vector0 = new Vector3(0.0f, 0.0f, intensity);
+            anim._vector1 = new Vector3(0.0f, 0.0f, Random.Range(0.0f, 100.0f));
             anim._delegate = ShakeRotationUpdateDelegate;
             return anim;
         }
@@ -921,6 +930,12 @@ namespace NoZ
 #endif
         }
 
+        private static void ShakeUpdate (Animation anim, float t)
+        {
+            ShakePositionUpdate(anim, t);
+            ShakeRotationUpdate(anim, t);
+        }
+
         private static void ShakePositionUpdate(Animation anim, float t)
         {
             (anim._object as Node).Position =
@@ -933,7 +948,7 @@ namespace NoZ
         private static void ShakeRotationUpdate(Animation anim, float t)
         {
             (anim._object as Node).Rotation =
-                anim._vector0.x * (MathEx.PerlinNoise(anim._vector1.x, t * 20f) - 0.5f) * 2.0f * (1f - t);
+                anim._vector0.z * (MathEx.PerlinNoise(anim._vector1.z, t * 20f) - 0.5f) * 2.0f * (1f - t);
         }
 
         private static void MoveUpdate(Animation anim, float t)
@@ -1001,6 +1016,7 @@ namespace NoZ
         private static readonly UpdateDelegate FadeUpdateSpriteDelegate = FadeUpdateSprite;
         private static readonly UpdateDelegate FadeUpdateLabelDelegate = FadeUpdateLabel;
         private static readonly UpdateDelegate WaitUpdateDelegate = WaitUpdate;
+        private static readonly UpdateDelegate ShakeUpdateDelegate = ShakeUpdate;
         private static readonly UpdateDelegate ShakePositionUpdateDelegate = ShakePositionUpdate;
         private static readonly UpdateDelegate ShakeRotationUpdateDelegate = ShakeRotationUpdate;
 

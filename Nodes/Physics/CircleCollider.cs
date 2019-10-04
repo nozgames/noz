@@ -52,7 +52,7 @@ namespace NoZ.Physics
             if (Radius == 0)
                 return null;
 
-            return body.AddCircleCollider(Position, Radius);
+            return body.AddCircleCollider(Physics.PixelsToMeters(Position), Physics.PixelsToMeters(Radius));
         }
     }
 }

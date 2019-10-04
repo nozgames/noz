@@ -27,16 +27,18 @@ namespace NoZ.Physics
     public class RigidBody : PhysicsNode
     {
         internal IBody _body;
-        private Vector2 _linearVelocity;        
+        private Vector2 _linearVelocity;
 
-        public bool IsKinematic { get; set; }
+        public bool IsKinematic { get; set; } = false;
+
+        public bool IsBullet { get; set; } = false;
 
         public Vector2 LinearVelocity {
             get => _linearVelocity;
             set {
                 _linearVelocity = value;
                 if (_body != null)
-                    _body.LinearVelocity = _linearVelocity;
+                    _body.LinearVelocity = Physics.PixelsToMeters(_linearVelocity);
             }
         }
 
@@ -46,10 +48,9 @@ namespace NoZ.Physics
 
             _body = Scene.World.CreateRigidBody();
             _body.OnCollisionEnter = OnCollisionEnter;
-            _body.Position = LocalToWorld.MultiplyVector(Vector2.Zero);
-            _body.LinearVelocity = _linearVelocity;
-            _body.CollisionMask = CollisionMask;
-            _body.CollidesWithMask = CollidesWithMask;
+            _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
+            _body.LinearVelocity = Physics.PixelsToMeters(_linearVelocity);
+            _body.IsBullet = IsBullet;
         }
 
         protected override void OnDisable()
@@ -71,9 +72,9 @@ namespace NoZ.Physics
             base.OnUpdate(deltaTime);
 
             if(IsKinematic)
-                _body.Position = LocalToWorld.MultiplyVector(Vector2.Zero);
+                _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
             else
-                Position = _body.Position;
+                Position = Physics.MetersToPixels(_body.Position);
         }
     }
 }

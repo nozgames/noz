@@ -42,6 +42,8 @@ namespace NoZ.Physics
 
         ICollider AddPolygonCollider (in Vector2 position, in Vector2[] points);
 
+        bool IsBullet { get; set; }
+
         Vector2 LinearVelocity { get; set; }
 
         Vector2 Position { get; set; }

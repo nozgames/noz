@@ -165,9 +165,9 @@ namespace NoZ
             if (_meshInvalid)
                 UpdateMesh();
 
-            gc.SetColor(Color);
-            gc.SetImage(Image);
-            gc.SetMaskMode(MaskMode);
+            gc.Color = Color;
+            gc.Image = Image;
+            gc.MaskMode = MaskMode;
 
             if (_indexBuffer == null)
                 gc.Draw(PrimitiveType.TriangleStrip, _vertexBuffer, _vertexBuffer.Length);

@@ -34,7 +34,7 @@ namespace NoZ.Physics
                 if (_size == value)
                     return;
 
-                _size = value;                
+                _size = value;
             }
         }
 
@@ -52,7 +52,7 @@ namespace NoZ.Physics
             if (Size == Vector2.Zero)
                 return null;
 
-            return body.AddBoxCollider(Vector2.Zero, Size);
+            return body.AddBoxCollider(Physics.PixelsToMeters(Position), Physics.PixelsToMeters(Size));
         }
     }
 }

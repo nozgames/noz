@@ -135,7 +135,7 @@ namespace NoZ
             _drawList.Draw(gc);
             _drawList.Clear();
 
-            _world.DrawDebug(gc);
+            _world?.DrawDebug(gc);
 
             gc.PopMatrix();
         }
@@ -159,7 +159,7 @@ namespace NoZ
 
             Broadcast(UpdateEvent);
 
-            World?.Step();
+            _world?.Step();
         }
 
 

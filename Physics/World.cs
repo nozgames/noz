@@ -32,8 +32,22 @@ namespace NoZ.Physics
         
         private IWorld _world;
         private float _accumulatedTime;
+        private Rect _bounds;
+        private ICollider _boundsCollider;
 
         public uint DebugVisualizationMask { get; set; } 
+
+        public Rect Bounds {
+            get => _bounds;
+            set {
+                if (_bounds == value)
+                    return;
+
+                _bounds = value;
+
+                UpdateBoundsCollider();
+            }
+        }
 
         public World ()
         {
@@ -66,6 +80,17 @@ namespace NoZ.Physics
         public override void Dispose()
         {
             base.Dispose();
+        }
+
+        private void UpdateBoundsCollider()
+        {
+            _boundsCollider?.Dispose();
+            _boundsCollider = null;
+
+            if (_bounds == Rect.Empty)
+                return;
+
+            // tODO: CREATE bounds collider with edge, collide with all
         }
     }
 }

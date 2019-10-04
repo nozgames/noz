@@ -43,9 +43,13 @@ namespace NoZ
         }
 
         public ushort Id { get; private set; }
-        public Image Image { get; private set; }        
         public Polygon[] Polygons { get; private set; }
         public Dictionary<string, string> Properties { get; private set; }
+
+        /// <summary>
+        /// Rectangle of the tile within the image
+        /// </summary>
+        public RectInt Rect { get; private set; }
 
         private Tile () { }
 
@@ -66,7 +70,7 @@ namespace NoZ
             return properties;
         }
 
-        public static Tile Create (BinaryReader reader)
+        public static Tile Create (BinaryReader reader, in Vector2Int tileSize)
         {
             var id = reader.ReadUInt16();
             if (id == 0xFFFF)
@@ -74,7 +78,7 @@ namespace NoZ
 
             var tile = new Tile();
             tile.Id = id;
-            tile.Image = Image.Create(null, reader);
+            tile.Rect = new RectInt(reader.ReadUInt16(), reader.ReadUInt16(), tileSize.x, tileSize.y);
 
             tile.Properties = ReadProperties(reader);
 

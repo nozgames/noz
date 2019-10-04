@@ -30,10 +30,6 @@ namespace NoZ.Physics
 
         public bool IsEnabled { get; private set; }
 
-        public uint CollisionMask { get; set; } = Physics.CollisionMaskAll;
-
-        public uint CollidesWithMask { get; set; } = Physics.CollisionMaskAll;
-
         protected override void OnSceneChanged(Scene oldScene)
         {
             base.OnSceneChanged(oldScene);

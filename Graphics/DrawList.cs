@@ -161,7 +161,7 @@ namespace NoZ
                 }
 
                 var drawable = _nodes[i].Node as IDrawable;
-                gc.SetTransform(_nodes[i].Node.LocalToWorld);
+                gc.Transform = _nodes[i].Node.LocalToWorld;
                 drawable?.Draw(gc);
             }
 

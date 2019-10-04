@@ -81,6 +81,12 @@ namespace NoZ
         {
             var temp = _stopwatch.ElapsedMilliseconds;
             var delta = temp - _elapsed;
+            if (delta < 10)
+            {
+                _deltaTime = 0.0f;
+                return;
+            }
+
             _elapsed = temp;
 
             // Unscaled delta time is the time before timescale is applied
@@ -89,7 +95,7 @@ namespace NoZ
             // Apply timescale
             _deltaTime = _unscaledDeltaTime * TimeScale;
 
-            // Keep try of total time since game started
+            // Keep total time since game started
             TotalTime = ((int)_elapsed) * MillisecondsToSeconds;
         }
 

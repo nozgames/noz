@@ -724,10 +724,10 @@ namespace NoZ
             if (_quadCount <= 0)
                 return false;
 
-            gc.SetColor(Color);
-            gc.SetImage(_font.Image);
-            gc.SetTransform(LocalToWorld);
-            gc.SetMaskMode(MaskMode);
+            gc.Color = Color;
+            gc.Image = _font.Image;
+            gc.Transform = LocalToWorld;
+            gc.MaskMode = MaskMode;
             gc.Draw(_quads, _quadCount);
             return true;
         }

@@ -30,6 +30,51 @@ namespace NoZ.Physics
         public const uint CollisionMaskAll = 0xFFFFFFFF;
 
         /// <summary>
+        /// True if a world has been created
+        /// </summary>
+        private static bool _worldCreated = false;
+
+        public static int _pixelsPerMeter = 100;
+        private static float _pixelsToMeters = 1.0f / _pixelsPerMeter;
+        private static float _metersToPixels = _pixelsPerMeter;
+
+        /// <summary>
+        /// Determiens the pixels per meter of the world.  Must be initialized before 
+        /// any world have been created.
+        /// </summary>
+        public static int PixelsPerMeter {
+            get => _pixelsPerMeter;
+            set {
+                if (_worldCreated)
+                    throw new System.InvalidOperationException("Pixels per meter must be set before any worlds are created");
+
+                _pixelsPerMeter = value;
+                _pixelsToMeters = 1.0f / _pixelsToMeters;
+                _metersToPixels = _pixelsPerMeter;
+            }
+        }
+
+        /// <summary>
+        /// Convert pixels to meters
+        /// </summary>
+        public static float PixelsToMeters(float pixels) => pixels * _pixelsToMeters;
+
+        /// <summary>
+        /// Convert pixels to meters
+        /// </summary>
+        public static Vector2 PixelsToMeters(in Vector2 pixels) => pixels * _pixelsToMeters;
+
+        /// <summary>
+        /// Convert meters to pixels
+        /// </summary>
+        public static float MetersToPixels(float meters) => meters * _metersToPixels;
+
+        /// <summary>
+        /// Convert meters to pixels
+        /// </summary>
+        public static Vector2 MetersToPixels(in Vector2 meters) => meters * _metersToPixels;
+
+        /// <summary>
         /// Current physics driver
         /// </summary>
         public static IPhysicsDriver Driver { get; set; }
@@ -38,7 +83,11 @@ namespace NoZ.Physics
         /// Create a new physics world
         /// </summary>
         /// <returns>Created world</returns>
-        public static IWorld CreateWorld() => Driver.CreateWorld();
+        public static IWorld CreateWorld()
+        {
+            _worldCreated = true;
+            return Driver.CreateWorld();
+        }
 
         /// <summary>
         /// Layer names

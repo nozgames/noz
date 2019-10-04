@@ -36,6 +36,9 @@ namespace NoZ.Physics
         /// </summary>
         private ICollider _collider;
 
+        public uint CollisionMask { get; set; } = Physics.CollisionMaskAll;
+
+        public uint CollidesWithMask { get; set; } = Physics.CollisionMaskAll;
 
         protected override void OnAnscestorChanged()
         {
@@ -58,8 +61,6 @@ namespace NoZ.Physics
             {
                 // Create a new body
                 _body = Scene.World.CreateStaticBody();
-                _body.CollidesWithMask = CollidesWithMask;
-                _body.CollisionMask = CollisionMask;
                 _collider = CreateCollider(_body);
             }
             else
@@ -74,9 +75,9 @@ namespace NoZ.Physics
                 return;
             }
 
-            _collider.Node = this;
-            _collider.CollisionMask = CollisionMask;
             _collider.CollidesWithMask = CollidesWithMask;
+            _collider.CollisionMask = CollisionMask;
+            _collider.Node = this;
         }
 
         protected override void OnDisable ()
@@ -93,7 +94,7 @@ namespace NoZ.Physics
             base.OnUpdate(deltaTime);
 
             if(_body != null)
-                _body.Position = LocalToWorld.MultiplyVector(Vector2.Zero);
+                _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
         }
 
         protected abstract ICollider CreateCollider(IBody body);
