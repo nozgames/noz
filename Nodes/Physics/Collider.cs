@@ -36,9 +36,19 @@ namespace NoZ.Physics
         /// </summary>
         private ICollider _collider;
 
-        public uint CollisionMask { get; set; } = Physics.CollisionMaskAll;
+        private int _layer;
 
-        public uint CollidesWithMask { get; set; } = Physics.CollisionMaskAll;
+        public int Layer {
+            get => _layer;
+            set {
+                _layer = value;
+                if(_collider != null)
+                {
+                    _collider.CollisionMask = (uint)(1 << _layer);
+                    _collider.CollidesWithMask = Physics.GetLayerCollisionMask(_layer);
+                }
+            }
+        }
 
         protected override void OnAnscestorChanged()
         {
@@ -75,8 +85,8 @@ namespace NoZ.Physics
                 return;
             }
 
-            _collider.CollidesWithMask = CollidesWithMask;
-            _collider.CollisionMask = CollisionMask;
+            _collider.CollisionMask = (uint)(1 << _layer);
+            _collider.CollidesWithMask = Physics.GetLayerCollisionMask(_layer);
             _collider.Node = this;
         }
 

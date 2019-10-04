@@ -422,6 +422,15 @@ namespace NoZ
             return anim;
         }
 
+        public static Animation MoveBy (in Vector2 by)
+        {
+            var anim = AllocAnimation();
+            anim._vector1 = by.ToVector3();
+            anim._delegate = MoveUpdateDelegate;
+            anim._startDelegate = MoveByStartDelegate;
+            return anim;
+        }
+
         public static Animation Rotate(float from, float to)
         {
             var anim = AllocAnimation();
@@ -876,6 +885,13 @@ namespace NoZ
             return true;
         }
 
+        private static bool MoveByStart(Animation anim)
+        {
+            anim._object = anim._target;
+            anim._vector0 = (anim._object as Node).Position.ToVector3();
+            anim._vector1 += anim._vector0;
+            return true;
+        }
 
         private static bool ScaleToStart(Animation anim)
         {
@@ -916,10 +932,11 @@ namespace NoZ
         private static readonly StartDelegate FadeStartDelegate = FadeStart;
         private static readonly StartDelegate MoveToStartDelegate = MoveToStart;
         private static readonly StartDelegate ScaleToStartDelegate = ScaleToStart;
+        private static readonly StartDelegate MoveByStartDelegate = MoveByStart;
 
 #endregion
 
-#region Update Delegates
+        #region Update Delegates
 
         private static void ActivateUpdate(Animation anim, float t)
         {

@@ -28,10 +28,29 @@ namespace NoZ.Physics
     {
         internal IBody _body;
         private Vector2 _linearVelocity;
-
-        public bool IsKinematic { get; set; } = false;
+        private float _linearDamping;
+        private bool _sensor;
+        private bool _kinematic;
 
         public bool IsBullet { get; set; } = false;
+
+        public bool IsSensor {
+            get => _sensor;
+            set {
+                _sensor = value;
+                if (_body != null)
+                    _body.IsSensor = _sensor;
+            }
+        }
+
+        public bool IsKinematic {
+            get => _kinematic;
+            set {
+                _kinematic = value;
+                if (_body != null)
+                    _body.IsKinematic = _kinematic;
+            }
+        }
 
         public Vector2 LinearVelocity {
             get => _linearVelocity;
@@ -42,6 +61,17 @@ namespace NoZ.Physics
             }
         }
 
+        public float LinearDamping {
+            get => _linearDamping;
+            set {
+                _linearDamping = value;
+                if(_body != null)
+                    _body.LinearDamping = value;
+            }
+        }
+
+        public void ApplyForce(in Vector2 force) => _body?.ApplyForce(Physics.PixelsToMeters(force));
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -50,7 +80,10 @@ namespace NoZ.Physics
             _body.OnCollisionEnter = OnCollisionEnter;
             _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
             _body.LinearVelocity = Physics.PixelsToMeters(_linearVelocity);
+            _body.LinearDamping = _linearDamping;
             _body.IsBullet = IsBullet;
+            _body.IsSensor = IsSensor;
+            _body.IsKinematic = IsKinematic;
         }
 
         protected override void OnDisable()
@@ -61,20 +94,22 @@ namespace NoZ.Physics
             _body = null;
         }
 
-        protected virtual bool OnCollisionEnter(Collision collision)
+        protected virtual void OnCollisionEnter(Collision collision)
         {
             Broadcast(CollisionEnterEvent, collision);
-            return true;
         }
 
         protected override void OnUpdate(float deltaTime)
         {
             base.OnUpdate(deltaTime);
 
-            if(IsKinematic)
+            if (IsKinematic)
                 _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
             else
+            {
                 Position = Physics.MetersToPixels(_body.Position);
+                _linearVelocity = _body.LinearVelocity;
+            }
         }
     }
 }

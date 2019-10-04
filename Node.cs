@@ -229,6 +229,9 @@ namespace NoZ
         public Vector2 Position {
             get => _position;
             set {
+                System.Diagnostics.Debug.Assert(!float.IsNaN(value.x));
+                System.Diagnostics.Debug.Assert(!float.IsNaN(value.y));
+
                 if (_position != value)
                 {
                     _position = value;

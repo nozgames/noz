@@ -26,7 +26,7 @@ using System;
 
 namespace NoZ.Physics
 {
-    public delegate bool CollisionEnterDelegate (Collision collission);
+    public delegate void CollisionEnterDelegate (Collision collission);
 
     public interface IBody : IDisposable
     {
@@ -35,6 +35,8 @@ namespace NoZ.Physics
         uint CollisionMask { set; }
 
         uint CollidesWithMask { set; }
+
+        void ApplyForce(in Vector2 force);
 
         ICollider AddBoxCollider(in Vector2 position, in Vector2 size);
 
@@ -46,9 +48,17 @@ namespace NoZ.Physics
 
         ICollider AddChainCollider (in Vector2 position, Vector2[] points, bool loop);
 
+        bool IsEnabled { get; set; }
+
         bool IsBullet { get; set; }
 
+        bool IsSensor { set; }
+
+        bool IsKinematic { set; }
+
         Vector2 LinearVelocity { get; set; }
+
+        float LinearDamping { get; set; }
 
         Vector2 Position { get; set; }
 

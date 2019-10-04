@@ -100,7 +100,10 @@ namespace NoZ
                             var collider = _body.AddPolygonCollider(
                                 Physics.Physics.PixelsToMeters(offset + new Vector2(x * TileMap.TileSize.x, y * TileMap.TileSize.y)), polygon.Points);
                             if (polygon.Properties.TryGetValue("Layer", out var polygonLayer))
-                                collider.CollisionMask = Physics.Physics.LayerToMask(Physics.Physics.NameToLayer(polygonLayer));
+                            {
+                                collider.CollisionMask = (uint)(1 << Physics.Physics.NameToLayer(polygonLayer));
+                                collider.CollidesWithMask = Physics.Physics.GetLayerCollisionMask(Physics.Physics.NameToLayer(polygonLayer));
+                            }
                         }                            
                     }
 
@@ -109,7 +112,8 @@ namespace NoZ
                         var collider = _body.AddBoxCollider(
                             Physics.Physics.PixelsToMeters(offset + new Vector2((x+0.5f) * TileMap.TileSize.x, (y+0.5f) * TileMap.TileSize.y)), 
                             Physics.Physics.PixelsToMeters(TileMap.TileSize.ToVector2()));
-                        collider.CollisionMask = Physics.Physics.LayerToMask(Physics.Physics.NameToLayer(layer));
+                        collider.CollisionMask = (uint) (1 << Physics.Physics.NameToLayer(layer));
+                        collider.CollidesWithMask = Physics.Physics.GetLayerCollisionMask(Physics.Physics.NameToLayer(layer));
                     }
                 }
 

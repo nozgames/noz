@@ -89,74 +89,105 @@ namespace NoZ.Physics
             return Driver.CreateWorld();
         }
 
+        private struct Layer
+        {
+            public string name;
+            public uint mask;
+
+            public Layer(string _name) { name = _name; mask = Physics.CollisionMaskNone; }
+        }
+
         /// <summary>
-        /// Layer names
+        /// Layers
         /// </summary>
-        private static string[] LayerNames = new string[32] {
-            "Layer0",
-            "Layer1",
-            "Layer2",
-            "Layer3",
-            "Layer4",
-            "Layer5",
-            "Layer6",
-            "Layer7",
-            "Layer8",
-            "Layer9",
-            "Layer10",
-            "Layer11",
-            "Layer12",
-            "Layer13",
-            "Layer14",
-            "Layer15",
-            "Layer16",
-            "Layer17",
-            "Layer18",
-            "Layer19",
-            "Layer20",
-            "Layer21",
-            "Layer22",
-            "Layer23",
-            "Layer24",
-            "Layer25",
-            "Layer26",
-            "Layer27",
-            "Layer28",
-            "Layer29",
-            "Layer30",
-            "Layer31",
+        private static Layer[] Layers = new Layer[32] {
+            new Layer("Default"),
+            new Layer("Layer1"),
+            new Layer("Layer2"),
+            new Layer("Layer3"),
+            new Layer("Layer4"),
+            new Layer("Layer5"),
+            new Layer("Layer6"),
+            new Layer("Layer7"),
+            new Layer("Layer8"),
+            new Layer("Layer9"),
+            new Layer("Layer10"),
+            new Layer("Layer11"),
+            new Layer("Layer12"),
+            new Layer("Layer13"),
+            new Layer("Layer14"),
+            new Layer("Layer15"),
+            new Layer("Layer16"),
+            new Layer("Layer17"),
+            new Layer("Layer18"),
+            new Layer("Layer19"),
+            new Layer("Layer20"),
+            new Layer("Layer21"),
+            new Layer("Layer22"),
+            new Layer("Layer23"),
+            new Layer("Layer24"),
+            new Layer("Layer25"),
+            new Layer("Layer26"),
+            new Layer("Layer27"),
+            new Layer("Layer28"),
+            new Layer("Layer29"),
+            new Layer("Layer30"),
+            new Layer("Layer31"),
             };
 
         /// <summary>
         /// Set the name of a layer
         /// </summary>
-        public static void SetLayerName(int layer, string name) => LayerNames[layer] = name;
+        public static void SetLayerName(int layer, string name)
+        {
+            if (layer == 0)
+                throw new System.ArgumentOutOfRangeException("default layer name cannot be changed");
+
+            Layers[layer].name = name;
+        }
 
         /// <summary>
         /// Return the layer name for a given layer index
         /// </summary>
-        public static string LayerToName(int layer) => LayerNames[layer];
-
-        /// <summary>
-        /// Convert a layer to a layer mask
-        /// </summary>
-        public static uint LayerToMask(int layer) => (uint)(1 << layer);
+        public static string LayerToName(int layer) => Layers[layer].name;
 
         /// <summary>
         /// Convert a layer name to a layer index
         /// </summary>
         public static int NameToLayer(string name)
         {
-            for (int i = 0; i < LayerNames.Length; i++)
-                if (LayerNames[i] == name)
+            for (int i = 0; i < Layers.Length; i++)
+                if (Layers[i].name == name)
                     return i;
 
             return -1;
         }
 
         /// <summary>
-        /// Convert a layer name to a layer index
+        /// Enable or disable colision between two layers
         /// </summary>
-        public static uint NameToLayerMask(string name) => LayerToMask(NameToLayer(name));
+        public static void EnableCollision(int layer1, int layer2, bool enable=true)
+        {
+            if (enable)
+            {
+                Layers[layer1].mask |= (uint)(1 << layer2);
+                Layers[layer2].mask |= (uint)(1 << layer1);
+            }
+            else
+            {
+                Layers[layer1].mask &= (uint)~(1 << layer2);
+                Layers[layer2].mask &= (uint)~(1 << layer1);
+            }
+        }
+
+        /// <summary>
+        /// Get the collision layer mask that indicates which layer(s) the given layer will collide with.
+        /// </summary>
+        public static uint GetLayerCollisionMask(int layer) => Layers[layer].mask;
+
+        /// <summary>
+        /// Set the collision layer mask that indicates which layer(s) the given layer will collide with
+        /// </summary>
+        public static uint SetLayerCollisionMask(int layer, uint mask) => Layers[layer].mask = mask;
     }
 }

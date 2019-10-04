@@ -56,7 +56,6 @@ namespace NoZ
 
         private static Node _activeCursor;
         private static View _cursorView;
-        private static Node _cursorNode;
         private static Node _cursorPosition;
 
         public static IWindowDriver Driver {
