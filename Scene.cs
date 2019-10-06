@@ -63,6 +63,8 @@ namespace NoZ
             }
         }
 
+        public bool HasWorld => _world != null;
+
         /// <summary>
         /// Physics world associated with the scene
         /// </summary>
@@ -160,8 +162,6 @@ namespace NoZ
             OnUpdate();
 
             Broadcast(UpdateEvent);
-
-            _world?.Step();
         }
 
 

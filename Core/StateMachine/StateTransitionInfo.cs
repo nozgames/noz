@@ -21,24 +21,18 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System;
 
 namespace NoZ
 {
-    public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+    internal class StateTransitionInfo
     {
-        public static ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+        public StateInfo From { get; internal set; }
 
-        public bool Equals(T left, T right)
-        {
-            return ReferenceEquals(left, right);
-        }
+        public StateInfo To { get; internal set; }
 
-        public int GetHashCode(T value)
-        {
-            return RuntimeHelpers.GetHashCode(value);
-        }
+        public Reflection.OpenDelegate InvokeDelegate { get; internal set; }
+
+        public void Invoke(object target) => InvokeDelegate.Invoke(target);
     }
 }

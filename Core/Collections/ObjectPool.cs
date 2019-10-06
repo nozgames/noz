@@ -24,25 +24,34 @@
 
 using System.Collections.Generic;
 
-namespace NoZ {
+namespace NoZ
+{
 
-    public class ObjectPool<T> where T : new() {
+    public class ObjectPool<T> where T : class
+    {
+        public delegate T Allocator();
+
         private Stack<T> _items;
         private int _capacity;
+        private Allocator _allocator;
 
-        public ObjectPool (int capacity) {
+        public ObjectPool(Allocator allocator, int capacity)
+        {
+            _allocator = allocator;
             _capacity = capacity;
             _items = new Stack<T>(capacity);
         }
 
-        public T Get () {
+        public T Get()
+        {
             if (_items.Count == 0)
-                return new T();
+                return _allocator();
 
             return _items.Pop();
         }
 
-        public void Release(T t) {
+        public void Release(T t)
+        {
             if (_items.Count == _capacity)
                 return;
             _items.Push(t);

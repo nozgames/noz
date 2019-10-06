@@ -73,7 +73,7 @@ namespace NoZ
         /// Set the animation update mode
         /// </summary>
         /// <param name="updateMode">New update mode</param>
-        public Animation UpdateMode(AnimationUpdateMode updateMode) { _updateMode = updateMode; return this; }
+        public Animation UpdateMode(UpdateMode updateMode) { _updateMode = updateMode; return this; }
 
         /// <summary>
         /// Set the animation key 

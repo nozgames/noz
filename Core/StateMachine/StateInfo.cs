@@ -22,23 +22,44 @@
   SOFTWARE.
 */
 
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System;
 
 namespace NoZ
 {
-    public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+    /// <summary>
+    /// Represents a state within a state machine
+    /// </summary>
+    internal class StateInfo
     {
-        public static ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+        /// <summary>
+        /// Name of the state
+        /// </summary>
+        public string Name { get; internal set; }
 
-        public bool Equals(T left, T right)
-        {
-            return ReferenceEquals(left, right);
-        }
+        /// <summary>
+        /// Unique mask of the state
+        /// </summary>
+        public ulong Mask { get; internal set; }
 
-        public int GetHashCode(T value)
+        /// <summary>
+        /// Delegate used to invoke the state update method
+        /// </summary>
+        public Reflection.OpenDelegate InvokeDelegate { get; internal set; }
+
+        /// <summary>
+        /// Delegate used to invoke the state updated method with an elapsed time
+        /// </summary>
+        public Reflection.OpenDelegate<float> InvokeWithTimeDelegate { get; internal set; }
+
+        /// <summary>
+        /// Ivoke the state method on the given target if the state has one
+        /// </summary>
+        public void Invoke (object target, float time)
         {
-            return RuntimeHelpers.GetHashCode(value);
+            if (InvokeWithTimeDelegate != null)
+                InvokeWithTimeDelegate.Invoke(target, time);
+            else if(InvokeDelegate != null)
+                InvokeDelegate.Invoke(target);
         }
     }
 }

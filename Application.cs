@@ -85,7 +85,21 @@ namespace NoZ
             for(var i=0;i<Window.ViewCount;i++)
                 Window.GetViewAt(i).Update();
 
-            Animation.Step(AnimationUpdateMode.Update);
+            while (Time.BeginFixedTimeStep())
+            {
+                for (var i = 0; i < Window.ViewCount; i++)
+                {
+                    var view = Window.GetViewAt(i);
+                    if (view.Scene.HasWorld && !view.Scene.IsPaused)
+                        view.Scene.World.Step();
+                }
+
+                Time.EndFixedTimeStep();
+            }
+
+            StateMachine.Update(UpdateMode.Update);
+
+            Animation.Step(UpdateMode.Update);
 
             var gc = Window.DrawBegin();
 

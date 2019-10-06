@@ -30,6 +30,7 @@ namespace NoZ
     {
         private static Stopwatch _stopwatch;
         private static long _elapsed;
+        private static float _accumulatedFixed;
         private static float _deltaTime;
         private static float _unscaledDeltaTime;
         private const float MillisecondsToSeconds = 1.0f / 1000.0f;
@@ -38,6 +39,7 @@ namespace NoZ
         {
             _stopwatch = Stopwatch.StartNew();
             _elapsed = 0;
+            _accumulatedFixed = 0;
             TotalTime = 0;
             _deltaTime = 0.0f;
         }
@@ -65,7 +67,7 @@ namespace NoZ
         /// <summary>
         /// Time in seconds for an unscaled time step
         /// </summary>
-        public static float FixedUnscaledDeltaTime { get; set; } = 1.0f / 60.0f;
+        public static float FixedUnscaledDeltaTime { get; set; } = 1.0f / 50.0f;
 
         /// <summary>
         /// Time in seconds for the current scaled fixed time
@@ -97,15 +99,22 @@ namespace NoZ
 
             // Keep total time since game started
             TotalTime = ((int)_elapsed) * MillisecondsToSeconds;
+
+            _accumulatedFixed += _deltaTime;
         }
 
         /// <summary>
         /// Begin a new fixed time step
         /// </summary>
-        internal static void BeginFixedTimeStep ()
+        internal static bool BeginFixedTimeStep ()
         {
+            if (_accumulatedFixed < FixedUnscaledDeltaTime)
+                return false;
+
+            _accumulatedFixed -= FixedUnscaledDeltaTime;
             InFixedTimeStep = true;
-            FixedDeltaTime = TimeScale * FixedUnscaledDeltaTime;
+            FixedDeltaTime = FixedUnscaledDeltaTime;
+            return true;
         }
 
         /// <summary>

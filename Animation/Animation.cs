@@ -26,14 +26,6 @@ using System;
 
 namespace NoZ
 {
-    public enum AnimationUpdateMode
-    {
-        None,
-        Update,
-        LateUpdate,
-        FixedUpdate
-    }
-
     public enum EaseType
     {
         None,
@@ -106,7 +98,7 @@ namespace NoZ
 
         public static bool IsPaused { get; private set; } = true;
 
-        private AnimationUpdateMode _updateMode;
+        private UpdateMode _updateMode;
         private Vector3 _vector0;
         private Vector3 _vector1;
         private Node _node;
@@ -149,7 +141,7 @@ namespace NoZ
         /// <summary>
         /// Pool of animations available for use
         /// </summary>
-        private static ObjectPool<Animation> _pool = new ObjectPool<Animation>(128);
+        private static ObjectPool<Animation> _pool = new ObjectPool<Animation>(() => new Animation(), 128);
 
         /// <summary>
         /// Array of all availalbe easing delegates
@@ -239,20 +231,19 @@ namespace NoZ
             onStop?.Invoke();
         }
 
-        public static void Step(AnimationUpdateMode updateMode)
+        public static void Step(UpdateMode updateMode)
         {
             var elapsedNormal = 0f;
             var elapsedUnscaled = 0f;
 
             switch (updateMode)
             {
-                case AnimationUpdateMode.FixedUpdate:
+                case NoZ.UpdateMode.FixedUpdate:
                     elapsedNormal = Time.FixedDeltaTime;
                     elapsedUnscaled = Time.FixedUnscaledDeltaTime;
                     break;
 
-                case AnimationUpdateMode.LateUpdate:
-                case AnimationUpdateMode.Update:
+                case NoZ.UpdateMode.Update:
                     elapsedNormal = Time.DeltaTime;
                     elapsedUnscaled = Time.UnscaledDeltaTime;
                     break;
@@ -292,7 +283,7 @@ namespace NoZ
         {
             var anim = _pool.Get();
             anim._delay = 0f;
-            anim._updateMode = AnimationUpdateMode.Update;
+            anim._updateMode = NoZ.UpdateMode.Update;
             anim._flags = 0f;
             anim._elapsed = 0f;
             anim._duration = 1f;

@@ -61,15 +61,8 @@ namespace NoZ.Physics
 
         public void Step()
         {
-            _accumulatedTime += Time.DeltaTime;
-            while(_accumulatedTime > Time.FixedUnscaledDeltaTime)
-            {
-                Time.BeginFixedTimeStep();
-                UpdateEvent.Broadcast(this, Time.FixedDeltaTime);
-                _world.Step(Time.FixedDeltaTime);
-                Time.EndFixedTimeStep();
-                _accumulatedTime -= Time.FixedUnscaledDeltaTime;
-            }
+            UpdateEvent.Broadcast(this, Time.FixedDeltaTime);
+            _world.Step(Time.FixedDeltaTime);
         }
 
         public void DrawDebug(GraphicsContext gc)

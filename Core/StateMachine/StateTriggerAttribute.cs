@@ -22,23 +22,22 @@
   SOFTWARE.
 */
 
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System;
 
 namespace NoZ
 {
-    public sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class StateTriggerAttribute : Attribute
     {
-        public static ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+        public bool Value { get; private set; }
+        public string From { get; private set; }
+        public string To { get; private set; }
 
-        public bool Equals(T left, T right)
+        public StateTriggerAttribute(bool value, string from, string to)
         {
-            return ReferenceEquals(left, right);
-        }
-
-        public int GetHashCode(T value)
-        {
-            return RuntimeHelpers.GetHashCode(value);
+            Value = value;
+            From = from;
+            To = to;
         }
     }
 }
