@@ -56,7 +56,7 @@ namespace NoZ
             for (int i = 0; i < frameCount; i++)
             {
                 var frame = new Frame();
-                frame.Image = ResourceDatabase.Load<Image>(reader.ReadString());
+                frame.Image = Resource.Load<Image>(reader.ReadString());
                 frame.Duration = reader.ReadSingle();
                 frame.Start = duration;
                 anim.Frames[i] = frame;

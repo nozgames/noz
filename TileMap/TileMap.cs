@@ -66,7 +66,7 @@ namespace NoZ
             // Load all tile sets
             tilemap.TileSets = new TileSet[reader.ReadUInt16()];
             for(var tileSetIndex = 0; tileSetIndex<tilemap.TileSets.Length; tileSetIndex++)
-                tilemap.TileSets[tileSetIndex] = ResourceDatabase.Load<TileSet>(reader.ReadString());
+                tilemap.TileSets[tileSetIndex] = Resource.Load<TileSet>(reader.ReadString());
 
             // Load all tiles
             tilemap.Tiles = new Tile[tilemap.Size.x * tilemap.Size.y];

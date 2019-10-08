@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-namespace NoZ.Physics
+namespace NoZ
 {
     public abstract class PhysicsNode : Node
     {

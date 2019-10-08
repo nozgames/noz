@@ -81,6 +81,16 @@ namespace NoZ
         /// <param name="key">Animation key</param>
         public Animation Key(string key) { _key = key; return this; }
 
+        public Animation AutoDestroy(bool autoDestroy = true)
+        {
+            if (autoDestroy)
+                _flags |= Flags.AudioDestroy;
+            else
+                _flags &= ~Flags.AudioDestroy;
+
+            return this;
+        }
+
         /// <summary>
         /// Enables or disables PingPong mode.  When PingPong mode is enabled the animation
         /// will play itself fully forward and then then in reverse before stopping.  This means that 
@@ -102,9 +112,10 @@ namespace NoZ
         /// Set the loop state of the animation
         /// </summary>
         /// <param name="loop">True if the animation should loop</param>
-        public Animation Loop(bool loop = true)
+        public Animation Loop(int count = -1)
         {
-            _flags = loop ? (_flags | Flags.Loop) : (_flags & ~Flags.Loop);
+            _flags =_flags | Flags.Loop;
+            _loopCount = count;
             return this;
         }
 

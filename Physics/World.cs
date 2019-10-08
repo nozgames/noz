@@ -24,14 +24,13 @@
 
 using System;
 
-namespace NoZ.Physics
+namespace NoZ
 {
     public class World : Object, IDisposable
     {
         public static readonly Event<float> UpdateEvent = new Event<float>();
         
         private IWorld _world;
-        private float _accumulatedTime;
         private Rect _bounds;
         private IBody _boundsBody;
         private ICollider _boundsCollider;

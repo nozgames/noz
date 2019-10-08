@@ -56,7 +56,7 @@ namespace NoZ
             }
         }
 
-        private NoZ.Physics.IBody _body;
+        private IBody _body;
 
         protected override void OnEnterScene(Scene entering)
         {
@@ -88,7 +88,7 @@ namespace NoZ
 
             var offset = -((TileMap.Size * TileMap.TileSize).ToVector2() * 0.5f);
 
-            List<NoZ.Physics.ICollider> colliders = new List<Physics.ICollider>();
+            List<ICollider> colliders = new List<ICollider>();
             for (int y = 0; y < TileMap.Size.y; y++)
                 for (int x = 0; x < TileMap.Size.x; x++)
                 {
@@ -98,11 +98,11 @@ namespace NoZ
                         foreach (var polygon in tile.Polygons)
                         {
                             var collider = _body.AddPolygonCollider(
-                                Physics.Physics.PixelsToMeters(offset + new Vector2(x * TileMap.TileSize.x, y * TileMap.TileSize.y)), polygon.Points);
+                                Physics.PixelsToMeters(offset + new Vector2(x * TileMap.TileSize.x, y * TileMap.TileSize.y)), polygon.Points);
                             if (polygon.Properties.TryGetValue("Layer", out var polygonLayer))
                             {
-                                collider.CollisionMask = (uint)(1 << Physics.Physics.NameToLayer(polygonLayer));
-                                collider.CollidesWithMask = Physics.Physics.GetLayerCollisionMask(Physics.Physics.NameToLayer(polygonLayer));
+                                collider.CollisionMask = (uint)(1 << Physics.NameToLayer(polygonLayer));
+                                collider.CollidesWithMask = Physics.GetLayerCollisionMask(Physics.NameToLayer(polygonLayer));
                             }
                         }                            
                     }
@@ -110,10 +110,10 @@ namespace NoZ
                     if(tile.Properties.TryGetValue("Layer", out var layer))
                     {                        
                         var collider = _body.AddBoxCollider(
-                            Physics.Physics.PixelsToMeters(offset + new Vector2((x+0.5f) * TileMap.TileSize.x, (y+0.5f) * TileMap.TileSize.y)), 
-                            Physics.Physics.PixelsToMeters(TileMap.TileSize.ToVector2()));
-                        collider.CollisionMask = (uint) (1 << Physics.Physics.NameToLayer(layer));
-                        collider.CollidesWithMask = Physics.Physics.GetLayerCollisionMask(Physics.Physics.NameToLayer(layer));
+                            Physics.PixelsToMeters(offset + new Vector2((x+0.5f) * TileMap.TileSize.x, (y+0.5f) * TileMap.TileSize.y)), 
+                            Physics.PixelsToMeters(TileMap.TileSize.ToVector2()));
+                        collider.CollisionMask = (uint) (1 << Physics.NameToLayer(layer));
+                        collider.CollidesWithMask = Physics.GetLayerCollisionMask(Physics.NameToLayer(layer));
                     }
                 }
 

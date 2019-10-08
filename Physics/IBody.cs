@@ -24,7 +24,7 @@
 
 using System;
 
-namespace NoZ.Physics
+namespace NoZ
 {
     public delegate void CollisionEnterDelegate (Collision collission);
 

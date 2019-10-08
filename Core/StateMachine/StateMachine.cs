@@ -53,17 +53,16 @@ namespace NoZ
         {
             var sm = _stateMachinePool.Get();
             sm._sminfo = StateMachineInfo.Create(target.GetType());
-            sm._state = sm._sminfo.GetState(initialState);
             sm._key = key;
             sm._target = target;
             sm._updateMode = mode;
             sm._elapsedTimeInState = 0.0f;
 
-            if (sm._state == null)
-                throw new ArgumentException($"unknown initial state '{initialState}'");
-
             // Track all running state machines
             _stateMachines.Add(sm);
+
+            // Set the initial state
+            sm.SetState(initialState);
         }
 
         /// <summary>
@@ -72,8 +71,27 @@ namespace NoZ
         /// <param name="updateMode"></param>
         public static void Update(UpdateMode updateMode) 
         {
-            foreach(var sm in _stateMachines)
+            for(int i=0; i<_stateMachines.Count; i++)
             {
+                var sm = _stateMachines[i];
+
+                // Handle node specific logic
+                if (sm._target is Node node)
+                {
+                    // Handle destroyed nodes
+                    if(node.IsDestroyed)
+                    {
+                        _stateMachines.RemoveAt(i);
+                        _stateMachinePool.Release(sm);
+                        i--;
+                        continue;
+                    }
+
+                    // If the scene is paused then pause the state machine too
+                    if (node.Scene == null || node.Scene.IsPaused)
+                        continue;
+                }
+
                 sm._elapsedTimeInState += Time.DeltaTime;
 
                 // Update the triggers for the current state
@@ -111,6 +129,21 @@ namespace NoZ
             return false;
         }
 
+        /// <summary>
+        /// Set the current state to the state with the given name
+        /// </summary>
+        private void SetState (string stateName)
+        {
+            var state = _sminfo.GetState(stateName);
+            if (null == state)
+                throw new ArgumentException("unknown state");
+
+            SetState(state);
+        }
+
+        /// <summary>
+        /// Set the current state using state info
+        /// </summary>
         private void SetState (StateInfo state)
         {
             if (_state == state)
@@ -124,5 +157,18 @@ namespace NoZ
             _elapsedTimeInState = 0.0f;
             _state = state;
         }
+
+        /// <summary>
+        /// Set a specific state in the state machine running on a given target.
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="stateName"></param>
+        public static void SetState (NoZ.Object target, string stateName, string key=null)
+        {
+            foreach (var sm in _stateMachines)
+                if(sm._target == target && (key == null || key == sm._key))
+                    sm.SetState(stateName);
+        }
+
     }
 }

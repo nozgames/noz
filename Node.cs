@@ -291,7 +291,7 @@ namespace NoZ
             }
         }
 
-        public float Alpha { get; set; } = 1.0f;
+        public float Opacity { get; set; } = 1.0f;
 
         public Vector2 Scale {
             get => _scale;
@@ -780,7 +780,7 @@ namespace NoZ
             // either the node common between the old and new or run out of nodes.
             if (oldMouseOver != null && node != oldMouseOver)
             {
-                for (; oldMouseOver != node; oldMouseOver = oldMouseOver.Parent)
+                for (; oldMouseOver != null && oldMouseOver != node; oldMouseOver = oldMouseOver.Parent)
                 {
                     oldMouseOver.ClearFlags(Flags.MouseOver);
                     oldMouseOver.OnMouseLeave();
@@ -788,6 +788,18 @@ namespace NoZ
             }
 
             return newMouseOver;
+        }
+
+        /// <summary>
+        /// Return the accumulated opacity from all parents
+        /// </summary>
+        public float AccumulatedOpacity {
+            get {
+                var opacity = Opacity;
+                for (var parent = Parent; parent != null && opacity > 0.0f; parent = parent.Parent)
+                    opacity *= parent.Opacity;
+                return opacity;
+            }
         }
     }
 }

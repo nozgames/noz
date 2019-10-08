@@ -60,15 +60,17 @@ namespace NoZ
 
     public abstract class GraphicsContext
     {
-        public struct State
+        public class State
         {
             public int maskCount;
             public Color color;
-            public float alpha;
+            public float opacity;
         }
 
+        private static ObjectPool<State> _statePool = new ObjectPool<State>(() => new State(), 16);
         private Stack<State> _state;
         private Stack<Matrix3> _worldToScreen;
+        private Color _color;
 
         public static GraphicsContext Create() => Graphics.Driver.CreateContext();
 
@@ -77,52 +79,56 @@ namespace NoZ
             _state = new Stack<State>(4);
             _worldToScreen = new Stack<Matrix3>(4);
             _worldToScreen.Push(Matrix3.Identity);
+
+            _state.Push(new State { color = Color.White, opacity = 1.0f, maskCount = 0 });
         }
 
         public virtual void Begin(Vector2Int size, Color backgroundColor)
         {
-            _state.Clear();
+            _color = Color.White;
         }
 
         public virtual void End()
         {
+            // Pop any states remaining
+            while (_state.Count > 1) _state.Pop();
         }
 
-        private State CurrentState {
-            get {
-                return _state.Peek();
-            }
-        }
+        /// <summary>
+        /// Get the current state
+        /// </summary>
+        private State CurrentState => _state.Peek();
 
+        /// <summary>
+        /// Push the current state onto the stack
+        /// </summary>
         public void PushState()
         {
-            if (_state.Count > 0)
-            {
-                _state.Push(new State()
-                {
-                    color = CurrentState.color,
-                    alpha = CurrentState.alpha
-                });
-            }
-            else
-            {
-                _state.Push(new State()
-                {
-                    color = Color.White,
-                    alpha = 1f
-                });
-            }
+            var state = _statePool.Get();
+            state.color = CurrentState.color;
+            state.opacity = CurrentState.opacity;
+            state.maskCount = 0;
+            _state.Push(state);
         }
 
+        /// <summary>
+        /// Pop the current state from the stack
+        /// </summary>
         public void PopState()
         {
-            State state = CurrentState;
+            if (_state.Count < 1)
+                return;
 
             // Pop any outstanding masks
-            while (state.maskCount > 0)
+            var current = CurrentState;
+            while (current.maskCount > 0)
                 throw new NotImplementedException();
 
             _state.Pop();
+
+            _statePool.Release(current);
+
+            _color = CurrentState.color.MultiplyAlpha(CurrentState.opacity);
         }
 
         /// <summary>
@@ -135,9 +141,25 @@ namespace NoZ
         /// </summary>
         public abstract void PopMask();
 
-        public abstract MaskMode MaskMode { get;  set; }
+        public abstract MaskMode MaskMode { get; set; }
 
-        public abstract Color Color { get; set; }
+        public Color Color {
+            get => CurrentState.color;
+            set {
+                CurrentState.color = value;
+                UpdateColor();
+            }
+        }
+
+        public float Opacity {
+            get => CurrentState.opacity;
+            set {
+                CurrentState.opacity = value;
+                UpdateColor();
+            }
+        }
+
+        public Color ColorWithOpacity => _color;
 
         public abstract Image Image { get; set; }
 
@@ -163,6 +185,8 @@ namespace NoZ
         }
 
         public Matrix3 WorldToScreen => _worldToScreen.Peek();
+
+        private void UpdateColor () => _color = CurrentState.color.MultiplyAlpha(CurrentState.opacity);
     }
 }
 

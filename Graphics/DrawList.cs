@@ -160,6 +160,8 @@ namespace NoZ
                     continue;
                 }
 
+                gc.Opacity = _nodes[i].Node.AccumulatedOpacity;
+
                 var drawable = _nodes[i].Node as IDrawable;
                 gc.Transform = _nodes[i].Node.LocalToWorld;
                 drawable?.Draw(gc);

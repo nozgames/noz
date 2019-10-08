@@ -357,6 +357,9 @@ namespace NoZ
         /// </summary>
         internal static void BeginFrame()
         {
+            // Clear mouse over if node was destroyed
+            MouseOver = (MouseOver?.IsDestroyed ?? true) ? null : MouseOver;
+
             // Update the mouse over node
             var oldMouseOver = MouseOver;
             MouseOver = Node.UpdateMouseOvers();

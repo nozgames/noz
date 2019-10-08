@@ -120,6 +120,14 @@ namespace NoZ
         }
 
         /// <summary>
+        /// Returns a int between the minimum and maximum values
+        /// </summary>
+        /// <param name="min">Minimum value (inclusive)</param>
+        /// <param name="max">Maximum value (inclusive)</param>
+        /// <returns>Random value</returns>
+        public static int Range(int min, int max) => min + (int)(NextDouble() * (max - min));
+
+        /// <summary>
         /// Returns a float between the minimum and maximum values
         /// </summary>
         /// <param name="min">Minimum value (inclusive)</param>

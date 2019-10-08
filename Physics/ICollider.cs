@@ -24,7 +24,7 @@
 
 using System;
 
-namespace NoZ.Physics
+namespace NoZ
 {
     public interface ICollider : IDisposable
     {

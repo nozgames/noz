@@ -75,6 +75,8 @@ namespace NoZ
 
         public AnimatedSprite() { }
 
+        public AnimatedSprite(Image image) : base(image) { }
+
         public AnimatedSprite(ImageAnimation animation) => Play(animation);
 
         public AnimatedSprite(ImageAnimation animation, bool loop) => Play(animation, loop);

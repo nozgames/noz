@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-namespace NoZ.Physics
+namespace NoZ
 {
     public class RigidBody : PhysicsNode
     {
@@ -108,7 +108,7 @@ namespace NoZ.Physics
             else
             {
                 Position = Physics.MetersToPixels(_body.Position);
-                _linearVelocity = _body.LinearVelocity;
+                _linearVelocity = Physics.MetersToPixels(_body.LinearVelocity);
             }
         }
     }

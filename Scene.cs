@@ -37,7 +37,8 @@ namespace NoZ
         private Camera _camera;
         private bool _paused = true;
         private Matrix3 _windowToScene;
-        private Physics.World _world;
+        private Matrix3 _sceneToWindow;
+        private World _world;
 
         public Node Cursor { get; set; }
 
@@ -68,10 +69,10 @@ namespace NoZ
         /// <summary>
         /// Physics world associated with the scene
         /// </summary>
-        public Physics.World World {
+        public World World {
             get {
                 if (_world == null)
-                    _world = new Physics.World();
+                    _world = new World();
 
                 return _world;
             }
@@ -124,6 +125,7 @@ namespace NoZ
                 mat2 = Matrix3.Multiply(mat2, Matrix3.Rotate(Camera.Rotation * MathEx.Deg2Rad));
                 mat = Matrix3.Multiply(mat2, mat);
 
+                _sceneToWindow = mat;
                 _windowToScene = mat.Inverse();
 
                 gc.PushMatrix(mat);
@@ -231,6 +233,8 @@ namespace NoZ
         protected virtual void OnResume() { }
 
         public Matrix3 WindowToScene => _windowToScene;
+
+        public Matrix3 SceneToWindow => _sceneToWindow;
 
         protected virtual void OnKeyDown(KeyCode keyCode) => Broadcast(KeyDownEvent, keyCode);
 

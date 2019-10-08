@@ -49,7 +49,7 @@ namespace NoZ
     public partial class Animation
     {
         [Flags]
-        private enum Flags : byte
+        private enum Flags : ushort
         {
             /// <summary>
             /// Indicates the animation should process the children as a sequence rather than a group
@@ -89,7 +89,12 @@ namespace NoZ
             /// <summary>
             /// Animation is stopping
             /// </summary>
-            Stopping = (1 << 7)
+            Stopping = (1 << 7),
+
+            /// <summary>
+            /// Automatically destroy the target node when the animation completes
+            /// </summary>
+            AudioDestroy = (1 << 8)
         }
 
         private delegate float EasingDelegate(float t, float p1, float p2);
@@ -122,6 +127,7 @@ namespace NoZ
         private Animation _lastChild;
         private Animation _parent;
         private Flags _flags;
+        private int _loopCount;
 
         #region Static
 
@@ -223,9 +229,15 @@ namespace NoZ
             anim.IsActive = false;
 
             var onStop = anim._onStop;
+            var target = anim._target;
 
             // Free the animation
             FreeAnimation(anim);
+
+            // Auto-destroy the node
+            if (anim.IsAutoDestroy)
+                if (target is Node node)
+                    node.Destroy();
 
             // Call onStop
             onStop?.Invoke();
@@ -259,6 +271,22 @@ namespace NoZ
 
                 if (anim._updateMode != updateMode)
                     continue;
+
+                // Handle node specific logic
+                if (anim._target is Node node)
+                {
+                    // If the node is destroyed then animation can finish
+                    if (node.IsDestroyed)
+                    {
+                        Stop(anim);
+                        continue;
+                    }
+                    // If node's scene is paused then pause the animation too
+                    else if (node.Scene == null || node.Scene.IsPaused)
+                    {
+                        continue;
+                    }
+                }
 
                 if ((anim._flags & Flags.UnscaledTime) == Flags.UnscaledTime)
                     anim.UpdateInternal(elapsedUnscaled);
@@ -362,6 +390,7 @@ namespace NoZ
         public bool IsSequence => (_flags & Flags.Sequence) == Flags.Sequence;
         public bool IsStarted => (_flags & Flags.Started) == Flags.Started;
         public bool IsLowPriority => (_flags & Flags.LowPriority) == Flags.LowPriority;
+        public bool IsAutoDestroy => (_flags & Flags.AudioDestroy) == Flags.AudioDestroy;
 
         public static Animation Shake(Vector2 positionalIntensity, float rotationalIntensity)
         {
@@ -675,6 +704,17 @@ namespace NoZ
                 // Do not run delay again if looping
                 if (IsLooping)
                 {
+                    // Handle loop count
+                    if (_loopCount > 0)
+                    {
+                        _loopCount--;
+                        if (_loopCount == 0)
+                        {
+                            _flags &= ~(Flags.Loop);
+                            _loopCount = -1;
+                        }
+                    }
+
                     _elapsed -= _delay;
                     _delay = 0f;
                 }
@@ -717,6 +757,17 @@ namespace NoZ
                 {
                     if (IsLooping)
                     {
+                        // Handle loop count
+                        if (_loopCount > 0)
+                        {
+                            _loopCount--;
+                            if (_loopCount == 0)
+                            {
+                                _flags &= ~(Flags.Loop);
+                                _loopCount = -1;
+                            }
+                        }
+
                         _elapsed = elapsed % _duration;
                         reverse = false;
                         elapsed = _elapsed;
@@ -892,17 +943,10 @@ namespace NoZ
 
         private static bool FadeStart(Animation anim)
         {
-            anim._object = anim._target as Sprite;
+            anim._object = anim._target as Node;
             if (null != anim._object)
             {
-                anim._delegate = FadeUpdateSpriteDelegate;
-                return true;
-            }
-
-            anim._object = anim._target as Label;
-            if (null != anim._object)
-            {
-                anim._delegate = FadeUpdateLabelDelegate;
+                anim._delegate = FadeUpdateNodeDelegate;
                 return true;
             }
 
@@ -984,23 +1028,9 @@ namespace NoZ
             (anim._object as Node).Rotation = anim._vector0.x * (1 - t) + anim._vector1.x * t;
         }
 
-#if false
-        private static void FadeUpdateCanvasGroup(Animation anim, float t)
+        private static void FadeUpdateNode(Animation anim, float t)
         {
-            (anim._object as CanvasGroup).alpha = anim._vector0.x * (1f - t) + anim._vector1.x * t;
-        }
-#endif
-
-        private static void FadeUpdateSprite(Animation anim, float t)
-        {
-            var sprite = (anim._object as Sprite);
-            sprite.Color = NoZ.Color.FromRgba(sprite.Color, (anim._vector0.x * (1f - t) + anim._vector1.x * t));
-        }
-
-        private static void FadeUpdateLabel(Animation anim, float t)
-        {
-            var label = (anim._object as Label);
-            label.Color = NoZ.Color.LerpAlpha(label.Color, anim._vector0.x, anim._vector1.x, t);
+            (anim._object as Node).Opacity = anim._vector0.x * (1f - t) + anim._vector1.x * t;
         }
 
         private static void ColorSpriteUpdate(Animation anim, float t)
@@ -1018,11 +1048,7 @@ namespace NoZ
         private static readonly UpdateDelegate MoveToUpdateDelegate = MoveToUpdate;
         private static readonly UpdateDelegate ScaleUpdateDelegate = ScaleUpdate;
         private static readonly UpdateDelegate RotateUpdateDelegate = RotateUpdate;
-#if false
-        private static readonly UpdateDelegate FadeUpdateCanvasGroupDelegate = FadeUpdateCanvasGroup;
-#endif
-        private static readonly UpdateDelegate FadeUpdateSpriteDelegate = FadeUpdateSprite;
-        private static readonly UpdateDelegate FadeUpdateLabelDelegate = FadeUpdateLabel;
+        private static readonly UpdateDelegate FadeUpdateNodeDelegate = FadeUpdateNode;
         private static readonly UpdateDelegate WaitUpdateDelegate = WaitUpdate;
         private static readonly UpdateDelegate ShakeUpdateDelegate = ShakeUpdate;
         private static readonly UpdateDelegate ShakePositionUpdateDelegate = ShakePositionUpdate;
