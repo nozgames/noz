@@ -603,7 +603,7 @@ namespace NoZ
                 return;
 
             // If arranging to parent then arrange now
-            if (DoesArrangeToParent && Parent != null)
+            if (DoesArrangeToParent && !DoesArrangeChildren && Parent != null)
                 Arrange(Parent.Rect);
 
             // Clear flags after arrange since arrange can invalidate the rect

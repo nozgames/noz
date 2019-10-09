@@ -46,6 +46,8 @@ namespace NoZ
         /// <param name="frame">new frame value</param>
         protected override void OnRectChanged(in Rect rect)
         {
+            MeasureChildren(rect.Size);
+
             // The U axis is the axis which content grows
             var u_axis = Orientation == Orientation.Vertical ? 1 : 0;
 
