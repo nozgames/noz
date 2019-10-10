@@ -126,10 +126,10 @@ namespace NoZ
             {
                 // Generate the camera matrix
                 var mat = Matrix3.Translate(Window.Size.ToVector2() * 0.5f);
-                mat = Matrix3.Multiply(LocalToWorld, mat);
+                mat = Matrix3.Multiply(LocalToSceneMatrix, mat);
 
 
-                var mat2 = Matrix3.Translate(-Camera.Parent.LocalToWorld.MultiplyVector(Camera.Position));
+                var mat2 = Matrix3.Translate(-Camera.Parent.LocalToScene(Camera.Position));
                 mat2 = Matrix3.Multiply(mat2, Matrix3.Scale(Camera.Scale));
                 mat2 = Matrix3.Multiply(mat2, Matrix3.Rotate(Camera.Rotation * MathEx.Deg2Rad));
                 mat = Matrix3.Multiply(mat2, mat);
@@ -141,9 +141,9 @@ namespace NoZ
             }
             else
             {
-                gc.PushMatrix(LocalToWorld);
+                gc.PushMatrix(LocalToSceneMatrix);
 
-                _windowToScene = WorldToLocal;
+                _windowToScene = SceneToLocalMatrix;
             }
 
             _drawList.Build(this);
@@ -241,9 +241,13 @@ namespace NoZ
         protected virtual void OnPause() { }
         protected virtual void OnResume() { }
 
-        public Matrix3 WindowToScene => _windowToScene;
+        public Matrix3 WindowToSceneMatrix => _windowToScene;
 
-        public Matrix3 SceneToWindow => _sceneToWindow;
+        public Vector2 WindowToScene(in Vector2 pos) => _windowToScene.MultiplyVector(pos);
+
+        public Matrix3 SceneToWindowMatrix => _sceneToWindow;
+
+        public Vector2 SceneToWindow (in Vector2 pos) => _sceneToWindow.MultiplyVector(pos);
 
         protected virtual void OnKeyDown(KeyCode keyCode) => Broadcast(KeyDownEvent, keyCode);
 

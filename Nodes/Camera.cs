@@ -53,7 +53,7 @@ namespace NoZ
         public void BeginLayer(GraphicsContext gc)
         {
             // Render all children of the camera as if they were children of the scene
-            gc.PushMatrix(Scene.LocalToWorld);
+            gc.PushMatrix(Scene.LocalToSceneMatrix);
         }
 
         public void EndLayer(GraphicsContext gc)

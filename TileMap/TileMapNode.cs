@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-
+using System;
 using System.Collections.Generic;
 
 namespace NoZ
@@ -172,6 +172,34 @@ namespace NoZ
 
             return true;
         }
+
+        /// <summary>
+        /// Gets the tile at the given XY coordinate
+        /// </summary>
+        public Tile GetTile(int x, int y) => TileMap?.GetTile(x, y) ?? null;
+
+        public Tile GetTile(in Vector2Int position) => TileMap?.GetTile(position) ?? null;
+
+        public Vector2 CellToLocal (in Vector2Int position)
+        {
+            if (null == TileMap)
+                return Vector2.Zero;
+
+            if (position.x < 0 || position.x >= TileMap.Size.x)
+                throw new ArgumentOutOfRangeException("x");
+
+            if (position.y < 0 || position.y >= TileMap.Size.y)
+                throw new ArgumentOutOfRangeException("y");
+
+            return (position.ToVector2() * TileMap.TileSize.ToVector2()) - ((TileMap.Size * TileMap.TileSize).ToVector2() * 0.5f);
+        }
+
+        public Vector2 CellToScene (in Vector2Int position) => LocalToScene(CellToLocal(position));
+
+        public Vector2Int SceneToCell(in Vector2 position) => LocalToCell(SceneToLocal(position));
+
+        public Vector2Int LocalToCell (in Vector2 position) =>
+            ((position + ((TileMap.Size * TileMap.TileSize).ToVector2() * 0.5f)) / TileMap.TileSize.ToVector2()).ToVector2Int();
     }
 }
 

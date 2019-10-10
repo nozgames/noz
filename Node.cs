@@ -123,11 +123,11 @@ namespace NoZ
         private NodeVisibility _visibility;
         private Flags _flags;
 
-        /// Transform used to convert local coordinates to world coordinates
-        private Matrix3 _localToWorld;
+        /// Transform used to convert local coordinates to scene coordinates
+        private Matrix3 _localToScene;
 
-        /// Transform used to convert world coordinates to local coordinates
-        private Matrix3 _worldToLocal;
+        /// Transform used to convert scene coordinates to local coordinates
+        private Matrix3 _sceneToLocal;
 
         /// <summary>
         /// The node's parent node
@@ -254,19 +254,21 @@ namespace NoZ
         /// <summary>
         /// Transforms local node coordinates to world coordinates
         /// </summary>
-        public Matrix3 LocalToWorld {
+        public Matrix3 LocalToSceneMatrix {
             get {
                 // Transforms are not updated until they are needed to update it now if its dirty
                 if (HasAllFlags(Flags.TransformDirty))
                     UpdateTransform();
-                return _localToWorld;
+                return _localToScene;
             }
         }
+
+        public Vector2 LocalToScene(in Vector2 local) => LocalToSceneMatrix.MultiplyVector(local);
 
         /// <summary>
         /// Transforms world coordinates to local node coordinates
         /// </summary>
-        public Matrix3 WorldToLocal {
+        public Matrix3 SceneToLocalMatrix {
             get {
                 // Transforms are not updated until they are needed to update it now if its dirty
                 if (HasAllFlags(Flags.TransformDirty))
@@ -275,24 +277,28 @@ namespace NoZ
                 // WorldToLocal isnt calulcated unless its needed so calculate it now if its dirty
                 if (HasAllFlags(Flags.WorldToLocalDirty))
                 {
-                    _worldToLocal = _localToWorld.Inverse();
+                    _sceneToLocal = _localToScene.Inverse();
                     ClearFlags(Flags.WorldToLocalDirty);
                 }
 
-                return _worldToLocal;
+                return _sceneToLocal;
             }
         }
 
-        public Matrix3 WindowToLocal => Matrix3.Multiply((Scene?.WindowToScene) ?? Matrix3.Identity, WorldToLocal);
+        public Vector2 SceneToLocal(in Vector2 position) => SceneToLocalMatrix.MultiplyVector(position);
 
-        public Rect AccumulatedFrame {
-            get {
-                return new Rect();
-            }
-        }
+        public Matrix3 WindowToLocalMatrix => Matrix3.Multiply((Scene?.WindowToSceneMatrix) ?? Matrix3.Identity, SceneToLocalMatrix);
 
+        public Vector2 WindowToLocal(in Vector2 position) => WindowToLocalMatrix.MultiplyVector(position);
+
+        /// <summary>
+        /// Opacity of the node and all of its children
+        /// </summary>
         public float Opacity { get; set; } = 1.0f;
 
+        /// <summary>
+        /// Scale of the node and all of its children
+        /// </summary>
         public Vector2 Scale {
             get => _scale;
             set {
@@ -554,9 +560,9 @@ namespace NoZ
 
             // Apply the parent transform..
             if (_parent == null || !_parent.DoesTransformAffectChildren)
-                _localToWorld = mat;
+                _localToScene = mat;
             else
-                _localToWorld = Matrix3.Multiply(mat, _parent._localToWorld);
+                _localToScene = Matrix3.Multiply(mat, _parent._localToScene);
 
             SetFlags(Flags.WorldToLocalDirty);
         }
@@ -807,7 +813,7 @@ namespace NoZ
 
             if (IsInteractive)
             {
-                var position = WorldToLocal.MultiplyVector(worldPosition);
+                var position = SceneToLocal(worldPosition);
                 if (Rect.Contains(position))
                     return HitTestResult.Hit;
             }
@@ -833,7 +839,7 @@ namespace NoZ
                 if (view.Scene.IsPaused)
                     continue;
 
-                newMouseOver = view.Scene.GetNodeAtPoint(null, view.Scene.WindowToScene.MultiplyVector(Input.MousePosition));
+                newMouseOver = view.Scene.GetNodeAtPoint(null, view.Scene.WindowToScene(Input.MousePosition));
 
                 // If a scene is marked interactive then it blocks all input below it
                 if (newMouseOver == null && view.Scene.IsInteractive)

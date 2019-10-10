@@ -78,7 +78,7 @@ namespace NoZ
 
             _body = Scene.World.CreateRigidBody();
             _body.OnCollisionEnter = OnCollisionEnter;
-            _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
+            _body.Position = Physics.PixelsToMeters(LocalToScene(Vector2.Zero));
             _body.LinearVelocity = Physics.PixelsToMeters(_linearVelocity);
             _body.LinearDamping = _linearDamping;
             _body.IsBullet = IsBullet;
@@ -104,7 +104,7 @@ namespace NoZ
             base.OnUpdate(deltaTime);
 
             if (IsKinematic)
-                _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
+                _body.Position = Physics.PixelsToMeters(LocalToScene(Vector2.Zero));
             else
             {
                 Position = Physics.MetersToPixels(_body.Position);

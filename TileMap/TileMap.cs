@@ -83,5 +83,21 @@ namespace NoZ
 
             return tilemap;
         }
+
+        /// <summary>
+        /// Gets the tile at the given XY coordinate
+        /// </summary>
+        public Tile GetTile (int x, int y) 
+        {
+            if (x < 0 || x >= Size.x)
+                throw new ArgumentOutOfRangeException("x");
+
+            if(y < 0 || y >= Size.y)
+                throw new ArgumentOutOfRangeException("y");
+
+            return Tiles[x + y * Size.x];
+        }
+
+        public Tile GetTile(in Vector2Int position) => GetTile(position.x, position.y);
     }
 }

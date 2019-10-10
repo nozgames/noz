@@ -210,6 +210,8 @@ namespace NoZ
 
         public Vector3 ToVector3() => new Vector3(x, y, 0);
 
+        public Vector2Int ToVector2Int() => new Vector2Int((int)x, (int)y);
+
         public float DistanceToLineSegmentSquared(in Vector2 pt1, in Vector2 pt2)
         {
             var seg = (pt2 - pt1);

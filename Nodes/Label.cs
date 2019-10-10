@@ -721,7 +721,7 @@ namespace NoZ
 
             gc.Color = Color;
             gc.Image = _font.Image;
-            gc.Transform = LocalToWorld;
+            gc.Transform = LocalToSceneMatrix;
             gc.MaskMode = MaskMode;
             gc.Draw(_quads, _quadCount);
             return true;

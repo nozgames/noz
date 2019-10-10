@@ -90,6 +90,42 @@ namespace NoZ
         }
 
         /// <summary>
+        /// Move the new scene in from right to left on top of old scene
+        /// </summary>
+        public static Transition MoveLeft() =>
+            new Transition(
+                Animation.Move(new Vector2(Window.Size.x, 0), Vector2.Zero),
+                null,
+                true);
+
+        /// <summary>
+        /// Move the new scene in from right to left on top of old scene
+        /// </summary>
+        public static Transition MoveRight() =>
+            new Transition(
+                Animation.Move(new Vector2(-Window.Size.x, 0), Vector2.Zero),
+                null,
+                true);
+
+        /// <summary>
+        /// Move the old scene to the left to reveal the new scene below it
+        /// </summary>
+        public static Transition RevealLeft () =>
+            new Transition(
+                null,
+                Animation.Move(Vector2.Zero, new Vector2(-Window.Size.x, 0)),
+                false);
+
+        /// <summary>
+        /// Move the new scene in from right to left on top of old scene
+        /// </summary>
+        public static Transition RevealRight() =>
+            new Transition(
+                null,
+                Animation.Move(Vector2.Zero, new Vector2(Window.Size.x, 0)),
+                true);
+
+        /// <summary>
         /// Push the old scene out towards the left
         /// </summary>
         public static Transition PushLeft () => 
@@ -106,6 +142,16 @@ namespace NoZ
             new Transition(
                 Animation.Move(new Vector2(-Window.Size.x, 0), Vector2.Zero),
                 Animation.Move(Vector2.Zero, new Vector2(Window.Size.x, 0)),
+                true);
+
+        /// <summary>
+        /// Fade the incoming scene in and the outgoing scene out
+        /// </summary>
+        /// <returns></returns>
+        public static Transition CrossFade() =>
+            new Transition(
+                Animation.Fade(0.0f, 1.0f),
+                Animation.Fade(1.0f, 0.0f),
                 true);
 
         public Transition PauseOutgoingScene(bool paused)
@@ -152,7 +198,7 @@ namespace NoZ
             _outgoingAnimation?.Easing(easeType, param1, param2);
             return this;
         }
-
+        
         public Transition EaseInElastic(int oscillations, float springiness) => Easing(EaseType.EaseInElastic, oscillations, springiness);
         public Transition EaseInElastic() => Easing(EaseType.EaseInElastic);
         public Transition EaseInOutElastic(int oscillations, float springiness) => Easing(EaseType.EaseInOutElastic, oscillations, springiness);

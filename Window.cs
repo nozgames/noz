@@ -188,7 +188,7 @@ namespace NoZ
         internal static void OnMouseOver(MouseOverEvent e)
         {
             // Update the cursor position
-            _cursorPosition.Position = _cursorView.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
+            _cursorPosition.Position = _cursorView.Scene.WindowToScene(Input.MousePosition);
 
             // Cursor for this frame is either the cursor in the event or the window cursor
             var cursor = e.Cursor ?? Cursor;

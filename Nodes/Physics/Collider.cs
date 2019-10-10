@@ -104,7 +104,7 @@ namespace NoZ
             base.OnUpdate(deltaTime);
 
             if(_body != null)
-                _body.Position = Physics.PixelsToMeters(LocalToWorld.MultiplyVector(Vector2.Zero));
+                _body.Position = Physics.PixelsToMeters(LocalToScene(Vector2.Zero));
         }
 
         protected abstract ICollider CreateCollider(IBody body);
