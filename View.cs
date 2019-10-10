@@ -29,6 +29,7 @@ namespace NoZ
     public class View : ILayer
     {
         private bool _visible;
+        private Transition _transition;
 
         public Scene Scene { get; private set; }
 
@@ -58,8 +59,30 @@ namespace NoZ
 
         public void PresentScene (Scene scene, Transition transition = null)
         {
-            // TODO: transition
+            if (scene == Scene)
+                return;
+
+            var old = Scene;
+
             Scene = scene;
+
+            if(scene != null)
+                scene.View = this;
+
+            // Apply a transition.
+            if(transition != null)
+            {
+                _transition = transition;
+                transition.Start(scene, old);
+                return;
+            } 
+            else if (old != null)
+            {
+                old.View = null;
+            }
+
+            if (Scene == null)
+                return;
 
             Size = Window.Size;
             Scene.IsPaused = false;
@@ -69,6 +92,14 @@ namespace NoZ
 
         public void Update ()
         {
+            if(_transition != null && !_transition.IsPlaying)
+            {
+                _transition = null;
+
+                if(Scene != null)
+                    Scene.IsPaused = false;
+            }
+
             if (null == Scene)
                 return;
 
@@ -79,9 +110,10 @@ namespace NoZ
 
         public void Draw (GraphicsContext gc)
         {
-            Scene.UpdateRect();
-            Scene.UpdateTransform();
-            Scene.Present(gc);
+            if (null != _transition)
+                _transition.Draw(gc);
+            else if(null != Scene)
+                Scene.Present(gc);
         }
 
         public void BeginLayer(GraphicsContext gc)
@@ -90,16 +122,13 @@ namespace NoZ
         }
 
         public void EndLayer(GraphicsContext gc)
-        {
-            
+        {            
         }
 
         public void UpdateScene ( )
         {
             if (null == Scene)
                 return;
-
-            Scene.View = this;
 
             if (Window.ReferenceSize > 0)
             {
@@ -120,7 +149,7 @@ namespace NoZ
                 Scene.Size = Size;
             }
 
-            Scene.Position = Vector2.Zero;
+            //Scene.Position = Vector2.Zero;
         }
     }
 }

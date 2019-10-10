@@ -31,6 +31,7 @@ namespace NoZ
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event UpdateEvent = new Event();
+        public static readonly Event<View> ViewChangedEvent = new Event<View>();
 
         private DrawList _drawList;
         private Vector2Int _size;
@@ -39,6 +40,7 @@ namespace NoZ
         private Matrix3 _windowToScene;
         private Matrix3 _sceneToWindow;
         private World _world;
+        private View _view;
 
         public Node Cursor { get; set; }
 
@@ -78,7 +80,16 @@ namespace NoZ
             }
         }
 
-        public View View { get; internal set; }
+        public View View {
+            get => _view;
+            internal set {
+                if (_view == value)
+                    return;
+
+                _view = value;
+                OnViewChanged(_view);
+            }
+        }
 
         public override bool DoesTransformAffectChildren => false;
 
@@ -241,6 +252,13 @@ namespace NoZ
         protected override Vector2 MeasureOverride(in Vector2 available) => _size.ToVector2();
 
         protected override Vector2 GetPivot() => Vector2.Zero;
+
+        /// <summary>
+        /// Called when the scenes view changes.
+        /// </summary>
+        protected internal virtual void OnViewChanged(View view) {
+            Broadcast(ViewChangedEvent, view);
+        }
 
         protected internal override void OnMouseOver(MouseOverEvent e)
         {

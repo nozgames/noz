@@ -273,7 +273,7 @@ namespace NoZ
                     continue;
 
                 // Handle node specific logic
-                if (anim._target is Node node)
+                if (anim._target is Node node && !(anim._target is Scene))
                 {
                     // If the node is destroyed then animation can finish
                     if (node.IsDestroyed)

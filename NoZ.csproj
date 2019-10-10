@@ -6,13 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Transitions\**" />
+    <EmbeddedResource Remove="Transitions\**" />
+    <None Remove="Transitions\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove=".git" />
     <None Remove=".gitignore" />
     <None Remove="_config.yml" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Transitions\" />
     <Folder Include="UI\" />
   </ItemGroup>
 

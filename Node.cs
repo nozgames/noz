@@ -827,9 +827,13 @@ namespace NoZ
             for (int i = Window.ViewCount - 1; i >= 0 && null == newMouseOver; i--)
             {
                 var view = Window.GetViewAt(i);
-                var pos = view.Scene.WindowToScene.MultiplyVector(Input.MousePosition);
+                if (view.Scene == null)
+                    continue;
 
-                newMouseOver = view.Scene.GetNodeAtPoint(null, pos);
+                if (view.Scene.IsPaused)
+                    continue;
+
+                newMouseOver = view.Scene.GetNodeAtPoint(null, view.Scene.WindowToScene.MultiplyVector(Input.MousePosition));
 
                 // If a scene is marked interactive then it blocks all input below it
                 if (newMouseOver == null && view.Scene.IsInteractive)

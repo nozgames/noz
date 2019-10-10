@@ -42,6 +42,7 @@ namespace NoZ
 
         public virtual void DrawEnd (GraphicsContext context) { }
 
+        public virtual void Exit () { }
     }
 
     public static class Application
@@ -68,6 +69,11 @@ namespace NoZ
             Animation.Initialize();
         }
 
+        public static void Exit ()
+        {
+            _applicationDelegate?.Exit();
+        }
+
         public static void Step ()
         {
             // Advance time
@@ -90,7 +96,7 @@ namespace NoZ
                 for (var i = 0; i < Window.ViewCount; i++)
                 {
                     var view = Window.GetViewAt(i);
-                    if (view.Scene.HasWorld && !view.Scene.IsPaused)
+                    if (view.Scene != null && view.Scene.HasWorld && !view.Scene.IsPaused)
                         view.Scene.World.Step();
                 }
 

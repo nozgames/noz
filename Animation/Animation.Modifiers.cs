@@ -141,5 +141,10 @@ namespace NoZ
             child.SetParent(this);
             return this;
         }
+
+        public void Cancel ()
+        {
+            FreeAnimation(this);
+        }
     }
 }

@@ -90,6 +90,26 @@ namespace NoZ
 
         public static int ReferenceSize { get; set; }
 
+        public static Vector2Int ScaledSize {
+            get {
+                if (Window.ReferenceSize > 0)
+                {
+                    if (Window.ReferenceOrientation == Orientation.Horizontal)
+                    {
+                        return new Vector2Int(Window.ReferenceSize, (int)(Size.y * (Window.ReferenceSize / (float)Size.x)));
+                    }
+                    else
+                    {
+                        return new Vector2Int((int)(Size.x * (Window.ReferenceSize / (float)Size.y)), Window.ReferenceSize);
+                    }
+                }
+                else
+                {
+                    return Size;
+                }
+            }
+        }
+
         public static Orientation ReferenceOrientation { get; set; } = Orientation.Horizontal;
 
         /// <summary>
