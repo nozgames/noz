@@ -94,7 +94,7 @@ namespace NoZ
             /// <summary>
             /// Automatically destroy the target node when the animation completes
             /// </summary>
-            AudioDestroy = (1 << 8)
+            AutoDestroy = (1 << 8)
         }
 
         private delegate float EasingDelegate(float t, float p1, float p2);
@@ -390,7 +390,7 @@ namespace NoZ
         public bool IsSequence => (_flags & Flags.Sequence) == Flags.Sequence;
         public bool IsStarted => (_flags & Flags.Started) == Flags.Started;
         public bool IsLowPriority => (_flags & Flags.LowPriority) == Flags.LowPriority;
-        public bool IsAutoDestroy => (_flags & Flags.AudioDestroy) == Flags.AudioDestroy;
+        public bool IsAutoDestroy => (_flags & Flags.AutoDestroy) == Flags.AutoDestroy;
 
         public static Animation Shake(Vector2 positionalIntensity, float rotationalIntensity)
         {

@@ -64,7 +64,7 @@ namespace NoZ
     }
 
     public class Node : Object
-    {        
+    {
         public static readonly Event<Node> DestroyEvent = new Event<Node>();
 
         private enum Flags
@@ -98,17 +98,17 @@ namespace NoZ
             /// <summary>
             /// WorldToLocal matrix is dirty and needs to be recalculated
             /// </summary>
-            WorldToLocalDirty = (1<<5),
+            WorldToLocalDirty = (1 << 5),
 
             /// <summary>
             /// Mouse cursor is currently over this node
             /// </summary>
-            MouseOver = (1<<6),
+            MouseOver = (1 << 6),
 
             /// <summary>
             /// Node should receive input events 
             /// </summary>
-            Interactive = (1<<7)
+            Interactive = (1 << 7)
         }
 
         private static List<Node> _pendingDestroy = new List<Node>();
@@ -198,7 +198,7 @@ namespace NoZ
         public bool IsDestroyed => HasAllFlags(Flags.Destroyed);
 
         /// <summary>
-        /// Returns true if the node arranges its children
+        /// Return true if the node arranges its children
         /// </summary>
         public virtual bool DoesArrangeChildren => false;
 
@@ -277,7 +277,7 @@ namespace NoZ
                 {
                     _worldToLocal = _localToWorld.Inverse();
                     ClearFlags(Flags.WorldToLocalDirty);
-                }                    
+                }
 
                 return _worldToLocal;
             }
@@ -318,7 +318,7 @@ namespace NoZ
         public float Rotation {
             get => _rotation;
             set {
-                if(_rotation != value)
+                if (_rotation != value)
                 {
                     _rotation = value;
                     InvalidateTransform();
@@ -326,7 +326,7 @@ namespace NoZ
             }
         }
 
-        public Node ()
+        public Node()
         {
             _visibility = NodeVisibility.Visible;
             _flags = Flags.Visible | Flags.AutoDestroy | Flags.RectDirty | Flags.TransformDirty;
@@ -342,14 +342,19 @@ namespace NoZ
         /// </summary>
         public int ChildCount => _children?.Count ?? 0;
 
+        /// <summary>
+        /// Return the child at the given index
+        /// </summary>
         public Node GetChildAt(int index) => _children?[index] ?? null;
 
         /// <summary>
         /// Add a new child node
         /// </summary>
-        /// <param name="node"></param>
         public void AddChild(Node node) => InsertChild(_children?.Count ?? 0, node);
 
+        /// <summary>
+        /// Insert a child node at a given index
+        /// </summary>
         public void InsertChild(int index, Node node)
         {
             if (node._parent != null)
@@ -425,7 +430,7 @@ namespace NoZ
             if (_scene != null)
                 OnEnterScene(_scene);
 
-            if(_children != null)
+            if (_children != null)
                 foreach (var child in _children)
                     child.PropegateScene(scene);
         }
@@ -449,7 +454,7 @@ namespace NoZ
         /// </summary>
         /// <param name="name">Name to seach for</param>
         /// <returns>First matching node</returns>
-        public Node FindChild (string name)
+        public Node FindChild(string name)
         {
             if (_children == null)
                 return null;
@@ -466,7 +471,7 @@ namespace NoZ
         /// </summary>
         /// <typeparam name="T">Type to search for</typeparam>
         /// <returns>Node that matches the given type</returns>
-        public T FindChild<T> () where T : Node
+        public T FindChild<T>() where T : Node
         {
             if (_children == null)
                 return null;
@@ -509,19 +514,10 @@ namespace NoZ
             return results.ToArray();
         }
 
-        public virtual Vector2 Measure(in Vector2 available) => Vector2.Zero;
-
-        /// <summary>
-        /// Called by parent node to instruct the node to arrange itself using 
-        /// the given rectangle.
-        /// </summary>
-        /// <param name="rect"></param>
-        public virtual void Arrange(Rect rect) { }
-
         /// <summary>
         /// Invalidate the transform of the node and the transform of all descendants as well
         /// </summary>
-        public void InvalidateTransform ()
+        public void InvalidateTransform()
         {
             if (HasAllFlags(Flags.TransformDirty))
                 return;
@@ -541,11 +537,14 @@ namespace NoZ
         {
             if (!HasAllFlags(Flags.TransformDirty))
                 return;
+            
+            // Make sure the rectangle is updated too
+            UpdateRect();
 
             // Find our deepest ancestor that has a dirty transform and update them instead.
             if (_parent != null && _parent.HasAllFlags(Flags.TransformDirty) && _parent.DoesTransformAffectChildren)
                 _parent.UpdateTransform();
-                
+
             ClearFlags(Flags.TransformDirty);
 
             var mat = Matrix3.Identity;
@@ -567,7 +566,11 @@ namespace NoZ
         /// </summary>
         public void InvalidateRect()
         {
-            if(HasAllFlags(Flags.RectDirty))
+            // Invalidate our parent as well if our parent arranges us
+            if (_parent != null && _parent.DoesArrangeChildren)
+                _parent.InvalidateRect();
+
+            if (HasAllFlags(Flags.RectDirty))
                 return;
 
             SetFlags(Flags.RectDirty);
@@ -590,36 +593,106 @@ namespace NoZ
         }
 
         /// <summary>
+        /// Called by parent node to instruct the node to arrange itself using 
+        /// the given rectangle.
+        /// </summary>
+        private void Arrange(in Rect rect)
+        {
+            // Arrange the node using the given rect
+            var newRect = ArrangeOverride(rect);
+
+            // Calculate the position using the nodes pivot and the resulting rect
+            var position = newRect.TopLeft + newRect.Size * GetPivot();
+
+            Position = position;
+
+            SetRect(newRect.Offset(-position));
+        }
+
+        /// <summary>
+        /// Arranges a child node using the given rectangle
+        /// </summary>
+        protected void ArrangeChild (int index, in Rect rect) => GetChildAt(index).Arrange(rect);
+
+        /// <summary>
+        /// Override to implement custom arrange logic
+        /// </summary>
+        protected virtual Rect ArrangeOverride(in Rect rect) => rect;
+
+        /// <summary>
+        /// Override to supply a custom pivot 
+        /// </summary>
+        protected virtual Vector2 GetPivot() => Vector2.Half;
+
+        /// <summary>
+        /// Measure the size of the node
+        /// </summary>
+        public Vector2 Measure(in Vector2 available) => MeasureOverride(available);
+
+        /// <summary>
+        /// Override to customize measurement for a node
+        /// </summary>
+        protected virtual Vector2 MeasureOverride(in Vector2 available) => Vector2.Zero;
+
+        /// <summary>
+        /// Override to arrange children within the node
+        /// </summary>
+        protected virtual void ArrangeChildren(in Rect rect) { }
+
+        /// <summary>
         /// Updates the Rect value for the node
         /// </summary>
         public void UpdateRect()
         {
-            // Ensure all parents are updated as well
-            if (_parent != null)
-                _parent.UpdateRect();
-
             // Dont update if rect isnt invalid
             if (!HasAllFlags(Flags.RectDirty))
                 return;
 
-            // If arranging to parent then arrange now
-            if (DoesArrangeToParent && !DoesArrangeChildren && Parent != null)
-                Arrange(Parent.Rect);
+            // If we arrange to our parent rectangle or our parent arranges us then
+            // make sure the parent rectangle is updated before we handle our own rectangle.
+            if(Parent != null && (DoesArrangeToParent || Parent.DoesArrangeChildren))
+                Parent.UpdateRect();
 
-            // Clear flags after arrange since arrange can invalidate the rect
+            // Check one more time if the rect is dirty since updating the parent rectangle may
+            // have inadvertently updated us.
+            if (!HasAllFlags(Flags.RectDirty))
+                return;
+
+            // If this node arranges to its parent and its parent isnt arranging children 
+            // then it can be arranged now using its parent rectangle.
+            if(DoesArrangeToParent && Parent != null && !Parent.DoesArrangeChildren)
+            {
+                Arrange(Parent.Rect);
+                return;
+            }
+
+            // Default handling is to just measure the node and use its measurement to 
+            // determine the rectangle
+            var measured = Measure(Vector2.Zero);
+            SetRect(new Rect(-measured * GetPivot(), measured));
+        }
+
+        /// <summary>
+        /// Set the node rectangle
+        /// </summary>
+        private void SetRect (in Rect rect)
+        {
+            // Clear the dirty rect flag
             ClearFlags(Flags.RectDirty);
 
-            var oldRect = _rect;
-            _rect = CalculateRect();
-            //if (_frame == oldFrame)
-            //  return;
+            if (_rect != rect)
+            {
+                _rect = rect;
+                OnRectChanged(_rect);
 
-            OnRectChanged(_rect);
+                // Let all of our children know our frame changed too
+                if (_children != null)
+                    foreach (var child in _children)
+                        child.OnParentRectChanged(Rect);
+            }
 
-            // Let all of our children know our frame changed too
-            if (_children != null)
-                foreach (var child in _children)
-                    child.OnParentRectChanged(Rect);
+            if (DoesArrangeChildren)
+                ArrangeChildren(_rect);
         }
 
         /// <summary>
@@ -636,8 +709,8 @@ namespace NoZ
             SetFlags(Flags.Visible, visible);
 
             // Propegate to all children
-            if(_children != null)
-                for (var i = _children.Count -1; i >= 0; i--)
+            if (_children != null)
+                for (var i = _children.Count - 1; i >= 0; i--)
                     _children[i].UpdateVisible();
 
             // Give the node a chance to handle its own visibility state.
@@ -657,13 +730,13 @@ namespace NoZ
 
         protected virtual void OnParentChanged() { }
 
-        protected virtual void OnAnscestorChanged () { }
+        protected virtual void OnAnscestorChanged() { }
 
         protected virtual void OnSceneChanged(Scene oldScene) { }
 
-        protected virtual void OnEnterScene (Scene entering) { }
+        protected virtual void OnEnterScene(Scene entering) { }
 
-        protected virtual void OnLeaveScene (Scene leaving) { }
+        protected virtual void OnLeaveScene(Scene leaving) { }
 
         protected virtual void OnMouseEnter() { }
 
@@ -675,12 +748,10 @@ namespace NoZ
 
         protected internal virtual void OnMouseUp(MouseButtonEvent e) { }
 
-        protected virtual void OnDestroy ()
+        protected virtual void OnDestroy()
         {
             DestroyEvent.Broadcast(this);
         }
-
-        protected virtual Rect CalculateRect() => new Rect(Position, Vector2.Zero);
 
         /// <summary>
         /// Destroy a node and all of its children them to be removed from the scene and disposed of.
@@ -692,6 +763,9 @@ namespace NoZ
 
             UnsubscribeAll();
 
+            // Stop all state machines running on this node.
+            StateMachine.Stop(this);
+
             // Flag the node as destroyed and add to the destroy list
             SetFlags(Flags.Destroyed);
             _pendingDestroy.Add(this);
@@ -702,7 +776,7 @@ namespace NoZ
                     _children[i].Destroy();
         }
 
-        public static void ProcessDestroyedNodes ()
+        public static void ProcessDestroyedNodes()
         {
             for (int i = 0; i < _pendingDestroy.Count; i++)
             {
@@ -728,7 +802,7 @@ namespace NoZ
         /// <returns>True if the position is within the node's bounds.</returns>
         public virtual HitTestResult HitTest(in Vector2 worldPosition)
         {
-            if(!IsVisible)
+            if (!IsVisible)
                 return HitTestResult.Ignore;
 
             if (IsInteractive)
@@ -750,7 +824,7 @@ namespace NoZ
         {
             Node oldMouseOver = Input.MouseOver;
             Node newMouseOver = null;
-            for (int i=Window.ViewCount-1; i>=0 && null == newMouseOver; i--)
+            for (int i = Window.ViewCount - 1; i >= 0 && null == newMouseOver; i--)
             {
                 var view = Window.GetViewAt(i);
                 var pos = view.Scene.WindowToScene.MultiplyVector(Input.MousePosition);

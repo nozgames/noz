@@ -104,8 +104,6 @@ namespace NoZ
 
         public int SortOrder { get; private set; }
 
-        protected override Rect CalculateRect() => new Rect(Position, _size.ToVector2());
-
         public Scene ()
         {
             _drawList = new DrawList();
@@ -239,6 +237,10 @@ namespace NoZ
         protected virtual void OnKeyDown(KeyCode keyCode) => Broadcast(KeyDownEvent, keyCode);
 
         protected virtual void OnKeyUp(KeyCode keyCode) => Broadcast(KeyUpEvent, keyCode);
+
+        protected override Vector2 MeasureOverride(in Vector2 available) => _size.ToVector2();
+
+        protected override Vector2 GetPivot() => Vector2.Zero;
 
         protected internal override void OnMouseOver(MouseOverEvent e)
         {

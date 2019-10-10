@@ -34,38 +34,36 @@ namespace NoZ
         SlicedNoFill
     }
 
-
     public class Sprite : Node, IDrawable
     {
         private Vertex[] _vertexBuffer;
         private short[] _indexBuffer;
         private Image _image;
+        private Vector2 _pivot = Vector2.Half;
 
         /// <summary>
         /// True if the vertex buffer and index buffer need to be updated.
         /// </summary>
         private bool _meshInvalid = true;
 
+        /// <summary>
+        /// Color of sprite
+        /// </summary>
         public Color Color { get; set; } = Color.White;
 
+        /// <summary>
+        /// Sprite draw mode
+        /// </summary>
         public SpriteDrawMode DrawMode { get; set; } = SpriteDrawMode.Auto;
 
+        /// <summary>
+        /// Sprite sort order
+        /// </summary>
         public int SortOrder { get; set; }
 
-        int IDrawable.SortOrder => SortOrder;
-
-        private Vector2 _size = Vector2.NaN;
-        private Vector2 _actualSize;
-        private Vector2 _pivot = Vector2.Half;
-
-        public Vector2 Size {
-            get => _size;
-            set {
-                _size = value;
-                UpdateActualSize();
-                InvalidateRect();
-            }
-        }
+        /// <summary>
+        /// Sprite pivot
+        /// </summary>
         public Vector2 Pivot {
             get => _pivot;
             set {
@@ -85,14 +83,11 @@ namespace NoZ
                     return;
 
                 _image = value;
-                UpdateActualSize();
                 InvalidateRect();
             }
         }
 
-
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
-
 
         public Sprite ( )
         {
@@ -116,48 +111,34 @@ namespace NoZ
             DrawMode = drawMode;
         }
 
-        protected void UpdateActualSize() => _actualSize = new Vector2(
-            float.IsNaN(_size.x) ? (Image?.Size.x ?? 0) : _size.x,
-            float.IsNaN(_size.y) ? (Image?.Size.y ?? 0) : _size.y
-            );
+        private Vector2 MeasureSliced() => 
+            new Vector2(Image.Border.left + Image.Border.right, Image.Border.top + Image.Border.bottom);
 
-        private Vector2 MeasureSliced()
+        private Vector2 MeasureStretched() => Image?.Size.ToVector2() ?? Vector2.Zero;
+
+        protected override Vector2 MeasureOverride (in Vector2 available)
         {
-            return new Vector2(Image.Border.left + Image.Border.right, Image.Border.top + Image.Border.bottom);
-        }
+            if (null == Image)
+                return Vector2.Zero;
 
-        private Vector2 MeasureStretched() => _actualSize;
-
-        public override Vector2 Measure (in Vector2 available)
-        {
-            Vector2 size = Vector2.Zero;
-            if (null != Image)
+            switch (DrawMode)
             {
-                switch (DrawMode)
-                {
-                    case SpriteDrawMode.Auto:
-                    {
-                        if (Image != null && !Image.Border.IsZero)
-                            size = MeasureSliced();
-                        else
-                            size = MeasureStretched();
-                        break;
-                    }
+                case SpriteDrawMode.Auto:
+                    if (Image != null && !Image.Border.IsZero)
+                        return MeasureSliced();
+                    else
+                        return MeasureStretched();
 
-                    case SpriteDrawMode.Stretched:
-                        size = MeasureStretched();
-                        break;
+                case SpriteDrawMode.Stretched:
+                    return MeasureStretched();
 
-                    case SpriteDrawMode.Sliced:
-                    case SpriteDrawMode.SlicedNoFill:
-                        size = MeasureSliced();
-                        break;
+                case SpriteDrawMode.Sliced:
+                case SpriteDrawMode.SlicedNoFill:
+                    return MeasureSliced();
 
-                    default:
-                        throw new NotImplementedException();
-                }
+                default:
+                    throw new NotImplementedException();
             }
-            return Vector2.Max(base.Measure(available), size);
         }
 
         bool IDrawable.Draw(GraphicsContext gc)
@@ -348,19 +329,15 @@ namespace NoZ
             }
         }
 
-        public override void Arrange(Rect frame)
-        {
-            // Update size to match the arranged rectangle
-            Size = frame.Size;
+        /// <summary>
+        /// Route the sprites's pivot value through to the base node
+        /// </summary>
+        protected override Vector2 GetPivot() => Pivot;
 
-            // Update position to reflect the new size
-            Position = new Vector2(
-                frame.x + frame.width * Pivot.x,
-                frame.y + frame.height * Pivot.y);
-        }
-
-        protected override Rect CalculateRect() => new Rect(-_actualSize * Pivot, _actualSize);
-
+        /// <summary>
+        /// Invalidate the mesh when the rect has changed.
+        /// </summary>
+        /// <param name="old"></param>
         protected override void OnRectChanged (in Rect old)
         {
             base.OnRectChanged(old);

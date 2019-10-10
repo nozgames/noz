@@ -66,6 +66,22 @@ namespace NoZ
         }
 
         /// <summary>
+        /// Stop a state machine
+        /// </summary>
+        public static void Stop(Object target, string key=null)
+        {
+            for(int i=_stateMachines.Count-1; i>=0; i--)
+            {
+                var sm = _stateMachines[i];
+                if (sm._target == target && (key == null || key == sm._key))
+                {
+                    _stateMachines.RemoveAt(i);
+                    _stateMachinePool.Release(sm);
+                }
+            }
+        }
+
+        /// <summary>
         /// Update all state machines on the given update mode
         /// </summary>
         /// <param name="updateMode"></param>

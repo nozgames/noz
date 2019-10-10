@@ -71,13 +71,10 @@ namespace NoZ
             UpdateColliders();
         }
 
-        protected override Rect CalculateRect()
-        {
-            if(_tilemap==null)
-                return base.CalculateRect();
-
-            return new Rect(-((TileMap.Size * TileMap.TileSize).ToVector2() * 0.5f), (TileMap.Size * TileMap.TileSize).ToVector2());
-        }
+        /// <summary>
+        /// Return the tilemap size as its measure
+        /// </summary>
+        protected override Vector2 MeasureOverride(in Vector2 available) => (TileMap.Size * TileMap.TileSize).ToVector2();
 
         private void UpdateColliders()
         {

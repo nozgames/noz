@@ -84,9 +84,9 @@ namespace NoZ
         public Animation AutoDestroy(bool autoDestroy = true)
         {
             if (autoDestroy)
-                _flags |= Flags.AudioDestroy;
+                _flags |= Flags.AutoDestroy;
             else
-                _flags &= ~Flags.AudioDestroy;
+                _flags &= ~Flags.AutoDestroy;
 
             return this;
         }

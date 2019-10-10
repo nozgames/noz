@@ -45,7 +45,6 @@ namespace NoZ
         public override bool DoesArrangeChildren => true;
         public override bool DoesArrangeToParent => true;
 
-        private Rect _arrangredFrame;
         private Vector2 _size;
         private Vector2 _minSize;
         private Vector2 _maxSize;
@@ -86,21 +85,16 @@ namespace NoZ
         private static bool IsAuto(float value) => float.IsNaN(value);
 
         /// <summary>
-        /// Handle OnFrameChanged to force all of our children to arrange to our frame
+        /// Route the layout's pivot value through to the base node
         /// </summary>
-        /// <param name="frame"></param>
-        protected override void OnRectChanged(in Rect rect)
-        {
-            // Force all of our children to arrange 
-            foreach(var child in Children)
-                child.Arrange(rect);
-        }
+        protected override Vector2 GetPivot() => Pivot;
 
         /// <summary>
         /// Arrange ourselv to the given rectangle
         /// </summary>
         /// <param name="rect"></param>
-        public override void Arrange(Rect rect) {
+        protected override Rect ArrangeOverride (in Rect rect) {
+            // Measure ourself
             var measuredSize = Measure(rect.Size);
 
             // Calculate the actual size of the node
@@ -155,26 +149,15 @@ namespace NoZ
                 }
             }
 
-            var actualRect = new Rect(
+            return new Rect(
                 rect.x + actualMargin.left,
                 rect.y + actualMargin.top,
                 rect.width - actualMargin.left - actualMargin.right,
                 rect.height - actualMargin.bottom - actualMargin.top
                 );
-
-            Position = new Vector2(
-                actualRect.x + actualRect.width * Pivot.x,
-                actualRect.y + actualRect.height * Pivot.y
-                );
-
-            _arrangredFrame = actualRect.Offset(-Position);
-
-            InvalidateRect();
         }
 
-        protected override Rect CalculateRect() => _arrangredFrame;
-
-        public sealed override Vector2 Measure (in Vector2 available)
+        protected sealed override Vector2 MeasureOverride (in Vector2 available)
         {
             var adjustedAvailable = available;
             var autoX = IsAuto(_size.x);
@@ -219,6 +202,9 @@ namespace NoZ
             return measuredSize;
         }
 
+        /// <summary>
+        /// Measure all child nodes 
+        /// </summary>
         protected virtual Vector2 MeasureChildren (in Vector2 available)
         {
             var size = Vector2.Zero;
@@ -226,6 +212,22 @@ namespace NoZ
                 size = Vector2.Max(size, child.Measure(available));
 
             return size;
+        }
+
+        /// <summary>
+        /// Arrange all child nodes
+        /// </summary>
+        protected sealed override void ArrangeChildren (in Rect rect) => 
+            ArrangeChildrenOverride(rect.Contract(Padding));
+
+        /// <summary>
+        /// Override to arrange all child nodes.  Default implementation arranges all children
+        /// to match the layout rectangle minus padding.
+        /// </summary>
+        protected virtual void ArrangeChildrenOverride (in Rect rect)
+        {
+            for (int i = 0; i < ChildCount; i++)
+                ArrangeChild(i, rect);
         }
     }
 }

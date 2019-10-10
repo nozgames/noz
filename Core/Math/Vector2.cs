@@ -27,10 +27,12 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
-namespace NoZ {
+namespace NoZ
+{
     [StructLayout(LayoutKind.Sequential, Pack = 0)]
     [TypeConverter(typeof(Vector2TypeConverter))]
-    public struct Vector2 {
+    public struct Vector2
+    {
         public static readonly Vector2 Zero = new Vector2();
         public static readonly Vector2 One = new Vector2(1f);
         public static readonly Vector2 Half = new Vector2(0.5f);
@@ -55,12 +57,14 @@ namespace NoZ {
             }
         }
 
-        public Vector2(float x, float y) {
+        public Vector2(float x, float y)
+        {
             this.x = x;
             this.y = y;
         }
 
-        public Vector2(float v) {
+        public Vector2(float v)
+        {
             x = y = v;
         }
 
@@ -70,7 +74,7 @@ namespace NoZ {
         /// Returns the maximum component of the vector
         public float Max() => MathEx.Max(x, y);
 
-        public static Vector2 Mix(Vector2 a, Vector2 b, float weight) => 
+        public static Vector2 Mix(Vector2 a, Vector2 b, float weight) =>
             new Vector2(MathEx.Mix(a.x, b.x, weight), MathEx.Mix(a.y, b.y, weight));
 
         public static float Dot(Vector2 lhs, Vector2 rhs) => lhs.x * rhs.x + lhs.y * rhs.y;
@@ -103,37 +107,44 @@ namespace NoZ {
                 if (l == 0)
                     return ZeroOne;
 
-                return new Vector2 (x / l, y / l);
+                return new Vector2(x / l, y / l);
             }
         }
 
         /// Return a vector that contains the maxium values of both components
-        public static Vector2 Max(in Vector2 a, in Vector2 b) {
-			return new Vector2(MathEx.Max (a.x, b.x), MathEx.Max (a.y, b.y));
+        public static Vector2 Max(in Vector2 a, in Vector2 b)
+        {
+            return new Vector2(MathEx.Max(a.x, b.x), MathEx.Max(a.y, b.y));
         }
 
         /// Return a vector that contains the minimum values of both components
-        public static Vector2 Min(in Vector2 a, in Vector2 b) {
+        public static Vector2 Min(in Vector2 a, in Vector2 b)
+        {
             return new Vector2(MathEx.Min(a.x, b.x), MathEx.Min(a.y, b.y));
         }
 
-        public static Vector2 Clamp(in Vector2 v, in Vector2 min, in Vector2 max) {
+        public static Vector2 Clamp(in Vector2 v, in Vector2 min, in Vector2 max)
+        {
             return new Vector2(MathEx.Clamp(v.x, min.x, max.x), MathEx.Clamp(v.y, min.y, max.y));
         }
 
-        public static Vector2 operator + (Vector2 lhs, Vector2 rhs) {
+        public static Vector2 operator +(Vector2 lhs, Vector2 rhs)
+        {
             return new Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
         }
 
-        public static Vector2 operator *(Vector2 lhs, Vector2 rhs) {
+        public static Vector2 operator *(Vector2 lhs, Vector2 rhs)
+        {
             return new Vector2(lhs.x * rhs.x, lhs.y * rhs.y);
         }
 
-        public static Vector2 operator -(Vector2 lhs, Vector2 rhs) {
+        public static Vector2 operator -(Vector2 lhs, Vector2 rhs)
+        {
             return new Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
         }
 
-        public static Vector2 operator /(Vector2 lhs, Vector2 rhs) {
+        public static Vector2 operator /(Vector2 lhs, Vector2 rhs)
+        {
             return new Vector2(lhs.x / rhs.x, lhs.y / rhs.y);
         }
 
@@ -147,15 +158,18 @@ namespace NoZ {
         public static Vector2 operator +(Vector2 lhs, float rhs) => new Vector2(lhs.x + rhs, lhs.y + rhs);
         public static Vector2 operator -(Vector2 lhs, float rhs) => new Vector2(lhs.x - rhs, lhs.y - rhs);
 
-        public static bool operator == (Vector2 lhs, Vector2 rhs) {
+        public static bool operator ==(Vector2 lhs, Vector2 rhs)
+        {
             return lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        public static bool operator != (Vector2 lhs, Vector2 rhs) {
+        public static bool operator !=(Vector2 lhs, Vector2 rhs)
+        {
             return !(lhs.x == rhs.x && lhs.y == rhs.y);
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             if (obj == null || obj.GetType() != GetType())
                 return false;
 
@@ -164,16 +178,19 @@ namespace NoZ {
             return lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return x.GetHashCode() ^ y.GetHashCode();
         }
 
-        public static Vector2 Parse(string value) {
+        public static Vector2 Parse(string value)
+        {
             string[] parts = value.Split(',');
             if (null == parts || parts.Length == 0)
                 return Zero;
 
-            if (parts.Length == 1) {
+            if (parts.Length == 1)
+            {
                 float.TryParse(parts[0], out var parsed);
                 return new Vector2(parsed);
             }
@@ -183,7 +200,8 @@ namespace NoZ {
             return new Vector2(parsedX, parsedY);
         }
 
-        public override string ToString () {
+        public override string ToString()
+        {
             if (x == y)
                 return $"{x}";
 
@@ -192,7 +210,8 @@ namespace NoZ {
 
         public Vector3 ToVector3() => new Vector3(x, y, 0);
 
-        public float DistanceToLineSegmentSquared (in Vector2 pt1, in Vector2 pt2) {
+        public float DistanceToLineSegmentSquared(in Vector2 pt1, in Vector2 pt2)
+        {
             var seg = (pt2 - pt1);
             var l2 = seg.MagnitudeSquared;
             var t = ((x - pt1.x) * seg.x + (y - pt1.y) * seg.y) / l2;
@@ -201,13 +220,16 @@ namespace NoZ {
             return new Vector2(pt1.x + t * seg.x, pt1.y + t * seg.y).MagnitudeSquared;
         }
 
-        private class Vector2TypeConverter : TypeConverter {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+        private class Vector2TypeConverter : TypeConverter
+        {
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+            {
                 if (sourceType == typeof(string)) return true;
                 return base.CanConvertFrom(context, sourceType);
             }
 
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
                 if (value == null) return Zero;
                 if (value is string) return Parse((string)value);
                 return base.ConvertFrom(context, culture, value);

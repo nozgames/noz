@@ -189,20 +189,17 @@ namespace NoZ
             _textSize = Vector2.Zero;
         }
 
-        public override Vector2 Measure(in Vector2 available)
+        protected override Vector2 MeasureOverride (in Vector2 available)
         {
-            Vector2 childrenSize = base.Measure(available);
-
             if (_font == null)
-                return childrenSize;
+                return Vector2.Zero;
 
             // Cached text size?
             if (_textSize != Vector2.Zero)
-                return Vector2.Max(_textSize, childrenSize);
+                return _textSize;
 
-
-            float scale = _fontSize / _font.Resolution;
-            float height = _font.Height * scale;
+            var scale = _fontSize / _font.Resolution;
+            var height = _font.Height * scale;
 
             // Calcuate the text size
             _textSize = new Vector2(0, height);
@@ -244,11 +241,9 @@ namespace NoZ
             }
 
             if (line_w != 0f)
-            {
                 _textSize.x = MathEx.Max(line_w, _textSize.x);
-            }
 
-            return Vector2.Max(childrenSize, _textSize);
+            return _textSize;
         }
 
         protected void UpdateMesh(Rect nrect)
@@ -732,20 +727,10 @@ namespace NoZ
             return true;
         }
 
-        protected override Rect CalculateRect() => new Rect(_textSize * -0.5f, _textSize);
-
-        protected override void OnRectChanged(in Rect old)
+        protected override void OnRectChanged(in Rect rect)
         {
-            base.OnRectChanged(old);
+            base.OnRectChanged(rect);
             InvalidateMesh();
-        }
-
-        public override void Arrange(Rect frame)
-        {
-            // Update position to reflect the new size
-            Position = new Vector2(
-                frame.x + frame.width * 0.5f,
-                frame.y + frame.height * 0.5f);
         }
     }
 }

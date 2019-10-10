@@ -158,6 +158,15 @@ namespace NoZ {
             return new Rect(x - ex, y - ey, width + ex * 2, height + ey * 2);
         }
 
+        public Rect Expand(Thickness thickness)
+        {
+            return new Rect(x - thickness.left, y - thickness.top, width + thickness.left + thickness.right, height + thickness.top + thickness.bottom);
+        }
+
+        public Rect Contract (Thickness thickness) =>
+            new Rect(x + thickness.left, y + thickness.top, width - thickness.left - thickness.right, height - thickness.top - thickness.bottom);
+
+
         public Rect Offset (in Vector2 offset)
         {
             return new Rect(x + offset.x, y + offset.y, width, height);

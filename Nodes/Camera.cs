@@ -60,8 +60,5 @@ namespace NoZ
         {
             gc.PopMatrix();
         }
-
-        // Cameras rect is the scenes rect
-        protected override Rect CalculateRect() => Scene?.Rect ?? Rect.Empty;
     }
 }
