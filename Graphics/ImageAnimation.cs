@@ -29,13 +29,44 @@ namespace NoZ
 {
     public class ImageAnimation : Resource
     {
+        /// <summary>
+        /// Defines a single frame in an image animation
+        /// </summary>
         public struct Frame
         {
-            public float Start;
-            public float Duration;
-            public Image Image;
+            /// <summary>
+            /// Image that represents the frame
+            /// </summary>
+            public Image Image { get; private set; }
+
+            /// <summary>
+            /// Start time of the frame
+            /// </summary>
+            public float Start { get; private set; }
+
+            /// <summary>
+            /// Duration of the frame
+            /// </summary>
+            public float Duration { get; private set; }
+
+            /// <summary>
+            /// Optional list of events to fire on the frame
+            /// </summary>
+            public string[] Events { get; private set; }
+
+
+            public Frame (Image image, float start, float duration, string[] events)
+            {
+                Image = image;
+                Start = start;
+                Duration = duration;
+                Events = events;
+            }
         }
 
+        /// <summary>
+        /// Return the available animation frames
+        /// </summary>
         public Frame[] Frames { get; private set; }
 
         /// <summary>
@@ -43,27 +74,37 @@ namespace NoZ
         /// </summary>
         public float Duration { get; private set; }
 
-        public ImageAnimation(string name) : base(name)
-        {
-        }
+        private ImageAnimation(string name) : base(name) { }
 
+        /// <summary>
+        /// Create a new image animation from the given stream
+        /// </summary>
         public static ImageAnimation Create(string name, BinaryReader reader)
         {
             var anim = new ImageAnimation(name);
             var frameCount = reader.ReadInt32();
             anim.Frames = new Frame[frameCount];
-            var duration = 0.0f;
+            var start = 0.0f;
             for (int i = 0; i < frameCount; i++)
             {
-                var frame = new Frame();
-                frame.Image = Resource.Load<Image>(reader.ReadString());
-                frame.Duration = reader.ReadSingle();
-                frame.Start = duration;
-                anim.Frames[i] = frame;
-                duration += frame.Duration;
+                var image = Resource.Load<Image>(reader.ReadString());
+                var duration = reader.ReadSingle();
+
+                var eventCount = (int)reader.ReadByte();
+                string[] events = null;
+                if (eventCount > 0)
+                {
+                    events = new string[eventCount];
+                    for (int e = 0; e < eventCount; e++)
+                        events[e] = reader.ReadString();
+                }
+
+                anim.Frames[i] = new Frame(image, start, duration, events);
+                start += duration;
+
             }
 
-            anim.Duration = duration;
+            anim.Duration = start;
 
             return anim;
         }

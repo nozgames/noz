@@ -54,6 +54,11 @@ namespace NoZ
         public bool IsLooping { get; private set; } = false;
 
         /// <summary>
+        /// Action called when an animation frame contains an event
+        /// </summary>
+        public Action<string> OnFrameEvent { get; set; }
+
+        /// <summary>
         /// Image used to render the rectangle.  If no image is given a solid color rectangle 
         /// will be rendered instead by using a solid white texture.
         /// </summary>
@@ -165,9 +170,30 @@ namespace NoZ
             var frame = _animation.GetFrameIndex(_animationTime, _animationFrame);
             if(_animationFrame != frame)
             {
+                FireEvents(_animationFrame, frame);
+
                 _animationFrame = frame;
                 base.Image = _animation.Frames[_animationFrame].Image;
             }                
+        }
+
+        /// <summary>
+        /// Fire all frame events that occurred
+        /// </summary>
+        private void FireEvents (int oldFrame, int newFrame)
+        {
+            if (null == OnFrameEvent)
+                return;
+
+            for(int i=oldFrame; i != newFrame; i = (i+1) % _animation.Frames.Length)
+            {
+                var events = _animation.Frames[i].Events;
+                if (null == events)
+                    continue;
+
+                for (int e = 0; e < events.Length; e++)
+                    OnFrameEvent(events[e]);
+            }
         }
     }
 }
