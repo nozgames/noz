@@ -483,15 +483,6 @@ namespace NoZ
             return anim;
         }
 
-        public static Animation Activate(bool activate = true)
-        {
-            var anim = AllocAnimation();
-            anim._delegate = ActivateUpdateDelegate;
-            anim._vector0.x = activate ? 1f : 0f;
-            anim._duration = 0f;
-            return anim;
-        }
-
         public static Animation Wait(float duration)
         {
             var anim = AllocAnimation();
@@ -973,15 +964,6 @@ namespace NoZ
 
         #region Update Delegates
 
-        private static void ActivateUpdate(Animation anim, float t)
-        {
-#if false
-            var active = tween._vector0.x > 0;
-            if (active != tween._target.activeSelf)
-                tween._target.SetActive(active);
-#endif
-        }
-
         private static void ShakeUpdate (Animation anim, float t)
         {
             ShakePositionUpdate(anim, t);
@@ -989,7 +971,7 @@ namespace NoZ
         }
 
         private static void ShakePositionUpdate(Animation anim, float t)
-        {
+        {            
             (anim._object as Node).Position =
                 new Vector2(
                     anim._vector0.x * (MathEx.PerlinNoise(anim._vector1.x, t * 20f) - 0.5f) * 2.0f,
@@ -1042,7 +1024,6 @@ namespace NoZ
 
         private static void WaitUpdate(Animation anim, float t) { }
 
-        private static readonly UpdateDelegate ActivateUpdateDelegate = ActivateUpdate;
         private static readonly UpdateDelegate MoveUpdateDelegate = MoveUpdate;
         private static readonly UpdateDelegate MoveWorldUpdateDelegate = MoveWorldUpdate;
         private static readonly UpdateDelegate MoveToUpdateDelegate = MoveToUpdate;

@@ -19,6 +19,14 @@ namespace NoZ
             writer.Write(value.y);
         }
 
+        public static void Write(this BinaryWriter writer, in Rect value)
+        {
+            writer.Write(value.x);
+            writer.Write(value.y);
+            writer.Write(value.width);
+            writer.Write(value.height);
+        }
+
         public static void Write(this BinaryWriter writer, short[] value)
         {
             byte[] bytes = new byte[value.Length * 2];

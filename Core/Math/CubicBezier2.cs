@@ -22,21 +22,25 @@
   SOFTWARE.
 */
 
-namespace NoZ {
-    public struct CubicBezier2 {
+namespace NoZ
+{
+    public struct CubicBezier2
+    {
         public Vector2 P0;
         public Vector2 P1;
         public Vector2 P2;
         public Vector2 P3;
 
-        public CubicBezier2(in Vector2 p0, in Vector2 p1, in Vector2 p2, in Vector2 p3) {
+        public CubicBezier2(in Vector2 p0, in Vector2 p1, in Vector2 p2, in Vector2 p3)
+        {
             P0 = p0;
             P1 = p1;
             P2 = p2;
             P3 = p3;
         }
 
-        public Vector2 GetPoint (float t) {
+        public Vector2 GetPoint(float t)
+        {
             float c = 1f - t;
             float bp0 = c * c * c;
             float bp1 = 3f * t * c * c;
@@ -48,7 +52,8 @@ namespace NoZ {
             );
         }
 
-        public Vector2 GetTangent(float t) {
+        public Vector2 GetTangent(float t)
+        {
             var q0 = P0 + (P1 - P0) * t;
             var q1 = P1 + (P2 - P1) * t;
             var q2 = P2 + (P3 - P2) * t;
@@ -66,19 +71,24 @@ namespace NoZ {
         /// the result will be.
         /// </param>
         /// <returns>Parameters value that is closest to the given point [0-1]</returns>
-        public float GetClosestParameter (in Vector2 point, float threshold = 0.000001f) {
+        public float GetClosestParameter(in Vector2 point, float threshold = 0.000001f)
+        {
             var seg0 = P0;
             var seg1 = P3;
             var t0 = 0.0f;
             var t1 = 1.0f;
 
-            while (t1 - t0 > threshold) {
+            while (t1 - t0 > threshold)
+            {
                 var dist0 = (seg0 - point).MagnitudeSquared;
                 var dist1 = (seg1 - point).MagnitudeSquared;
-                if (dist0 < dist1) {
+                if (dist0 < dist1)
+                {
                     t1 = (t0 + t1) * 0.5f;
                     seg1 = GetPoint(t1);
-                } else {
+                }
+                else
+                {
                     t0 = (t0 + t1) * 0.5f;
                     seg0 = GetPoint(t0);
                 }
@@ -87,15 +97,18 @@ namespace NoZ {
             return (t0 + t1) * 0.5f;
         }
 
-        public Vector2 GetClosestPoint (in Vector2 point, float threshold) {
+        public Vector2 GetClosestPoint(in Vector2 point, float threshold)
+        {
             return GetPoint(GetClosestParameter(point, threshold));
         }
 
-        public float GetDistanceSquared (in Vector2 point, float threshold) {
+        public float GetDistanceSquared(in Vector2 point, float threshold)
+        {
             return (point - GetPoint(GetClosestParameter(point, threshold))).MagnitudeSquared;
         }
 
-        public float GetDistance(in Vector2 point, float threshold) {
+        public float GetDistance(in Vector2 point, float threshold)
+        {
             return (point - GetPoint(GetClosestParameter(point, threshold))).Magnitude;
         }
     }

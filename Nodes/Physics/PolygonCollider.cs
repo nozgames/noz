@@ -32,9 +32,10 @@ namespace NoZ
         {
         }
 
-        public PolygonCollider(Vector2[] points)
+        public PolygonCollider(Vector2[] points, int layer = 0)
         {
             Points = points;
+            Layer = layer;
         }
 
         protected override ICollider CreateCollider(IBody body)

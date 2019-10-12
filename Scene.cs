@@ -33,7 +33,7 @@ namespace NoZ
         public static readonly Event UpdateEvent = new Event();
         public static readonly Event<View> ViewChangedEvent = new Event<View>();
 
-        private DrawList _drawList;
+        private DrawList _drawList = new DrawList();
         private Vector2Int _size;
         private Camera _camera;
         private bool _paused = true;
@@ -41,6 +41,12 @@ namespace NoZ
         private Matrix3 _sceneToWindow;
         private World _world;
         private View _view;
+       
+
+        public TransparencySortMode TransparencySortMode {
+            get => _drawList.TransparencySortMode;
+            set => _drawList.TransparencySortMode = value;
+        }
 
         public Node Cursor { get; set; }
 
@@ -117,7 +123,6 @@ namespace NoZ
 
         public Scene ()
         {
-            _drawList = new DrawList();
         }
 
         public void Present (GraphicsContext gc)

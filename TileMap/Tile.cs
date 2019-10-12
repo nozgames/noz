@@ -80,6 +80,7 @@ namespace NoZ
             tile.Id = id;
             tile.Rect = new RectInt(reader.ReadUInt16(), reader.ReadUInt16(), tileSize.x, tileSize.y);
 
+            // Read all of the tile properties
             tile.Properties = ReadProperties(reader);
 
             tile.Polygons = new Polygon[reader.ReadUInt16()];
@@ -87,7 +88,7 @@ namespace NoZ
             {
                 var points = new Vector2[reader.ReadUInt16()];
                 for(int pointIndex=0; pointIndex<points.Length; pointIndex++)
-                    points[pointIndex] = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                    points[pointIndex] = Physics.PixelsToMeters(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
 
                 var properties = ReadProperties(reader);
 

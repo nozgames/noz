@@ -26,15 +26,28 @@ using System.Collections.Generic;
 
 namespace NoZ
 {
+    public enum TransparencySortMode 
+    {
+        /// <summary>
+        /// Default transparency sort is the order objects are rendered
+        /// </summary>
+        Default,
+
+        YAxis,
+    }
+
     /// <summary>
     /// List of all nodes that will be drawn sorted by their layer and sort order.  The draw list has a 
     /// maximum of 65535 drawable nodes.
     /// </summary>
     class DrawList
     {
+        private const float DefaultTransparencySortIncrement = 0.001f;
+
         public struct DrawNode
         {
-            public ushort PaintersIndex;
+            public float TransparencySort;
+            public ushort Index;
             public ushort SortGroup;
             public int SortOrder;
             public Node Node;
@@ -42,11 +55,14 @@ namespace NoZ
             public class Comparer : IComparer<DrawNode> {
                 public static Comparer Instance = new Comparer();
 
-                public int Compare(DrawNode x, DrawNode y) {
-                    var diff = x.SortOrder - y.SortOrder;
+                public int Compare(DrawNode lhs, DrawNode rhs) {
+                    var diff = lhs.SortOrder - rhs.SortOrder;
                     if (diff != 0) return diff;
 
-                    return x.PaintersIndex - y.PaintersIndex;
+                    var tdiff = lhs.TransparencySort - rhs.TransparencySort;
+                    if (tdiff != 0) return (int)MathEx.Sign(tdiff);
+
+                    return lhs.Index - rhs.Index;
                 }
             }
         }
@@ -72,6 +88,8 @@ namespace NoZ
         private List<DrawNode> _nodes = new List<DrawNode>(4096);
         private List<DrawLayer> _layers = new List<DrawLayer>(64);
 
+        public TransparencySortMode TransparencySortMode { get; set; }
+
         private void BuildLayer(ushort layerIndex)
         {
             var drawLayer = _layers[layerIndex];
@@ -93,6 +111,19 @@ namespace NoZ
             _layers[layerIndex] = drawLayer;
         }
 
+        private float CalculateTransparenySort(Node node)
+        {
+            switch(TransparencySortMode)
+            {
+                default:
+                case TransparencySortMode.Default:
+                    return _nodes.Count * DefaultTransparencySortIncrement;
+
+                case TransparencySortMode.YAxis:
+                    return node.LocalToScene(Vector2.Zero).y;
+            }
+        }
+
         private void AddNode(Node node) {
             // Skip nodes and their descendants if they are not visible.
             if (!node.IsVisible) return;
@@ -107,8 +138,9 @@ namespace NoZ
 
                 var sd = new DrawNode();
                 sd.Node = node;
-                sd.PaintersIndex = (ushort)_nodes.Count;
+                sd.TransparencySort = CalculateTransparenySort(node);
                 sd.SortOrder = layer.SortOrder;
+                sd.Index = (ushort)_nodes.Count;
                 sd.SortGroup = (ushort)(_layers.Count - 1);
                 _nodes.Add(sd);
                 return;
@@ -118,8 +150,9 @@ namespace NoZ
             if (drawable != null) {
                 var sd = new DrawNode();
                 sd.Node = node;
-                sd.PaintersIndex = (ushort)_nodes.Count;
+                sd.TransparencySort = CalculateTransparenySort(node);
                 sd.SortOrder = drawable.SortOrder;
+                sd.Index = (ushort)_nodes.Count;
                 sd.SortGroup = 0;
                 _nodes.Add(sd);
             }

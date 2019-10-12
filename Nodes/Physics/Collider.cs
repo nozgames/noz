@@ -102,9 +102,6 @@ namespace NoZ
         protected override void OnUpdate(float deltaTime)
         {
             base.OnUpdate(deltaTime);
-
-            if(_body != null)
-                _body.Position = Physics.PixelsToMeters(LocalToScene(Vector2.Zero));
         }
 
         protected abstract ICollider CreateCollider(IBody body);

@@ -87,6 +87,8 @@ namespace NoZ
 
         public static float Log(float f) => (float)Math.Log(f);
 
+        public static float Sign(float f) => f < 0.0f ? -1.0f : 1.0f;
+
         public static float EvaluateCurve(float t, float val1, float tan1, float val2, float tan2)
         {
             var t2 = t * t;

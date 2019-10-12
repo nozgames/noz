@@ -42,9 +42,10 @@ namespace NoZ
         {
         }
 
-        public CircleCollider(float radius)
+        public CircleCollider(float radius, int layer = 0)
         {
             Radius = radius;
+            Layer = layer;
         }
 
         protected override ICollider CreateCollider(IBody body)
