@@ -36,6 +36,8 @@ namespace NoZ
 
         public int SortOrder { get; set; }
 
+        public int SortLayer { get; set; }
+
         public TileMap.LayerInfo Layer { get; private set; }
 
         public TileMap TileMap => Layer.TileMap;
@@ -132,6 +134,7 @@ namespace NoZ
             gc.Color = Color.White;
             gc.Image = TileMap.TileSets[0].Image;
             gc.SortOrder = (short)SortOrder;
+            gc.SortLayer = (byte)SortLayer;
             gc.Draw(_quads, 0, _quads.Length); 
         }
 

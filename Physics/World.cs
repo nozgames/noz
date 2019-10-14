@@ -26,6 +26,22 @@ using System;
 
 namespace NoZ
 {
+    public struct QueryResults
+    {
+        private ICollider[] _results;
+        private int _length;
+
+        public int Length => _length;
+
+        public ICollider this [int index] => _results[index];
+
+        public QueryResults (ICollider[] results, int length)
+        {
+            _results = results;
+            _length = length;
+        }
+    }
+
     public class World : Object, IDisposable
     {
         public static readonly Event<float> UpdateEvent = new Event<float>();
@@ -34,6 +50,7 @@ namespace NoZ
         private Rect _bounds;
         private IBody _boundsBody;
         private ICollider _boundsCollider;
+        private ICollider[] _queryResults;
 
         public uint DebugVisualizationMask { get; set; } 
 
@@ -57,6 +74,23 @@ namespace NoZ
         public IBody CreateRigidBody() => _world.CreateRigidBody();
         public IBody CreateKinematicBody() => _world.CreateKinematicBody();
         public IBody CreateStaticBody() => _world.CreateStaticBody();
+
+        public QueryResults Query(in Rect rect, uint mask, int count)
+        {
+            if (_queryResults == null || _queryResults.Length < count)
+                _queryResults = new ICollider[count];
+
+            return new QueryResults(
+                _queryResults, 
+                _world.Query(
+                    Physics.PixelsToMeters(rect),
+                    mask,
+                    _queryResults,
+                    0,
+                    count
+                )
+            );
+        }
 
         public void Step()
         {

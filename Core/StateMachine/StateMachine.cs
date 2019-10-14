@@ -90,6 +90,8 @@ namespace NoZ
             for(int i=0; i<_stateMachines.Count; i++)
             {
                 var sm = _stateMachines[i];
+                if (sm._updateMode != updateMode)
+                    continue;
 
                 // Handle node specific logic
                 if (sm._target is Node node)

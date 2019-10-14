@@ -128,6 +128,11 @@ namespace NoZ
             return new Vector2(MathEx.Clamp(v.x, min.x, max.x), MathEx.Clamp(v.y, min.y, max.y));
         }
 
+        /// <summary>
+        /// Return vector perpendicular to the given vector
+        /// </summary>
+        public static Vector2 Perpendicular(in Vector2 v) => new Vector2(-v.y, v.x);
+
         public static Vector2 operator +(Vector2 lhs, Vector2 rhs)
         {
             return new Vector2(lhs.x + rhs.x, lhs.y + rhs.y);

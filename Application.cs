@@ -54,6 +54,8 @@ namespace NoZ
         private static MouseWheelEvent _mouseWheelEvent = new MouseWheelEvent();
         private static KeyboardEvent _keyboardEvent = new KeyboardEvent();
 
+        public static int Frame { get; private set; }
+
         /// <summary>
         /// Initialize the application
         /// </summary>
@@ -76,6 +78,8 @@ namespace NoZ
 
         public static void Step ()
         {
+            Frame++;
+
             // Advance time
             Time.Step();
 
@@ -93,6 +97,8 @@ namespace NoZ
 
             while (Time.BeginFixedTimeStep())
             {
+                StateMachine.Update(UpdateMode.FixedUpdate);
+
                 for (var i = 0; i < Window.ViewCount; i++)
                 {
                     var view = Window.GetViewAt(i);

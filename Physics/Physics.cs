@@ -65,6 +65,11 @@ namespace NoZ
         public static Vector2 PixelsToMeters(in Vector2 pixels) => pixels * _pixelsToMeters;
 
         /// <summary>
+        /// Convert pixels to meters
+        /// </summary>
+        public static Rect PixelsToMeters(in Rect pixels) => new Rect(pixels.TopLeft * _pixelsToMeters, pixels.Size * _pixelsToMeters);
+
+        /// <summary>
         /// Convert meters to pixels
         /// </summary>
         public static float MetersToPixels(float meters) => meters * _metersToPixels;

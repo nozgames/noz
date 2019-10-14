@@ -97,14 +97,14 @@ namespace NoZ
 
             public int Compare(DrawNode lhs, DrawNode rhs)
             {
-                var diff = lhs.SortGroup - rhs.SortGroup;
-                if (diff != 0) return diff;
+                var diff1 = lhs.SortGroup - rhs.SortGroup;
+                if (diff1 != 0) return diff1;
 
-                diff = lhs.SortLayer - rhs.SortLayer;
-                if (diff != 0) return diff;
+                var diff2 = lhs.SortLayer - rhs.SortLayer;
+                if (diff2 != 0) return diff2;
 
-                diff = lhs.SortOrder - rhs.SortOrder;
-                if (diff != 0) return diff;
+                var diff3 = lhs.SortOrder - rhs.SortOrder;
+                if (diff3 != 0) return lhs.SortOrder < rhs.SortOrder ? -1 : 1;
 
                 var tdiff = lhs.TransparencySort - rhs.TransparencySort;
                 if (tdiff != 0.0f) return (int)MathEx.Sign(tdiff);

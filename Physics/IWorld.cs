@@ -39,6 +39,8 @@ namespace NoZ
         void RemoveRigidBody(IBody body);
 
         void DrawDebug(GraphicsContext gc, uint mask=Physics.CollisionMaskAll);
+
+        int Query(in Rect rect, uint mask, ICollider[] results, int start, int count);
     }
 }
 

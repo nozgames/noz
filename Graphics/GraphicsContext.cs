@@ -130,7 +130,7 @@ namespace NoZ
             dnode.SortGroup = 0;
             dnode.TransparencySort = 0.0f;
             dnode.GroupCount = 0;
-            dnode.GroupStart = 0;
+            dnode.GroupStart = 1;
 
             _sortGroupStack.Push(1);
             _sortGroups.Add(dnode);
