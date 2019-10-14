@@ -24,16 +24,9 @@
 
 namespace NoZ
 {
-    /// <summary>
-    /// Interface that indicates a node is a drawable node
-    /// </summary>
-    public interface IDrawable
+    public enum TransparencySortMode
     {
-        bool Draw(GraphicsContext context);
-
-        /// <summary>
-        /// Returns the sort order within the current layer.  
-        /// </summary>
-        int SortOrder { get; }
+        Default,
+        YAxis
     }
 }

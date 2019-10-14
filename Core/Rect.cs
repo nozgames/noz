@@ -126,6 +126,8 @@ namespace NoZ {
             }
         }
 
+        public Vector2 Center => new Vector2(x + width * 0.5f, y + height * 0.5f);
+
         public Rect Union(Rect rect) {
             float ul = Math.Min(rect.x, x);
             float ur = Math.Max(rect.x + rect.width, x + width);

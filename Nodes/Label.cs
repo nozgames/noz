@@ -50,7 +50,7 @@ namespace NoZ
         Justified
     }
 
-    public class Label : Node, IDrawable
+    public class Label : Node
     {
         /// <summary>
         /// Structure which represents a single line of characters within the label
@@ -96,7 +96,7 @@ namespace NoZ
 
         public int SortOrder { get; set; }
 
-        int IDrawable.SortOrder => SortOrder;
+        public int SortLayer { get; set; }
 
         public MaskMode MaskMode { get; set; } = MaskMode.Inside;
 
@@ -132,6 +132,7 @@ namespace NoZ
                         _text = "";
                     InvalidateRect();
                     InvalidateMesh();
+                    IsDrawable = Text != null;
                 }
             }
         }
@@ -711,20 +712,16 @@ namespace NoZ
             return (int)line.charMax;
         }
 
-        bool IDrawable.Draw(GraphicsContext gc) => DrawOverride(gc);
-
-        protected virtual bool DrawOverride(GraphicsContext gc)
+        public override void Draw (GraphicsContext gc)
         {
             UpdateMesh(Rect);
             if (_quadCount <= 0)
-                return false;
+                return;
 
             gc.Color = Color;
             gc.Image = _font.Image;
-            gc.Transform = LocalToSceneMatrix;
             gc.MaskMode = MaskMode;
-            gc.Draw(_quads, _quadCount);
-            return true;
+            gc.Draw(_quads, 0, _quadCount);
         }
 
         protected override void OnRectChanged(in Rect rect)

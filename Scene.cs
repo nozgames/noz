@@ -23,17 +23,25 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace NoZ
 {
-    public class Scene : Node, ILayer
+    public class Scene : Node
     {
         public static readonly Event<KeyCode> KeyDownEvent = new Event<KeyCode>();
         public static readonly Event<KeyCode> KeyUpEvent = new Event<KeyCode>();
         public static readonly Event UpdateEvent = new Event();
         public static readonly Event<View> ViewChangedEvent = new Event<View>();
 
-        private DrawList _drawList = new DrawList();
+        /// <summary>
+        /// Defines a drawable node in the draw list
+        /// </summary>
+        public struct DrawableNode {
+            public Node node;
+            public bool end;
+        }
+
         private Vector2Int _size;
         private Camera _camera;
         private bool _paused = true;
@@ -41,12 +49,13 @@ namespace NoZ
         private Matrix3 _sceneToWindow;
         private World _world;
         private View _view;
-       
 
-        public TransparencySortMode TransparencySortMode {
-            get => _drawList.TransparencySortMode;
-            set => _drawList.TransparencySortMode = value;
-        }
+        /// <summary>
+        /// List of all nodes that should be drawn in the scene
+        /// </summary>
+        private List<DrawableNode> _draw = new List<DrawableNode>();
+       
+        public TransparencySortMode TransparencySortMode { get; set; }
 
         public Node Cursor { get; set; }
 
@@ -125,14 +134,32 @@ namespace NoZ
         {
         }
 
+        public void InvalidateDrawList ()
+        {
+            _draw.Clear();
+        }
+
+        private void BuildDrawList(Node node)
+        {
+            if (node.IsDrawable)
+                _draw.Add(new DrawableNode { node = node, end = false});
+
+            for (int i = 0, c = node.ChildCount; i < c; i++)
+                BuildDrawList(node.GetChildAt(i));
+
+            if (node.IsDrawable)
+                _draw.Add(new DrawableNode { node = node, end = true });
+        }
+
         public void Present (GraphicsContext gc)
         {
+            gc.BatchBegin();
+
             if (Camera != null)
             {
                 // Generate the camera matrix
                 var mat = Matrix3.Translate(Window.Size.ToVector2() * 0.5f);
                 mat = Matrix3.Multiply(LocalToSceneMatrix, mat);
-
 
                 var mat2 = Matrix3.Translate(-Camera.Parent.LocalToScene(Camera.Position));
                 mat2 = Matrix3.Multiply(mat2, Matrix3.Scale(Camera.Scale));
@@ -142,32 +169,39 @@ namespace NoZ
                 _sceneToWindow = mat;
                 _windowToScene = mat.Inverse();
 
-                gc.PushMatrix(mat);
+                gc.PushTransform(mat);
             }
             else
             {
-                gc.PushMatrix(LocalToSceneMatrix);
+                gc.PushTransform(LocalToSceneMatrix);
 
                 _windowToScene = SceneToLocalMatrix;
             }
 
-            _drawList.Build(this);
-            _drawList.Draw(gc);
-            _drawList.Clear();
+            gc.TransparencySortMode = TransparencySortMode;
 
+            if (_draw.Count == 0)
+                BuildDrawList(this);
+
+            foreach(var dnode in _draw)
+            {
+                if(dnode.end)
+                {
+                    dnode.node.DrawEnd(gc);
+                    gc.PopState();
+                    continue;
+                }
+
+                gc.PushState();
+                gc.PushMultipliedTransform(dnode.node.LocalToSceneMatrix);
+                dnode.node.Draw(gc);
+                gc.PopTransform();
+            }
+            
             _world?.DrawDebug(gc);
 
-            gc.PopMatrix();
-        }
-
-        public void BeginLayer(GraphicsContext gc)
-        {
-            
-        }
-
-        public void EndLayer(GraphicsContext gc)
-        {
-            
+            gc.PopTransform();
+            gc.BatchEnd();
         }
 
         public void Update ()
@@ -237,10 +271,8 @@ namespace NoZ
             return GetNodeAtPointInternal(root, position, type);
         }
 
-        public T GetNodeAtPoint<T>(Node root, in Vector2 worldPosition) where T : Node
-        {
-            return GetNodeAtPoint(root, worldPosition, typeof(T)) as T;
-        }
+        public T GetNodeAtPoint<T>(Node root, in Vector2 worldPosition) where T : Node => 
+            GetNodeAtPoint(root, worldPosition, typeof(T)) as T;
 
         protected virtual void OnUpdate() { }
         protected virtual void OnPause() { }

@@ -108,7 +108,12 @@ namespace NoZ
             /// <summary>
             /// Node should receive input events 
             /// </summary>
-            Interactive = (1 << 7)
+            Interactive = (1 << 7),
+
+            /// <summary>
+            /// True if the node is drawble
+            /// </summary>
+            Drawable = (1<<8)
         }
 
         private static List<Node> _pendingDestroy = new List<Node>();
@@ -196,6 +201,22 @@ namespace NoZ
         /// Returns true if the node has been destroyed
         /// </summary>
         public bool IsDestroyed => HasAllFlags(Flags.Destroyed);
+
+        /// <summary>
+        /// True if the node should have its Draw method called
+        /// </summary>
+        public bool IsDrawable {
+            get => HasAllFlags(Flags.Drawable);
+            set {
+                if (value == IsDrawable)
+                    return;
+
+                SetFlags(Flags.Drawable, value);
+
+                // If the node is already in a scene then invalidate the scenes draw list.
+                Scene?.InvalidateDrawList();
+            }
+        }
 
         /// <summary>
         /// Return true if the node arranges its children
@@ -427,14 +448,20 @@ namespace NoZ
 
             var old = _scene;
             if (old != null)
+            {
+                _scene.InvalidateDrawList();
                 OnLeaveScene(old);
+            }                
 
             _scene = scene;
 
             OnSceneChanged(old);
 
             if (_scene != null)
+            {
+                _scene.InvalidateDrawList();
                 OnEnterScene(_scene);
+            }                
 
             if (_children != null)
                 foreach (var child in _children)
@@ -727,6 +754,14 @@ namespace NoZ
             if (Parent != null && Parent.DoesArrangeChildren)
                 Parent.InvalidateRect();
         }
+
+        /// <summary>
+        /// Override to draw a node using the given graphics context.  This method will be called 
+        /// on all nodes with IsDrawable equal to true
+        /// </summary>
+        public virtual void Draw(GraphicsContext gc) { }
+
+        public virtual void DrawEnd (GraphicsContext gc) { }
 
         protected virtual void OnRectChanged(in Rect rect) { }
 

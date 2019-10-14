@@ -29,10 +29,9 @@ namespace NoZ
     /// <summary>
     /// Renderable grid of tiles used by TileMap
     /// </summary>
-    public class TileGridNode : Node, IDrawable
+    public class TileGridNode : Node
     {
-        private Vertex[] _vertexBuffer;
-        private short[] _indexBuffer;
+        private Quad[] _quads;
         private IBody _body;
 
         public int SortOrder { get; set; }
@@ -45,52 +44,42 @@ namespace NoZ
         {
             Layer = layer;
             UpdateMesh();
+            IsDrawable = true;
         }
 
         private void UpdateMesh()
         {
             var offset = -((Layer.Size * TileMap.TileSize).ToVector2() * 0.5f);
 
-            var vertexCount = Layer.TileCount * 4;
-            if (_vertexBuffer == null || _vertexBuffer.Length != vertexCount)
-                _vertexBuffer = new Vertex[vertexCount];
+            if (_quads == null || _quads.Length != Layer.TileCount)
+                _quads = new Quad[Layer.TileCount];
 
-            var indexCount = Layer.TileCount * 6;
-            if (_indexBuffer == null || _indexBuffer.Length != indexCount)
-                _indexBuffer = new short[indexCount];
+            // Texels per x any y unit 
+            var tpx = 1.0f / TileMap.TileSets[0].Image.Width;
+            var tpy = 1.0f / TileMap.TileSets[0].Image.Height;
 
-            var v = 0;
-            var i = 0;
-            for (int y = 0; y < TileMap.Size.y; y++)
-                for (int x = 0; x < TileMap.Size.x; x++)
+            for (int y = 0, q = 0; y < TileMap.Size.y; y++)
+                for (int x = 0; x < TileMap.Size.x; x++, q++)
                 {
                     var tile = Layer.Tiles[x + y * TileMap.Size.x];
                     if (tile == null)
                         continue;
 
                     var rect = new Rect(
-                        tile.Rect.x / (float)TileMap.TileSets[0].Image.Width,
-                        tile.Rect.y / (float)TileMap.TileSets[0].Image.Height,
-                        tile.Rect.width / (float)TileMap.TileSets[0].Image.Width,
-                        tile.Rect.height / (float)TileMap.TileSets[0].Image.Height);
+                        (tile.Rect.x + 0.25f) * tpx,
+                        (tile.Rect.y + 0.25f) * tpy,
+                        (tile.Rect.width - 0.5f) * tpx,
+                        (tile.Rect.height - 0.5f) * tpy);
 
-                    _vertexBuffer[v + 0] = new Vertex(offset + new Vector2((x + 0) * 32, (y + 0) * 32), rect.TopLeft);
-                    _vertexBuffer[v + 1] = new Vertex(offset + new Vector2((x + 1) * 32, (y + 0) * 32), rect.TopRight);
-                    _vertexBuffer[v + 2] = new Vertex(offset + new Vector2((x + 1) * 32, (y + 1) * 32), rect.BottomRight);
-                    _vertexBuffer[v + 3] = new Vertex(offset + new Vector2((x + 0) * 32, (y + 1) * 32), rect.BottomLeft);
-
-                    _indexBuffer[i + 0] = (short)v;
-                    _indexBuffer[i + 1] = (short)(v + 1);
-                    _indexBuffer[i + 2] = (short)(v + 3);
-                    _indexBuffer[i + 3] = (short)(v + 3);
-                    _indexBuffer[i + 4] = (short)(v + 2);
-                    _indexBuffer[i + 5] = (short)(v + 1);
-
-                    v += 4;
-                    i += 6;
+                    _quads[q] = new Quad
+                    {
+                        TL = new Vertex(offset + new Vector2((x + 0) * 32, (y + 0) * 32), rect.TopLeft),
+                        TR = new Vertex(offset + new Vector2((x + 1) * 32, (y + 0) * 32), rect.TopRight),
+                        BR = new Vertex(offset + new Vector2((x + 1) * 32, (y + 1) * 32), rect.BottomRight),
+                        BL = new Vertex(offset + new Vector2((x + 0) * 32, (y + 1) * 32), rect.BottomLeft)
+                    };
                 }
         }
-
 
         private void UpdateColliders()
         {
@@ -135,16 +124,15 @@ namespace NoZ
             _body.Position = Position;
         }
 
-        public bool Draw(GraphicsContext context)
+        public override void Draw (GraphicsContext gc)
         {
             if (null == TileMap)
-                return false;
+                return;
 
-            context.Color = Color.White;
-            context.Image = TileMap.TileSets[0].Image;
-            context.Draw(PrimitiveType.TriangleList, _vertexBuffer, _vertexBuffer.Length, _indexBuffer, _indexBuffer.Length);
-
-            return true;
+            gc.Color = Color.White;
+            gc.Image = TileMap.TileSets[0].Image;
+            gc.SortOrder = (short)SortOrder;
+            gc.Draw(_quads, 0, _quads.Length); 
         }
 
         protected override void OnEnterScene(Scene entering)

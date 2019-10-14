@@ -26,7 +26,7 @@ using System;
 
 namespace NoZ
 {
-    public class View : ILayer
+    public class View 
     {
         private bool _visible;
         private Transition _transition;
@@ -36,8 +36,6 @@ namespace NoZ
         public Rect Rect { get; private set; }
 
         public Vector2Int Size { get; private set; }
-
-        public int SortOrder => 0;
 
         public bool IsVisible {
             get => _visible;
@@ -114,15 +112,6 @@ namespace NoZ
                 _transition.Draw(gc);
             else if(null != Scene)
                 Scene.Present(gc);
-        }
-
-        public void BeginLayer(GraphicsContext gc)
-        {
-            
-        }
-
-        public void EndLayer(GraphicsContext gc)
-        {            
         }
 
         public void UpdateScene ( )

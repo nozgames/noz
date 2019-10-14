@@ -27,14 +27,6 @@ using System.Collections.Generic;
 
 namespace NoZ
 {
-    public enum PrimitiveType
-    {
-        TriangleList,
-        TriangleStrip,
-        LineList,
-        LineStrip
-    }
-
     public enum MaskMode
     {
         /// <summary>
@@ -60,6 +52,8 @@ namespace NoZ
 
     public abstract class GraphicsContext
     {
+        private const float DefaultTransparencySortIncrement = 0.001f;
+
         public class State
         {
             public int maskCount;
@@ -67,37 +61,128 @@ namespace NoZ
             public float opacity;
         }
 
+        /// <summary>
+        /// Pool to reuse states
+        /// </summary>
         private static ObjectPool<State> _statePool = new ObjectPool<State>(() => new State(), 16);
+
         private Stack<State> _state;
-        private Stack<Matrix3> _worldToScreen;
-        private Color _color;
+        private Stack<Matrix3> _transform;
+        private Stack<ushort> _sortGroupStack = new Stack<ushort>();
+
+        private List<DrawNode> _nodes = new List<DrawNode>();
+        private List<DrawNode> _sortGroups = new List<DrawNode>();
+        private int _nodeCount = 0;
+
+
+        public byte SortLayer { get; set; }
+
+        public short SortOrder { get; set; }
 
         public static GraphicsContext Create() => Graphics.Driver.CreateContext();
 
         protected GraphicsContext()
         {
-            _state = new Stack<State>(4);
-            _worldToScreen = new Stack<Matrix3>(4);
-            _worldToScreen.Push(Matrix3.Identity);
-
+            _transform = new Stack<Matrix3>(16);
+            _transform.Push(Matrix3.Identity);
+            _state = new Stack<State>(16);
             _state.Push(new State { color = Color.White, opacity = 1.0f, maskCount = 0 });
+            _nodes.Add(new DrawNode());
         }
 
-        public virtual void Begin(Vector2Int size, Color backgroundColor)
+        protected internal virtual void Begin (Vector2Int size, Color backgroundColor) { }
+
+        protected internal virtual void End () { }
+
+        private void DrawGroup(DrawNode group)
         {
-            _color = Color.White;
+            for (int i = 0; i < group.GroupCount; i++)
+            {
+                var dnode = _nodes[group.GroupStart + i];
+                switch (dnode.Type)
+                {
+                    case DrawNodeType.Group:
+                        DrawGroup(dnode);
+                        break;
+
+                    case DrawNodeType.DebugLine:
+                    case DrawNodeType.Quad:
+                        Draw(dnode);
+                        break;
+                }
+            }
         }
 
-        public virtual void End()
+        public void BatchBegin()
         {
+            TransparencySortMode = TransparencySortMode.Default;
+
+            _nodeCount = 1;
+            _sortGroupStack.Clear();
+            _sortGroups.Clear();
+
+            var dnode = _nodes[0];
+            dnode.Type = DrawNodeType.Group;
+            dnode.Index = (ushort)(_nodeCount);
+            dnode.color = Color.White;
+            dnode.SortLayer = 0;
+            dnode.SortOrder = 0;
+            dnode.SortGroup = 0;
+            dnode.TransparencySort = 0.0f;
+            dnode.GroupCount = 0;
+            dnode.GroupStart = 0;
+
+            _sortGroupStack.Push(1);
+            _sortGroups.Add(dnode);
+        }
+
+        public void BatchEnd()
+        {
+            if (_nodeCount == 0)
+                return;
+
+            PopSortGroup();
+
+            // Sort the nodes 
+            _nodes.Sort(0, _nodeCount, DrawNode.Comparer.Instance);
+
+            // Determine the start node of all groups
+            for (int groupIndex = 0, nodeIndex = 1; groupIndex < _sortGroups.Count; nodeIndex += _sortGroups[groupIndex].GroupCount, groupIndex++)
+                _sortGroups[groupIndex].GroupStart = (ushort)nodeIndex;
+
+            // Render each node
+            DrawGroup(_nodes[0]);
+
             // Pop any states remaining
-            while (_state.Count > 1) _state.Pop();
+            while (_state.Count > 1) PopState();
         }
 
         /// <summary>
         /// Get the current state
         /// </summary>
         private State CurrentState => _state.Peek();
+
+        /// <summary>
+        /// Current mask mode
+        /// </summary>
+        public MaskMode MaskMode { get; set; }
+
+        /// <summary>
+        /// Current color
+        /// </summary>
+        public Color Color { get; set; }
+
+        public float Opacity {
+            get => CurrentState.opacity;
+            set => CurrentState.opacity = value;
+        }
+
+        public TransparencySortMode TransparencySortMode { get; set; } = TransparencySortMode.Default;
+
+        /// <summary>
+        /// Image used to render any subsequent Draw calls
+        /// </summary>
+        public Image Image { get; set; }
 
         /// <summary>
         /// Push the current state onto the stack
@@ -127,66 +212,183 @@ namespace NoZ
             _state.Pop();
 
             _statePool.Release(current);
-
-            _color = CurrentState.color.MultiplyAlpha(CurrentState.opacity);
         }
 
         /// <summary>
         /// Save the current mask and push a new one on the stack.
         /// </summary>
-        public abstract void PushMask();
+        public void PushMask() => throw new NotImplementedException();
 
         /// <summary>
         /// Remove the current mask and revert back to the previous mask
         /// </summary>
-        public abstract void PopMask();
+        public void PopMask() => throw new NotImplementedException();
 
-        public abstract MaskMode MaskMode { get; set; }
+        /// <summary>
+        /// Push the current transform on to the transform stack
+        /// </summary>
+        public void PushTransform () => _transform.Push(Transform);
 
-        public Color Color {
-            get => CurrentState.color;
+        /// <summary>
+        /// Push the current transform multiplied by the given transform to the transform stack
+        /// </summary>
+        public void PushMultipliedTransform(in Matrix3 mat) => _transform.Push(Matrix3.Multiply(mat, _transform.Peek()));
+
+        /// <summary>
+        /// Push the given transform onto the transform stack
+        /// </summary>
+        public void PushTransform (in Matrix3 mat) => _transform.Push(mat);
+
+        /// <summary>
+        /// Pop the current transform off of the transform stack
+        /// </summary>
+        public void PopTransform ()
+        {
+            if (_transform.Count > 1)
+                _transform.Pop();
+        }
+
+        /// <summary>
+        /// Multiply the current transform by the given transform
+        /// </summary>
+        /// <param name="mat"></param>
+        public void MultiplyTransform (in Matrix3 mat) => _transform.Push(Matrix3.Multiply(mat, _transform.Pop()));
+
+        /// <summary>
+        /// Current transform on the transform stack
+        /// </summary>
+        public Matrix3 Transform {
+            get => _transform.Peek();
             set {
-                CurrentState.color = value;
-                UpdateColor();
+                _transform.Pop();
+                _transform.Push(value);
             }
         }
 
-        public float Opacity {
-            get => CurrentState.opacity;
-            set {
-                CurrentState.opacity = value;
-                UpdateColor();
+        public void PushSortGroup ()
+        {
+            var index = _nodeCount++;
+            if (index >= _nodes.Count)
+                _nodes.Add(new DrawNode());
+
+            var dnode = _nodes[index];
+
+            switch (TransparencySortMode)
+            {
+                case TransparencySortMode.Default:
+                    dnode.TransparencySort = index * DefaultTransparencySortIncrement;
+                    break;
+
+                case TransparencySortMode.YAxis:
+                    dnode.TransparencySort = Transform.MultiplyVector(Vector2.Zero).y;
+                    break;
             }
+
+            dnode.Type = DrawNodeType.Group;
+            dnode.Index = (ushort)index;
+            dnode.color = Color.White;
+            dnode.SortLayer = SortLayer;
+            dnode.SortOrder = SortOrder;
+            dnode.SortGroup = _sortGroupStack.Peek();
+            dnode.image = null;
+            dnode.GroupCount = 0;
+            dnode.GroupStart = 0;
+
+            // Maintain the node count in the group
+            _sortGroups[dnode.SortGroup - 1].GroupCount++;
+
+            _sortGroups.Add(dnode);
+            _sortGroupStack.Push((ushort)_sortGroups.Count);
         }
 
-        public Color ColorWithOpacity => _color;
-
-        public abstract Image Image { get; set; }
-
-        public abstract Matrix3 Transform { get; set; }
-
-        public abstract void Draw(PrimitiveType primitive, Vertex[] vertexBuffer, int vertexCount, short[] indexBuffer, int indexCount);
-
-        public abstract void Draw(PrimitiveType primitive, Vertex[] vertexBuffer, int vertexCount);
-
-        public abstract void Draw(in Quad quad);
-
-        public abstract void Draw(Quad[] quad, int count);
-
-        public void PushMatrix(in Matrix3 worldToScreen)
+        public void PopSortGroup()
         {
-            _worldToScreen.Push(worldToScreen);
+            _sortGroupStack.Pop();
         }
 
-        public void PopMatrix()
+        /// <summary>
+        /// Draw a single quad
+        /// </summary>
+        public void Draw(in Quad quad)
         {
-            if (_worldToScreen.Count > 1)
-                _worldToScreen.Pop();
+            var tquad = quad;
+            tquad.TL.XY = Transform.MultiplyVector(quad.TL.XY);
+            tquad.TR.XY = Transform.MultiplyVector(quad.TR.XY);
+            tquad.BR.XY = Transform.MultiplyVector(quad.BR.XY);
+            tquad.BL.XY = Transform.MultiplyVector(quad.BL.XY);
+
+            var index = _nodeCount++;
+            if (index >= _nodes.Count)
+                _nodes.Add(new DrawNode());
+
+            var transparencySort = 0.0f;
+            switch (TransparencySortMode)
+            {
+                case TransparencySortMode.Default: 
+                    transparencySort = index * DefaultTransparencySortIncrement; 
+                    break;
+
+                case TransparencySortMode.YAxis: 
+                    transparencySort = (tquad.TL.XY.y + tquad.TR.XY.y + tquad.BL.XY.y + tquad.BR.XY.y) * 0.25f;
+                    break;
+            }
+
+            var dnode = _nodes[index];
+            dnode.Type = DrawNodeType.Quad;
+            dnode.quad = tquad;
+            dnode.Index = (ushort)index;
+            dnode.color = Color.MultiplyAlpha(Opacity);
+            dnode.SortLayer = SortLayer;
+            dnode.SortOrder = SortOrder;
+            dnode.SortGroup = _sortGroupStack.Peek();
+            dnode.TransparencySort = transparencySort;
+            dnode.image = Image;
+
+            // Maintain the node count in the group
+            _sortGroups[dnode.SortGroup - 1].GroupCount++;
         }
 
-        public Matrix3 WorldToScreen => _worldToScreen.Peek();
+        /// <summary>
+        /// Draw a batch of quads
+        /// </summary>
+        public void Draw(Quad[] quad, int offset, int count)
+        {
+            for (int i = 0; i < count; i++)
+                Draw(quad[i + offset]);
+        }
 
-        private void UpdateColor () => _color = CurrentState.color.MultiplyAlpha(CurrentState.opacity);
+        /// <summary>
+        /// Override to draw a node
+        /// </summary>
+        protected abstract void Draw(DrawNode node);
+
+
+        /// <summary>
+        /// Draw a debug line on top 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        public void DrawDebugLine (in Vector2 from, in Vector2 to)
+        {
+            var index = _nodeCount++;
+            if (index >= _nodes.Count)
+                _nodes.Add(new DrawNode());
+
+            var dnode = _nodes[index];
+            dnode.Type = DrawNodeType.DebugLine;
+            dnode.quad = new Quad { 
+                TL = new Vertex(Transform.MultiplyVector(from)),
+                TR = new Vertex(Transform.MultiplyVector(to)) };
+            dnode.Index = (ushort)index;
+            dnode.color = Color.MultiplyAlpha(Opacity);
+            dnode.SortLayer = 255;
+            dnode.SortOrder = 0;
+            dnode.SortGroup = 1;
+            dnode.TransparencySort = 0.0f;
+            dnode.image = null;
+
+            _sortGroups[0].GroupCount++;
+        }
     }
 }
 

@@ -34,10 +34,9 @@ namespace NoZ
         SlicedNoFill
     }
 
-    public class Sprite : Node, IDrawable
+    public class Sprite : Node
     {
-        private Vertex[] _vertexBuffer;
-        private short[] _indexBuffer;
+        private Quad[] _quads;
         private Image _image;
         private Vector2 _pivot = Vector2.Half;
 
@@ -55,6 +54,11 @@ namespace NoZ
         /// Sprite draw mode
         /// </summary>
         public SpriteDrawMode DrawMode { get; set; } = SpriteDrawMode.Auto;
+
+        /// <summary>
+        /// Sprite sort layer
+        /// </summary>
+        public int SortLayer { get; set; }
 
         /// <summary>
         /// Sprite sort order
@@ -83,6 +87,7 @@ namespace NoZ
                     return;
 
                 _image = value;
+                IsDrawable = _image != null;
                 InvalidateRect();
             }
         }
@@ -141,21 +146,20 @@ namespace NoZ
             }
         }
 
-        bool IDrawable.Draw(GraphicsContext gc)
+        public override void Draw(GraphicsContext gc)
         {
             if (_meshInvalid)
                 UpdateMesh();
 
+            if (_quads == null)
+                return;
+
             gc.Color = Color;
             gc.Image = Image;
             gc.MaskMode = MaskMode;
-
-            if (_indexBuffer == null)
-                gc.Draw(PrimitiveType.TriangleStrip, _vertexBuffer, _vertexBuffer.Length);
-            else
-                gc.Draw(PrimitiveType.TriangleList, _vertexBuffer, _vertexBuffer.Length, _indexBuffer, _indexBuffer.Length);
-
-            return true;
+            gc.SortOrder = gc.SortOrder;
+            gc.SortLayer = gc.SortLayer;
+            gc.Draw(_quads, 0, _quads.Length);
         }
 
         void UpdateMesh()
@@ -192,20 +196,21 @@ namespace NoZ
 
         private void BuildStretchedMesh()
         {
-            if (_vertexBuffer == null || _vertexBuffer.Length != 4)
-                _vertexBuffer = new Vertex[4];
+            if (_quads == null || _quads.Length != 1)
+                _quads = new Quad[1];
 
-            _indexBuffer = null;
+            var l = Rect.x;
+            var t = Rect.y;
+            var r = Rect.x + Rect.width;
+            var b = Rect.y + Rect.height;
 
-            float l = Rect.x;
-            float t = Rect.y;
-            float r = Rect.x + Rect.width;
-            float b = Rect.y + Rect.height;
-
-            _vertexBuffer[0] = new Vertex { XY = new Vector2(l, t), UV = Vector2.Zero, Color = Color.White };
-            _vertexBuffer[1] = new Vertex { XY = new Vector2(r, t), UV = Vector2.OneZero, Color = Color.White };
-            _vertexBuffer[2] = new Vertex { XY = new Vector2(l, b), UV = Vector2.ZeroOne, Color = Color.White };
-            _vertexBuffer[3] = new Vertex { XY = new Vector2(r, b), UV = Vector2.One, Color = Color.White };
+            _quads[0] = new Quad
+            {
+                TL = new Vertex { XY = new Vector2(l, t), UV = Vector2.Zero, Color = Color.White },
+                TR = new Vertex { XY = new Vector2(r, t), UV = Vector2.OneZero, Color = Color.White },
+                BR = new Vertex { XY = new Vector2(r, b), UV = Vector2.One, Color = Color.White },
+                BL = new Vertex { XY = new Vector2(l, b), UV = Vector2.ZeroOne, Color = Color.White }
+            };
         }
 
         private Vector2[] CalcOffsets(float borderMin, float borderMax, float imageSize, float rectMin, float rectSize, out int fill)
@@ -271,6 +276,8 @@ namespace NoZ
 
         private void BuildSlicedMesh(bool filled)
         {
+            _quads = null;
+#if false
             var xoffsets = CalcOffsets(Image.Border.left, Image.Border.right, Image.Width, Rect.x, Rect.width, out var xfill);
             var yoffsets = CalcOffsets(Image.Border.top, Image.Border.bottom, Image.Height, Rect.y, Rect.height, out var yfill);
 
@@ -327,6 +334,7 @@ namespace NoZ
                     _indexBuffer[triangleIndex++] = (short)vn;
                 }
             }
+#endif
         }
 
         /// <summary>

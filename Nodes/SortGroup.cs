@@ -4,16 +4,27 @@ using System.Text;
 
 namespace NoZ
 {
-    public class SortGroup : Node, ILayer
+    public class SortGroup : Node
     {
-        public int SortOrder { get; set; }
-
-        public void BeginLayer(GraphicsContext gc)
+        public SortGroup()
         {
+            IsDrawable = true;
         }
 
-        public void EndLayer(GraphicsContext gc)
+        public int SortOrder { get; set; }
+
+        public int SortLayer { get; set; }
+
+        public override void Draw (GraphicsContext gc)
         {
+            gc.PushSortGroup();
+            gc.SortOrder = (short)SortOrder;
+            gc.SortLayer = (byte)SortLayer;
+        }
+
+        public override void DrawEnd (GraphicsContext gc)
+        {
+            gc.PopSortGroup();
         }
     }
 }

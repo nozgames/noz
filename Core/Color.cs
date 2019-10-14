@@ -44,6 +44,9 @@ namespace NoZ {
         public static readonly Color Green = FromRgb(0, 255, 0);
         public static readonly Color Transparent = FromRgba(0, 0, 0, 0);
 
+        private static float ByteToFloat(byte b) => b * (1.0f / 255.0f);
+        private static byte FloatToByte(float f) => (byte)(f * 255.0f);
+
         private const int RedShift = 0;
         private const int GreenShift = 8;
         private const int BlueShift = 16;
@@ -81,33 +84,30 @@ namespace NoZ {
             }
         }
 
-        public static Color FromRgb(in Vector3 rgb) => new Color(MakeRgba((byte)(rgb.x * 255), (byte)(rgb.y * 255), (byte)(rgb.z * 255), 255));
-        public static Color FromRgba(in Vector3 rgb, float alpha) => new Color(MakeRgba((byte)(rgb.x * 255), (byte)(rgb.y * 255), (byte)(rgb.z * 255), (byte)(alpha * 255)));
+        public static Color FromRgba(in Vector4 rgba) => FromRgba(rgba.x, rgba.y, rgba.z, rgba.w);
 
-        public static Color FromRgba(float red, float green, float blue, float alpha) {
-            return new Color(MakeRgba((byte)(red*255), (byte)(green*255), (byte)(blue*255), (byte)(alpha*255)));
-        }
+        public static Color FromRgb(in Vector3 rgb) => FromRgba(rgb.x, rgb.y, rgb.z, 1.0f);
+        public static Color FromRgba(in Vector3 rgb, float a) => FromRgba(rgb.x, rgb.y, rgb.z, a);
 
-        public static Color FromRgb(int red, int green, int blue) {
-            return new Color(MakeRgba((byte)red, (byte)green, (byte)blue, 255));
-        }
+        public static Color FromRgba(float r, float g, float b, float a) =>
+            FromRgba(FloatToByte(r), FloatToByte(g), FloatToByte(b), FloatToByte(a));
 
-        public static Color FromRgba(int red, int green, int blue, int alpha) {
-            return new Color(MakeRgba((byte)red, (byte)green, (byte)blue, (byte)alpha));
-        }
+        public static Color FromRgb(byte r, byte g, byte b) => FromRgba(r, g, b, 255);
+
+        public static Color FromRgba(byte r, byte g, byte b, byte a) => new Color(MakeRgba(r, g, b, a));
 
         public static Color FromRgba(Color from, byte a) => FromRgba(from.R, from.G, from.B, a);
-        public static Color FromRgba(Color from, float a) => FromRgba(from.R, from.G, from.B, (byte)(a * 255.0f));
+        public static Color FromRgba(Color from, float a) => FromRgba(from.R, from.G, from.B, FloatToByte(a));
 
         public static Color FromUInt32 (uint value) => new Color(value);
 
-        private static uint MakeRgba(byte red, byte green, byte blue, byte alpha) {
+        private static uint MakeRgba(byte r, byte g, byte b, byte a) {
             return (uint)
                 (unchecked((uint)(
-                    red << RedShift |
-                    green << GreenShift |
-                    blue << BlueShift |
-                    alpha << AlphaShift)));
+                    r << RedShift |
+                    g << GreenShift |
+                    b << BlueShift |
+                    a << AlphaShift)));
         }
 
         public static Color Parse(string value) {
@@ -142,24 +142,11 @@ namespace NoZ {
             return $"#{R.ToString("X2")}{G.ToString("X2")}{B.ToString("X2")}{A.ToString("X2")}";
         }
 
-        public Vector3 ToVector3() => new Vector3(R / 255.0f, G / 255.0f, B / 255.0f);
+        public Vector3 ToVector3() => new Vector3(ByteToFloat(R), ByteToFloat(G), ByteToFloat(B));
+        public Vector4 ToVector4() => new Vector4(ByteToFloat(R), ByteToFloat(G), ByteToFloat(B), ByteToFloat(A));
 
-        public Color Scale (float value) {
-            return FromRgba((byte)(R * value), (byte)(G * value), (byte)(B * value), (byte)(A * value));
-        }
-
-        /// <summary>
-        /// Multiply the alpha component of the color by the given alpha value and return
-        /// a new color.
-        /// </summary>
-        /// <param name="value">Value to multiply the alpha by.</param>
-        /// <returns>
-        /// New color that contains the same RGB components of the original and the
-        /// alpha value multiplied by the given value.
-        /// </returns>
-        public Color MultiplyAlpha(byte value) {
-            return FromRgba(R, G, B, (byte)(((value * A) / 255) & 0xFF));
-        }        
+        public Color Scale (float value) =>
+            FromRgba((byte)(R * value), (byte)(G * value), (byte)(B * value), (byte)(A * value));
 
         /// <summary>
         /// Multiply the alpha component of the color by the given alpha value and return
@@ -170,9 +157,18 @@ namespace NoZ {
         /// New color that contains the same RGB components of the original and the
         /// alpha value multiplied by the given value.
         /// </returns>
-        public Color MultiplyAlpha(float value) {
-            return FromRgba(R, G, B, (byte)(value * A));
-        }
+        public Color MultiplyAlpha(byte value) => FromRgba(R, G, B, (byte)(((value * A) / 255) & 0xFF));
+
+        /// <summary>
+        /// Multiply the alpha component of the color by the given alpha value and return
+        /// a new color.
+        /// </summary>
+        /// <param name="value">Value to multiply the alpha by.</param>
+        /// <returns>
+        /// New color that contains the same RGB components of the original and the
+        /// alpha value multiplied by the given value.
+        /// </returns>
+        public Color MultiplyAlpha(float value) => FromRgba(R, G, B, (byte)(value * A));
 
         public static Color Lerp (Color from, Color to, float lerp) {
             var ilerp = 1.0f - lerp;
@@ -213,6 +209,8 @@ namespace NoZ {
                 (byte)(lhs.A + rhs.A)
                 );
         }
+
+        public static Color operator *(in Color lhs, in Color rhs) => FromRgba(lhs.ToVector4() * rhs.ToVector4());
 
         public static bool operator ==(Color lhs, Color rhs) => lhs.Value == rhs.Value;
         public static bool operator !=(Color lhs, Color rhs) => lhs.Value != rhs.Value;
