@@ -17,13 +17,13 @@ namespace NoZ.Nodes
         public State? State { get; private set; }
 
         /// <summary>
-        /// Set the state of the state machine the state type
+        /// Set the state of the state machine
         /// </summary>
         public void SetState<TState>() where TState : State =>
             SetState(typeof(TState));
 
         /// <summary>
-        /// Set the state of the state machine the state type
+        /// Set the state of the state machine
         /// </summary>
         public void SetState(Type stateType)
         {
