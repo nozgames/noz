@@ -23,12 +23,16 @@ namespace NoZ.Graphics
         private static Vector2[] _quad = new Vector2[4];
         private static Vector2* _quadPtr;
         private static Shader? _spriteShader;
+        private static Shader? _solidShader;
 
         public static Shader SpriteShader => _spriteShader!;
+
+        public static Shader SolidShader => _solidShader!;
 
         public static void Initialize(int maxSprites)
         {
             _spriteShader = ResourceDatabase.LoadShader("shaders/sprite", "shaders/sprite");
+            _solidShader = ResourceDatabase.LoadShader("shaders/solid", "shaders/solid");
 
             _count = 0;
             _materials = new List<Material>(32);
@@ -67,10 +71,10 @@ namespace NoZ.Graphics
             Raylib.BeginBlendMode(BlendMode.Alpha);
 
             var ppuInv = Application.PixelsPerUnitInv;
-            var renderSprite = (RenderObject2D*)Unsafe.AsPointer(ref _objects![0]);
+            var renderObject = (RenderObject2D*)Unsafe.AsPointer(ref _objects![0]);
             var transform = Matrix4x4.Identity;
 
-            for (var i = 0; i < _count; i++, renderSprite++)
+            for (var i = 0; i < _count; i++, renderObject++)
             {
 #if false
                 var renderWidth = renderSprite->AtlasRect.Width * ppuInv;
@@ -176,9 +180,9 @@ namespace NoZ.Graphics
 #endif
                 // TODO: remove transpose here
                 Raylib.DrawMesh(
-                    renderSprite->Mesh,
-                    _materials![renderSprite->MaterialIndex]._material,
-                    Matrix4x4.Transpose(new Matrix4x4(renderSprite->Transform)));
+                    renderObject->Mesh,
+                    _materials![renderObject->MaterialIndex]._material,
+                    Matrix4x4.Transpose(new Matrix4x4(renderObject->Transform)));
             }
 
 

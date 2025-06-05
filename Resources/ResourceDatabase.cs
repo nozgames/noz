@@ -7,6 +7,7 @@
 using NoZ.Audio;
 using NoZ.Graphics;
 using NoZ.VFX;
+using System.Runtime.InteropServices;
 
 namespace NoZ
 {
@@ -75,7 +76,9 @@ namespace NoZ
             if (fs != null)
                 fs = GetFullResourcePath(fs) + ".frag";
 
-            return Resource<Shader>.Register(path, new Shader(Raylib_cs.Raylib.LoadShader(vs, fs)));
+            var shader = Raylib_cs.Raylib.LoadShader(vs, fs);
+
+            return Resource<Shader>.Register(path, new Shader(shader));
         }
 
         public static AudioShader LoadAudioShader(string path)
