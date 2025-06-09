@@ -13,7 +13,10 @@ namespace NoZ.Networking
         // Initial connection message
         Connect = 1,
 
+        // Heartbeat message
+        Heartbeat = 2,
+
         // Raw message
-        Custom = 2,
+        Custom = 3,
     }
 }

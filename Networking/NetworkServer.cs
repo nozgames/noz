@@ -7,18 +7,20 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using NoZ.Collections;
+using NoZ.Networking.Messages;
 
 namespace NoZ.Networking
 {
-    public class NetworkServer : NoZ.IUpdatable, IDisposable
+    public class NetworkServer : NetworkBase, NoZ.IUpdatable, IDisposable
     {
-        private readonly System.Net.Sockets.Socket _socket;
         private readonly ConcurrentDictionary<IPEndPoint, (NetworkConnection connection, DateTime lastSeen)> _connections;
         private readonly TimeSpan _timeout;
+        private long _serverTimeMs = 0;
+        private DateTime _lastServerTimeUpdate = DateTime.UtcNow;
         private bool _running;
         private Task? _receiveTask;
-        private readonly byte[] _receiveBuffer;
-        private const int BufferSize = 65536; // Max UDP packet size
         private uint _nextPlayerId = 1;
 
         public int Port { get; }
@@ -34,14 +36,12 @@ namespace NoZ.Networking
         /// </summary>
         /// <param name="port">The port to listen on.</param>
         /// <param name="timeoutSeconds">The timeout in seconds for inactive connections.</param>
-        public NetworkServer(int port = 0, int timeoutSeconds = 30)
+        public NetworkServer(int port = 0, int timeoutSeconds = 30) : base()
         {
             Port = port;
-            _socket = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             _socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             _connections = new ConcurrentDictionary<IPEndPoint, (NetworkConnection, DateTime)>();
             _timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            _receiveBuffer = new byte[BufferSize];
             _running = true;
             _receiveTask = Task.Run(ReceiveLoopAsync);
         }
@@ -53,12 +53,9 @@ namespace NoZ.Networking
         /// <param name="connection">The client connection to send to.</param>
         /// <param name="messageId">The custom message id.</param>
         /// <param name="value">The message payload.</param>
-        public unsafe void Send<T>(NetworkConnection connection, byte messageId, in T value) where T : unmanaged
+        public void Send<T>(NetworkConnection connection, byte messageId, in T value) where T : unmanaged
         {
-            var buffer = stackalloc byte[1 + sizeof(T)];
-            buffer[0] = (byte)(MessageType.Custom + messageId);
-            *(T*)(buffer + 1) = value;
-            _socket.SendTo(new ReadOnlySpan<byte>(buffer, 1 + sizeof(T)), SocketFlags.None, connection.EndPoint);
+            SendMessage(connection.EndPoint, messageId, value);
         }
 
         /// <summary>
@@ -67,11 +64,12 @@ namespace NoZ.Networking
         private async Task ReceiveLoopAsync()
         {
             var remoteEP = new IPEndPoint(IPAddress.Any, 0);
+            var segment = new ArraySegment<byte>(_receiveBuffer);
+
             while (_running)
             {
                 try
                 {
-                    var segment = new ArraySegment<byte>(_receiveBuffer);
                     var result = await System.Net.Sockets.SocketTaskExtensions.ReceiveFromAsync(
                         _socket,
                         segment,
@@ -82,7 +80,9 @@ namespace NoZ.Networking
                     var now = DateTime.UtcNow;
                     var connectionTuple = _connections.GetOrAdd(endpoint, ep => (new NetworkConnection(ep), now));
                     _connections[endpoint] = (connectionTuple.connection, now);
-                    OnDataReceived(connectionTuple.connection, _receiveBuffer.AsSpan(0, result.ReceivedBytes));
+
+                    var data = new UnsafeSpan<byte>(_receiveBufferSpan, 0, result.ReceivedBytes);
+                    HandleMessage(connectionTuple.connection, data);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -100,22 +100,61 @@ namespace NoZ.Networking
         /// </summary>
         /// <param name="connection">The client connection.</param>
         /// <param name="data">The received data.</param>
-        protected virtual unsafe void OnDataReceived(NetworkConnection connection, ReadOnlySpan<byte> data)
+        protected virtual unsafe void HandleMessage(NetworkConnection connection, UnsafeSpan<byte> data)
         {
-            if (data.Length > 0 && data[0] == (byte)MessageType.Connect)
+            if (data.Length < 1)
+                return;
+
+            switch((MessageType)data[0])
             {
-                // Handshake request from client
-                connection.PlayerId = _nextPlayerId++;
-                Console.WriteLine($"[SERVER] Client joined: {connection.EndPoint} assigned PlayerId: {connection.PlayerId}");
-                var response = stackalloc byte[5];
-                response[0] = (byte)MessageType.Connect; // handshake response
-                BitConverter.TryWriteBytes(new Span<byte>(response + 1, 4), connection.PlayerId);
-                _socket.SendTo(new ReadOnlySpan<byte>(response, 5), SocketFlags.None, connection.EndPoint);
+                case MessageType.Connect:
+                    HandleConnect(connection, data.Slice(1));
+                    break;
+
+                case MessageType.Heartbeat:
+                    HandleHeartbeat(connection, data.Slice(1));
+                    break;
+
+                case >= MessageType.Custom:
+                    HandleCustomMessage(connection, data);
+                    break;
             }
-            else
+        }
+
+        private unsafe void HandleConnect(NetworkConnection connection, UnsafeSpan<byte> data)
+        {
+            // Handshake request from client
+            connection.PlayerId = _nextPlayerId++;
+            Console.WriteLine($"[SERVER] Client joined: {connection.EndPoint} assigned PlayerId: {connection.PlayerId}");
+            var response = stackalloc byte[Messages.Handshake.Size + 1];
+            var handshake = (Messages.Handshake*)(response + 1);
+            response[0] = (byte)MessageType.Connect; // handshake response
+            *handshake = new Handshake
             {
-                // Handle other data
-            }
+                PlayerId = connection.PlayerId
+            };
+            this._socket.SendTo(new ReadOnlySpan<byte>(response, Messages.Handshake.Size + 1), SocketFlags.None, connection.EndPoint);
+        }
+
+        private unsafe void HandleHeartbeat(NetworkConnection connection, UnsafeSpan<byte> data)
+        {
+            var clientHeartbeat = (Heartbeat*)data.Pointer;
+            var response = stackalloc byte[1 + Heartbeat.Size];
+            var responseHeartbeat = (Heartbeat*)(response + 1);
+            *responseHeartbeat = new Heartbeat
+            {
+                ClientTicks = clientHeartbeat->ClientTicks,
+                ServerTicks = _serverTimeMs
+            };
+
+            response[0] = (byte)MessageType.Heartbeat;
+            this._socket.SendTo(new ReadOnlySpan<byte>(response, 1 + Heartbeat.Size), SocketFlags.None, connection.EndPoint);
+        }
+
+        private unsafe void HandleCustomMessage(NetworkConnection connection, UnsafeSpan<byte> data)
+        {
+            var messageId = (byte)(data[0] - (byte)MessageType.Custom);
+            InvokeCustomHandler(messageId, connection, data.Slice(1));
         }
 
         /// <summary>
@@ -125,7 +164,7 @@ namespace NoZ.Networking
         /// <param name="data">The data to send.</param>
         public virtual void Send(NetworkConnection connection, ReadOnlySpan<byte> data)
         {
-            _socket.SendTo(data.ToArray(), SocketFlags.None, connection.EndPoint); // ToArray() needed for sync API
+            this._socket.SendTo(data.ToArray(), SocketFlags.None, connection.EndPoint); // ToArray() needed for sync API
         }
 
         /// <summary>
@@ -133,7 +172,16 @@ namespace NoZ.Networking
         /// </summary>
         public void Update()
         {
+            // Advance server time
             var now = DateTime.UtcNow;
+            var delta = (now - _lastServerTimeUpdate).TotalMilliseconds;
+            if (delta > 0)
+            {
+                _serverTimeMs += (long)delta;
+                _lastServerTimeUpdate = now;
+            }
+
+            // Timeout logic
             foreach (var kvp in _connections)
             {
                 if (now - kvp.Value.lastSeen > _timeout)
@@ -159,7 +207,7 @@ namespace NoZ.Networking
         public void Dispose()
         {
             _running = false;
-            _socket.Close();
+            this._socket.Close();
         }
     }
 }

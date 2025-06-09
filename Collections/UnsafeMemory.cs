@@ -6,7 +6,7 @@
 
 namespace NoZ.Collections
 {
-    internal unsafe struct UnsafeMemory<T> : IDisposable where T : unmanaged
+    public unsafe struct UnsafeMemory<T> : IDisposable where T : unmanaged
     {
         private T* _data;
         private int _length;

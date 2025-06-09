@@ -6,27 +6,34 @@
 
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using NoZ.Collections;
 
 namespace NoZ.Networking
 {
-    public class NetworkClient : IDisposable
+    public class NetworkClient : NetworkBase, IDisposable
     {
-        private readonly System.Net.Sockets.Socket _socket;
-        private readonly byte[] _receiveBuffer;
-        private const int BufferSize = 65536;
         private Task? _receiveTask;
         private bool _running;
         public uint PlayerId { get; private set; }
         public IPEndPoint? ServerEndPoint { get; private set; }
-        public bool IsConnected { get; private set; }
+        private DateTime _lastHeartbeatSent = DateTime.MinValue;
+        private double _serverTime;
+        private double _rtt;
+        private double _heartbeatIntervalSeconds = 1.0; // Send heartbeat every second by default
+        private DateTime _clientStartTime = DateTime.UtcNow;
+
+        public event Action<uint>? Connected;
+        public event Action? Disconnected;
 
         /// <summary>
         /// Initializes a new instance of the NetworkClient class.
         /// </summary>
-        public NetworkClient()
+        public NetworkClient() : base() 
         {
-            _socket = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _receiveBuffer = new byte[BufferSize];
+            // Ensure the socket is bound to a local endpoint for UDP
+            if (!_socket.IsBound)
+                _socket.Bind(new IPEndPoint(IPAddress.Any, 0)); // Bind to any available port
         }
 
         /// <summary>
@@ -41,6 +48,7 @@ namespace NoZ.Networking
             _running = true;
             _receiveTask = Task.Run(ReceiveLoopAsync);
             SendHandshakeRequest();
+            Console.WriteLine("[CLIENT] Connect() called, waiting for handshake response...");
         }
 
         /// <summary>
@@ -51,7 +59,7 @@ namespace NoZ.Networking
             var msg = stackalloc byte[1];
             msg[0] = (byte)MessageType.Connect;
             var msgSpan = new ReadOnlySpan<byte>(msg, 1);
-            _socket.SendTo(msgSpan, SocketFlags.None, ServerEndPoint!);
+            this._socket.SendTo(msgSpan, SocketFlags.None, ServerEndPoint!);
         }
 
         /// <summary>
@@ -60,17 +68,58 @@ namespace NoZ.Networking
         /// <typeparam name="T">The unmanaged type of the message payload.</typeparam>
         /// <param name="messageId">The custom message id.</param>
         /// <param name="value">The message payload.</param>
-        public unsafe void Send<T>(byte messageId, in T value) where T : unmanaged
+        public void Send<T>(byte messageId, in T value) where T : unmanaged
         {
             if (ServerEndPoint == null)
                 return;
-            var buffer = stackalloc byte[1 + sizeof(T)];
-            buffer[0] = (byte)(MessageType.Custom + messageId);
+            SendMessage(ServerEndPoint, messageId, value);
+        }
 
-            var bufferSpan = new Span<byte>(buffer, sizeof(T) + 1);
-            fixed (byte* dst = bufferSpan.Slice(1))
-                *(T*)dst = value;
-            _socket.SendTo(bufferSpan, SocketFlags.None, ServerEndPoint);
+        /// <summary>
+        /// Call this periodically to send a heartbeat to the server.
+        /// </summary>
+        public unsafe void SendHeartbeat()
+        {
+            if (ServerEndPoint == null) return;
+            var now = DateTime.UtcNow;
+            var msg = new Messages.Heartbeat { ClientTicks = now.Ticks, ServerTicks = 0 };
+            var buffer = stackalloc byte[1 + Messages.Heartbeat.Size];
+            buffer[0] = (byte)MessageType.Heartbeat;
+            *(Messages.Heartbeat*)(buffer + 1) = msg;
+            this._socket.SendTo(new ReadOnlySpan<byte>(buffer, 1 + Messages.Heartbeat.Size), SocketFlags.None, ServerEndPoint);
+            _lastHeartbeatSent = now;
+        }
+
+        /// <summary>
+        /// Gets the last known server time (approximate, based on heartbeat RTT).
+        /// </summary>
+        public double ServerTime => _serverTime;
+
+        /// <summary>
+        /// Gets the last measured round-trip time (RTT) in seconds.
+        /// </summary>
+        public double RoundTripTime => _rtt;
+
+        /// <summary>
+        /// Sets the heartbeat interval in seconds (default: 1.0).
+        /// </summary>
+        public void SetHeartbeatInterval(double seconds)
+        {
+            _heartbeatIntervalSeconds = seconds;
+        }
+
+        /// <summary>
+        /// Should be called regularly to handle heartbeat sending.
+        /// </summary>
+        public virtual void Update()
+        {
+            if (!_running)
+                return;
+            if (!IsConnected)
+                return;
+            var now = DateTime.UtcNow;
+            if ((now - _lastHeartbeatSent).TotalSeconds >= _heartbeatIntervalSeconds)
+                SendHeartbeat();
         }
 
         /// <summary>
@@ -79,30 +128,26 @@ namespace NoZ.Networking
         private async Task ReceiveLoopAsync()
         {
             var remoteEP = new IPEndPoint(IPAddress.Any, 0);
+            var segment = new ArraySegment<byte>(_receiveBuffer);
             while (_running)
             {
                 try
                 {
-                    var segment = new ArraySegment<byte>(_receiveBuffer);
                     var result = await System.Net.Sockets.SocketTaskExtensions.ReceiveFromAsync(
-                        _socket, segment, SocketFlags.None, remoteEP);
+                        this._socket,
+                        segment,
+                        SocketFlags.None,
+                        remoteEP);
+
                     if (ServerEndPoint != null && !result.RemoteEndPoint.Equals(ServerEndPoint))
                         continue;
 
-                    var data = new byte[result.ReceivedBytes];
-                    Array.Copy(_receiveBuffer, 0, data, 0, result.ReceivedBytes);
+                    var data = _receiveBufferSpan.Slice(0, result.ReceivedBytes);
+                    if (data.Length == 0)
+                        continue;
 
-                    if (data.Length > 0 && data[0] == (byte)MessageType.Connect && data.Length >= 5)
-                    {
-                        // Handshake response: [1 byte: type=Connect][4 bytes: playerId]
-                        PlayerId = BitConverter.ToUInt32(data, 1);
-                        IsConnected = true;
-                        OnConnected(PlayerId);
-                    }
-                    else
-                    {
-                        OnDataReceived(data);
-                    }
+                    HandleMessage(data);
+
                 }
                 catch (ObjectDisposedException)
                 {
@@ -112,13 +157,53 @@ namespace NoZ.Networking
                 {
                     if (!_running)
                         break; // Suppress on shutdown
-                    // Optionally log: Console.WriteLine($"[CLIENT] SocketException: {ex.Message}");
+                    Console.WriteLine($"[CLIENT] SocketException: {ex.Message}");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Log or handle error
+                    Console.WriteLine($"[CLIENT] Exception: {ex.Message}");
                 }
             }
+        }
+
+        protected virtual void HandleMessage(UnsafeSpan<byte> data)
+        {
+            switch (data[0])
+            {
+                case (byte)MessageType.Connect:
+                    HandleConnect(data.Slice(1));
+                    break;
+
+                case (byte)MessageType.Heartbeat:
+                    HandleHeartbeat(data.Slice(1));
+                    break;
+
+                case >= (byte)MessageType.Custom:
+                    HandleCustomMessage(data);
+                    break;
+            }
+        }
+
+        private unsafe void HandleConnect(UnsafeSpan<byte> data)
+        {
+            if (data.Length != Messages.Handshake.Size)
+                return;
+
+            var handshake = (Messages.Handshake*)data.Pointer;
+            PlayerId = handshake->PlayerId;
+            IsConnected = true;
+            OnConnected(PlayerId);
+        }
+
+        private unsafe void HandleHeartbeat(UnsafeSpan<byte> data)
+        {
+            var heartbeat = (Messages.Heartbeat*)data.Pointer;
+
+            var now = DateTime.UtcNow;
+            var sentTime = new DateTime(heartbeat->ClientTicks);
+            _rtt = (now - sentTime).TotalSeconds;
+            var newServerTime = heartbeat->ServerTicks + (_rtt * 1000.0 * 0.5);
+            _serverTime = Math.Max(_serverTime, newServerTime);
         }
 
         /// <summary>
@@ -127,16 +212,17 @@ namespace NoZ.Networking
         /// <param name="playerId">The assigned player ID.</param>
         protected virtual void OnConnected(uint playerId)
         {
-            Console.WriteLine($"[CLIENT] Connected to server with PlayerId: {playerId}");
+            Connected?.Invoke(playerId);
         }
 
         /// <summary>
         /// Called when data is received from the server.
         /// </summary>
-        /// <param name="data">The received data.</param>
-        protected virtual void OnDataReceived(ReadOnlySpan<byte> data)
+        /// <param name="data">The received data as UnsafeSpan.</param>
+        protected void HandleCustomMessage(UnsafeSpan<byte> data)
         {
-            // Override or subscribe to handle other data
+            var messageId = (byte)(data[0] - (byte)MessageType.Custom);
+            base.InvokeCustomHandler(messageId, null, data.Slice(1));
         }
 
         /// <summary>
@@ -146,7 +232,7 @@ namespace NoZ.Networking
         public virtual void Send(ReadOnlySpan<byte> data)
         {
             if (ServerEndPoint != null)
-                _socket.SendTo(data.ToArray(), SocketFlags.None, ServerEndPoint);
+                this._socket.SendTo(data.ToArray(), SocketFlags.None, ServerEndPoint);
         }
 
         /// <summary>
@@ -155,7 +241,8 @@ namespace NoZ.Networking
         public void Dispose()
         {
             _running = false;
-            _socket.Close();
+            this._socket.Close();
+            Disconnected?.Invoke();
         }
     }
 }
