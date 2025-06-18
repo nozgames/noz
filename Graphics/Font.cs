@@ -6,18 +6,20 @@
 
 namespace NoZ.Graphics
 {
+    // SDL3 stub for Font
     public class Font : Resource<Font>
     {
-        internal Raylib_cs.Font _font;
+        public int BaseSize { get; set; } = 16;
+        // TODO: Add SDL3 font fields as needed
 
-        internal Font(Raylib_cs.Font font)
+        public Font(int baseSize = 16)
         {
-            _font = font;
+            BaseSize = baseSize;
         }
 
         protected internal override void Unload()
         {
-            Raylib_cs.Raylib.UnloadFont(_font);
+            // TODO: Unload SDL3 font here
         }
     }
 }

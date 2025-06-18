@@ -6,7 +6,6 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Raylib_cs;
 
 namespace NoZ.UI
 {
@@ -87,6 +86,8 @@ namespace NoZ.UI
             element.Bounds = new Rect(pl, pt, ew, eh);
             element.BoundsWithMargins = new Rect(pl - ml, pt - mt, ew + ml + mr, eh + mt + mb);
             element.LayoutBounds = element.Bounds;
+
+            // TODO: Remove Raylib_cs dependencies and implement SDL3 layout logic as needed.
         }
     }
 }

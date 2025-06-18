@@ -4,8 +4,6 @@
 
 */
 
-using NoZ.Helpers;
-
 namespace NoZ.Graphics
 {
     public struct AnimationFrameConfig

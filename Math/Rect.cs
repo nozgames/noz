@@ -26,6 +26,6 @@ namespace NoZ
             Height = height;
         }
 
-        public static implicit operator Raylib_cs.Rectangle(Rect r) => new Raylib_cs.Rectangle(r.X, r.Y, r.Width, r.Height);
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 math logic as needed.
     }
 }

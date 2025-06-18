@@ -5,7 +5,6 @@
 */
 
 using System.Numerics;
-using Raylib_cs;
 
 namespace NoZ.VFX
 {
@@ -26,6 +25,8 @@ namespace NoZ.VFX
         public Color StartColor;
         public Color EndColor;
         public int BaseSortOrder;
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 VFX logic as needed.
     }
 #endif
 }

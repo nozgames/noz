@@ -53,33 +53,11 @@ namespace NoZ.UI
         /// </summary>
         public static int HotControlId { get; private set; }
 
-        public static bool IsMouseOver
-        {
-            get
-            {
-                if (_mouseOverControlId == ControlId)
-                    return _mouseOver;
-                
-                ref var element = ref _elements[_currentElement];
-                _mouseOverControlId = ControlId;
-                _mouseOver = Raylib_cs.Raylib.CheckCollisionPointRec(_mousePosition, CanvasToScreen(element.Bounds));
-                return _mouseOver;
-            }
-        }
+        public static bool IsMouseOver => false; // TODO: Implement with SDL3
         
-        public static bool IsMouseEnter
-        {
-            get
-            {
-                ref var element = ref _elements[_currentElement];
-                var wasOver = Raylib_cs.Raylib.CheckCollisionPointRec(_lastMousePosition, CanvasToScreen(element.Bounds));
-                var isOver = Raylib_cs.Raylib.CheckCollisionPointRec(_mousePosition, CanvasToScreen(element.Bounds));
-                return isOver && !wasOver;
-            }
-        }
+        public static bool IsMouseEnter => false; // TODO: Implement with SDL3
 
-        public static bool IsMouseClick => 
-            Raylib_cs.Raylib.IsMouseButtonReleased(Raylib_cs.MouseButton.Left) && IsMouseOver && !IsMouseClickConsumed;
+        public static bool IsMouseClick => false; // TODO: Implement with SDL3
         
         public static bool IsMouseClickConsumed { get; set; }
 
@@ -138,7 +116,7 @@ namespace NoZ.UI
             _images.Clear();
             _canvases.Clear();
             _lastMousePosition = _mousePosition;
-            _mousePosition = Raylib_cs.Raylib.GetMousePosition();
+            _mousePosition = default; // TODO: Get mouse position from SDL3
 
             ReadInput();
         }
@@ -260,8 +238,7 @@ namespace NoZ.UI
         public static void Image(Texture texture, in Style style)
         {
             _images.Add(new ImageElement { Texture = texture });
-            BeginElement(style, ElementType.Image, resourceId: _images.Count);
-            EndElement();
+            using var _ = BeginElement(style, ElementType.Image, resourceId: _images.Count);
         }
         
         public static void Image(in Sprite sprite, in Style style)
@@ -316,7 +293,7 @@ namespace NoZ.UI
                 onClick?.Invoke();
             }
 
-            IsPressed = Raylib_cs.Raylib.IsMouseButtonDown(Raylib_cs.MouseButton.Left) && IsMouseOver;
+            IsPressed = false; // TODO: Implement with SDL3
 
             return new AutoEndElement();
         }

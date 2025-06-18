@@ -4,8 +4,6 @@
 
 */
 
-using Raylib_cs;
-
 namespace NoZ.UI
 {
     internal enum ElementType
@@ -28,4 +26,6 @@ namespace NoZ.UI
         public int Resource;
         public int ControlId;
     }
+
+    // TODO: Remove Raylib_cs dependencies and implement SDL3 rendering logic as needed.
 }

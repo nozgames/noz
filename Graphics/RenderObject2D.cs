@@ -4,7 +4,6 @@
 
 */
 
-using Raylib_cs;
 using System.Numerics;
 
 namespace NoZ.Graphics
@@ -15,5 +14,7 @@ namespace NoZ.Graphics
         public int MaterialIndex;
         public Matrix3x2 Transform;        
         public int SortOrder;
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 rendering logic as needed.
     }
 }

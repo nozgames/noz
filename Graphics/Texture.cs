@@ -4,30 +4,41 @@
 
 */
 
+using SDL3;
+
 namespace NoZ.Graphics
 {
+    // SDL3 implementation for Texture
     public class Texture : Resource<Texture>
     {
-        internal Raylib_cs.Texture2D _texture;
+        public int Width { get; }
+        public int Height { get; }
+        
+        internal nint Handle { get; private set; }
 
-        public int Width => _texture.Width;
-        public int Height => _texture.Height;
-
-        public Texture(int width, int height, Raylib_cs.Color color)
+        public Texture(int width, int height) : this(width, height, new Color(255,255,255,255)) { }
+        
+        public Texture(int width, int height, Color color)
         {
-            var image = Raylib_cs.Raylib.GenImageColor(width, height, Raylib_cs.Color.White);
-            _texture = Raylib_cs.Raylib.LoadTextureFromImage(image);
-            Raylib_cs.Raylib.UnloadImage(image);
+            Width = width;
+            Height = height;
+            Handle = 0;
         }
 
-        internal Texture(Raylib_cs.Texture2D texture)
+        public Texture(nint handle, int width, int height)
         {
-            _texture = texture;
+            Handle = handle;
+            Width = width;
+            Height = height;
         }
 
         protected internal override void Unload()
         {
-            Raylib_cs.Raylib.UnloadTexture(_texture);
+            if (Handle == nint.Zero)
+                return;
+
+            SDL.DestroyTexture(Handle);
+            Handle = nint.Zero;
         }
     }
 }

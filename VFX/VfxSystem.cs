@@ -6,8 +6,6 @@
 
 using System.Diagnostics;
 using System.Numerics;
-using NoZ.Helpers;
-using Raylib_cs;
 
 namespace NoZ.VFX
 {
@@ -179,5 +177,7 @@ namespace NoZ.VFX
             }
         }
 #endif
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 VFX logic as needed.
     }
 }

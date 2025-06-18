@@ -13,10 +13,10 @@ namespace NoZ.Nodes
     {
         private Texture _texture;
         private Vector2 _pivot;
-        private Raylib_cs.Mesh _mesh;
         private Material _material;
         private bool _meshDirty;
         private Vector2 _size;
+        private Mesh _mesh = new Mesh();
 
         public Vector2 Size
         {
@@ -62,8 +62,9 @@ namespace NoZ.Nodes
             }
         }
 
-        public Raylib_cs.Color Color { get; set; } = Raylib_cs.Color.White;
+        public Color Color { get; set; } = Color.White;
 
+        // TODO: Implement SDL3 node logic as needed.
         // TODO: shader
         // TODO: shader params
 
@@ -85,20 +86,7 @@ namespace NoZ.Nodes
         {
             _material = new Material(Renderer2D.SpriteShader);
             
-            _mesh = new Raylib_cs.Mesh(4, 2);
-            _mesh.AllocTexCoords();
-            _mesh.AllocVertices();
-            _mesh.AllocIndices();
-            _mesh.AllocColors();
-
-            var indices = _mesh.Indices;
-            indices[0] = 0;
-            indices[1] = 2;
-            indices[2] = 1;
-            indices[3] = 0;
-            indices[4] = 3;
-            indices[5] = 2;
-
+            // TODO: Implement SDL3 node logic as needed.
             _meshDirty = true;
         }
 
@@ -108,28 +96,8 @@ namespace NoZ.Nodes
             var renderHeight = _size.Y;
             var texture = _texture;
 
-            var vertices = (Vector3*)_mesh.Vertices;
-            var z = 0;
-            vertices[0] = new Vector3(-renderWidth * _pivot.X, -renderHeight * _pivot.Y, z);
-            vertices[1] = new Vector3(renderWidth * (1.0f - _pivot.X), -renderHeight * _pivot.Y, z);
-            vertices[2] = new Vector3(renderWidth * (1.0f - _pivot.X), renderHeight * (1.0f - _pivot.Y), z);
-            vertices[3] = new Vector3(-renderWidth * _pivot.X, renderHeight * (1.0f - _pivot.Y), z);
-
-            var uv = (Vector2*)_mesh.TexCoords;
-            uv[0] = new Vector2(0, 0);
-            uv[1] = new Vector2(1, 0);
-            uv[2] = new Vector2(1, 1);
-            uv[3] = new Vector2(0, 1);
-
+            // TODO: Implement SDL3 node logic as needed.
             _material.Texture = texture;
-
-            var colors = (Raylib_cs.Color*)_mesh.Colors;
-            colors[0] = Color;
-            colors[1] = Color;
-            colors[2] = Color;
-            colors[3] = Color;
-
-            Raylib_cs.Raylib.UploadMesh(ref _mesh, false);
 
             _meshDirty = false;
         }

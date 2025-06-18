@@ -9,8 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Raylib-cs" Version="7.0.0" />
+      <PackageReference Include="SDL3-CS" Version="3.2.2" />
       <PackageReference Include="Box2D.NetStandard" Version="2.4.7-alpha" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+      <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
     </ItemGroup>
 
 </Project>

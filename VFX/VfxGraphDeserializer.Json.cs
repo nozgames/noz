@@ -8,7 +8,6 @@ using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NoZ.Graphics;
-using Raylib_cs;
 
 namespace NoZ.VFX
 {
@@ -82,7 +81,7 @@ namespace NoZ.VFX
                     var r = Convert.ToByte(hex[..1], 16);
                     var g = Convert.ToByte(hex.Substring(1, 1), 16);
                     var b = Convert.ToByte(hex.Substring(2, 1), 16);
-                    return new Color(r + (r << 4), g + (g << 4), b + (b << 4), (byte)255);
+                    return new Color((byte)(r + (r << 4)), (byte)(g + (g << 4)), (byte)(b + (b << 4)), (byte)255);
                 }
                 else if (hex.Length == 6)
                 {
@@ -230,5 +229,7 @@ namespace NoZ.VFX
         private partial class VfxGraphContext : JsonSerializerContext
         {
         }
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 VFX deserialization logic as needed.
     }    
 }

@@ -5,7 +5,7 @@
 */
 
 using System.Numerics;
-using Raylib_cs;
+using NoZ.Graphics;
 
 namespace NoZ
 {
@@ -96,6 +96,7 @@ namespace NoZ
 
         public static Color Lerp(Color a, Color b, float t)
         {
+            // TODO: Remove Raylib_cs dependencies and implement SDL3 math logic as needed.
             var tinv = 1.0f - t;
             return new Color(
                 (byte)(a.R * tinv + b.R * t),

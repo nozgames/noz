@@ -4,8 +4,6 @@
 
 */
 
-using Raylib_cs;
-
 namespace NoZ.UI
 {
     public enum EventType
@@ -21,5 +19,7 @@ namespace NoZ.UI
         public int MouseButton;
         
         public static Event Current;
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 event logic as needed.
     }
 }

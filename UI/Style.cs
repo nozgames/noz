@@ -5,7 +5,8 @@
 */
 
 using System.Runtime.CompilerServices;
-using Raylib_cs;
+using NoZ.Graphics;
+// TODO: Remove Raylib_cs dependencies and implement SDL3 style logic as needed.
 
 namespace NoZ.UI
 {

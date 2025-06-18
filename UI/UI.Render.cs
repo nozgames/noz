@@ -5,7 +5,7 @@
 */
 
 using System.Numerics;
-using Raylib_cs;
+using NoZ.Graphics;
 
 namespace NoZ.UI
 {
@@ -36,22 +36,17 @@ namespace NoZ.UI
                     var height = scaledRect.Height;
                     var roundness = radius / (width > height ? height : width);
 
-                    Raylib.DrawRectangleRounded(
-                        scaledRect,
-                        roundness,
-                        (int)(radius * BorderSegmentsPerUnit),
-                        element.Style.BackgroundColor);
+                    // Stubbed logic for SDL3 migration.
                 }
                 else
-                    Raylib.DrawRectangleRec(scaledRect, element.Style.BackgroundColor);
+                {
+                    // Stubbed logic for SDL3 migration.
+                }
             }
 
             if (element.Style.BorderColor.A > 0 && element.Style.BorderWidth > float.Epsilon)
             {
-                Raylib.DrawRectangleLinesEx(
-                    scaledRect,
-                    element.Style.BorderWidth * Scale,
-                    element.Style.BorderColor);
+                // Stubbed logic for SDL3 migration.
             }
             
             switch(element.ElementType)
@@ -102,7 +97,7 @@ namespace NoZ.UI
             if (element.Style.ImageFlip)
                 source.Width = -source.Width;
             
-            Raylib.DrawTexturePro(texture._texture, source, dest, new Vector2(0, 0), 0, element.Style.ImageTint);
+            // Stubbed logic for SDL3 migration.
         }
 
         private static bool TryMeasureElement(in Element element, in Vector2 size, out Vector2 measuredSized)
@@ -110,7 +105,7 @@ namespace NoZ.UI
             switch(element.ElementType)
             {
                 case ElementType.Label:
-                    // TODO: use size to handle wrapping
+                    // Stubbed logic for SDL3 migration.
                     measuredSized = MeasureText(element);
                     return true;
 
@@ -140,7 +135,8 @@ namespace NoZ.UI
             var text = _text[element.Resource - 1];
             var font = GetFont(element.Style.Font);
             var fontSize = element.Style.FontSize * Scale;
-            return Raylib.MeasureTextEx(font._font, text, fontSize, 0);
+            // Stubbed logic for SDL3 migration.
+            return Vector2.Zero;
         }
 
         private static void DrawText(in Element element, in Rect rect)
@@ -148,103 +144,52 @@ namespace NoZ.UI
             var text = _text[element.Resource - 1];
             var font = GetFont(element.Style.Font);
             var fontSize = element.Style.FontSize * Scale;
-            var textSize = Raylib.MeasureTextEx(font._font, text, fontSize, 0);
+            var textSize = Vector2.Zero; // Stubbed logic for SDL3 migration.
             var color = element.Style.Color;
             var textOutlineWidth = element.Style.TextOutlineWidth * UI.Scale;
             var textOutlineColor = element.Style.TextOutlineColor;
 
-            Raylib.BeginShaderMode(_textShader!._shader);
+            // Stubbed logic for SDL3 migration.
             
             switch (element.Style.TextAlignment)
             {
                 case TextAlignment.TopLeft:
-                    Raylib.DrawTextEx(font._font, text, new Vector2(rect.X, rect.Y), fontSize, 0, color);
+                    // Stubbed logic for SDL3 migration.
                     break;
                 
                 case TextAlignment.Middle:
-                    Raylib.DrawTextEx(
-                        font._font,
-                        text,
-                        new Vector2(
-                            rect.X + (rect.Width - textSize.X) * 0.5f,
-                            rect.Y + (rect.Height - textSize.Y) * 0.5f),
-                        fontSize,
-                        0,
-                        color);
-                    
+                    // Stubbed logic for SDL3 migration.
                     break;
                 
                 case TextAlignment.MiddleLeft:
-                    Raylib.DrawTextEx(
-                        font._font,
-                        text,
-                        new Vector2(
-                            rect.X,
-                            rect.Y + (rect.Height - textSize.Y) * 0.5f),
-                        fontSize,
-                        0,
-                        color);
-                    
+                    // Stubbed logic for SDL3 migration.
                     break;
 
                 case TextAlignment.BottomLeft:
-                    Raylib.DrawTextEx(
-                        font._font,
-                        text,
-                        new Vector2(
-                            rect.X,
-                            rect.Y + rect.Height - textSize.Y),
-                        fontSize,
-                        0,
-                        color);
+                    // Stubbed logic for SDL3 migration.
                     break;
 
                 case TextAlignment.BottomRight:
-                    Raylib.DrawTextEx(
-                        font._font,
-                        text,
-                        new Vector2(
-                            rect.X + rect.Width - textSize.X,
-                            rect.Y + rect.Height - textSize.Y),
-                        fontSize,
-                        0,
-                        color);
+                    // Stubbed logic for SDL3 migration.
                     break;                
 
                 case TextAlignment.TopMiddle:
-                    DrawText(
-                        font._font,
-                        text,
-                        new Vector2(
-                            rect.X + (rect.Width - textSize.X) * 0.5f - 5 * UI.Scale,
-                            rect.Y),
-                        fontSize,
-                        color,
-                        textOutlineWidth,
-                        textOutlineColor);
+                    // Stubbed logic for SDL3 migration.
                     break;                
                 
             }
             
-            Raylib.EndShaderMode();
+            // Stubbed logic for SDL3 migration.
         }
 
         private static void DrawText(Font font, string text, Vector2 position, float fontSize, Color color, float outlineWidth, Color outlineColor)
         {
             if (outlineWidth > 0)
             {
-                Raylib.DrawTextEx(font, text, new Vector2(position.X - outlineWidth, position.Y), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X + outlineWidth, position.Y), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X, position.Y - outlineWidth), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X, position.Y + outlineWidth), fontSize, 0, outlineColor);
-
-                Raylib.DrawTextEx(font, text, new Vector2(position.X - outlineWidth, position.Y - outlineWidth), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X + outlineWidth, position.Y - outlineWidth), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X - outlineWidth, position.Y + outlineWidth), fontSize, 0, outlineColor);
-                Raylib.DrawTextEx(font, text, new Vector2(position.X + outlineWidth, position.Y + outlineWidth), fontSize, 0, outlineColor);
+                // Stubbed logic for SDL3 migration.
             }
 
-            Raylib.DrawTextEx(font, text, position, fontSize, 0, color);
+            // Stubbed logic for SDL3 migration.
         }
     }
 }

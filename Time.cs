@@ -4,8 +4,6 @@
 
 */
 
-using Raylib_cs;
-
 namespace NoZ
 {
     public static class Time 
@@ -22,8 +20,9 @@ namespace NoZ
         public static void Update()
         {
             FrameIndex++;
-            UnscaledDeltaTime = Raylib.GetFrameTime(); 
-            DeltaTime = Raylib.GetFrameTime() * TimeScale; 
+            // TODO: Implement frame timing with SDL3
+            UnscaledDeltaTime = 0;
+            DeltaTime = 0;
         }
 
         public static void Clear()

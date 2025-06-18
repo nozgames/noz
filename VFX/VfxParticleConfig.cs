@@ -5,7 +5,6 @@
 */
 
 using NoZ.Graphics;
-using Raylib_cs;
 
 namespace NoZ.VFX
 {
@@ -50,5 +49,7 @@ namespace NoZ.VFX
         public VfxRandomRange AnimationSpeed;
         public VfxRandomRange AnimationStartTime;
         public int SortOrder;
+
+        // TODO: Remove Raylib_cs dependencies and implement SDL3 VFX logic as needed.
     }
 }

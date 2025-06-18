@@ -11,12 +11,12 @@ namespace NoZ.Nodes
 {
     public class Circle : Node2D, IRenderable
     {
-        private Raylib_cs.Mesh _mesh;
+        // TODO: Implement SDL3 node logic as needed.
         private Material _material;
         private bool _meshDirty = true;
         private float _radius;
         private int _segments;
-        private Raylib_cs.Color _color;
+        private Color _color;
 
         public float Radius
         {
@@ -40,7 +40,7 @@ namespace NoZ.Nodes
             }
         }
 
-        public Raylib_cs.Color Color
+        public Color Color
         {
             get => _color;
             set
@@ -59,7 +59,7 @@ namespace NoZ.Nodes
             set => _material.Shader = value;
         }
 
-        public Circle(float radius, Raylib_cs.Color color, int segments = 32)
+        public Circle(float radius, Color color, int segments = 32)
         {
             _radius = radius;
             _color = color;
@@ -72,52 +72,18 @@ namespace NoZ.Nodes
             if (_meshDirty)
                 UpdateMesh();
 
-            Renderer2D.Render(_mesh, _material, LocalToWorld, SortOrder);
+            // TODO: Implement SDL3 rendering logic
         }
 
-        private unsafe void InitializeMesh()
+        private void InitializeMesh()
         {
             _material = new Material(Renderer2D.SolidShader);
-
-            // +1 for center, +1 to close the loop
-            _mesh = new Raylib_cs.Mesh(_segments + 2, _segments * 3);
-            _mesh.AllocVertices();
-            _mesh.AllocIndices();
-            _mesh.AllocColors();
-
             _meshDirty = true;
         }
 
-        private unsafe void UpdateMesh()
+        private void UpdateMesh()
         {
-            var vertices = (Vector3*)_mesh.Vertices;
-            var colors = (Raylib_cs.Color*)_mesh.Colors;
-            var indices = _mesh.Indices;
-
-            // Center vertex
-            vertices[0] = new Vector3(0, 0, 0);
-            colors[0] = _color;
-
-            // Perimeter vertices
-            for (int i = 0; i <= _segments; i++)
-            {
-                float angle = (float)i / _segments * MathF.PI * 2.0f;
-                float x = MathF.Cos(angle) * _radius;
-                float y = MathF.Sin(angle) * _radius;
-                vertices[i + 1] = new Vector3(x, y, 0);
-                colors[i + 1] = _color;
-            }
-
-            // Indices for triangle fan
-            var idx = 0;
-            for (int i = 0; i < _segments; i++)
-            {
-                indices[idx++] = (ushort)(i + 2);
-                indices[idx++] = (ushort)(i + 1);
-                indices[idx++] = 0;
-            }
-
-            Raylib_cs.Raylib.UploadMesh(ref _mesh, false);
+            // TODO: Implement SDL3 mesh update logic
             _meshDirty = false;
         }
     }

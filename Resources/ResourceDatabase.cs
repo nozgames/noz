@@ -7,7 +7,13 @@
 using NoZ.Audio;
 using NoZ.Graphics;
 using NoZ.VFX;
+using SDL3;
+using System.Drawing.Imaging;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Advanced;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace NoZ
 {
@@ -19,14 +25,8 @@ namespace NoZ
 
         public static event Action<Resource>? ResourceLoaded;
 
-
-        public static void Initialize()
-        {
-        }
-
-        public static void Shutdown()
-        {
-        }
+        public static void Initialize() { }
+        public static void Shutdown() { }
 
         public static void UnloadUnused()
         {
@@ -40,11 +40,10 @@ namespace NoZ
         }
 
         public static string GetFullResourcePath(string path) =>
-            Path.Combine(s_path, path);
+            Path.Combine(s_path, path.Replace('/', Path.DirectorySeparatorChar));
 
         public static SpriteAtlas LoadSpriteAtlas(string path)
         {
-            // Already loaded?
             if (Resource<SpriteAtlas>.TryGet(path, out var spriteAtlas))
                 return spriteAtlas!;
 
@@ -70,15 +69,8 @@ namespace NoZ
             if (Resource<Shader>.TryGet(path, out var resource))
                 return resource!;
 
-            if (vs != null)
-                vs = GetFullResourcePath(vs) + ".vert";
-            
-            if (fs != null)
-                fs = GetFullResourcePath(fs) + ".frag";
-
-            var shader = Raylib_cs.Raylib.LoadShader(vs, fs);
-
-            return Resource<Shader>.Register(path, new Shader(shader));
+            // TODO: Implement SDL3 shader loading logic here
+            return Resource<Shader>.Register(path, new Shader());
         }
 
         public static AudioShader LoadAudioShader(string path)
@@ -93,7 +85,8 @@ namespace NoZ
                 if (!File.Exists(wavPath))
                     throw new System.IO.FileNotFoundException(path);
 
-                return Resource<AudioShader>.Register(path, new AudioShader(Raylib_cs.Raylib.LoadSound(wavPath)));
+                // TODO: Implement SDL3 audio loading logic here
+                return Resource<AudioShader>.Register(path, new AudioShader());
             }
 
             var text = File.ReadAllText(path + ".json");
@@ -103,10 +96,10 @@ namespace NoZ
                 throw new System.InvalidOperationException("Invalid audio shader");
 
             if (json.Sounds != null && json.Sounds.Length > 0)
-                return Resource<AudioShader>.Register(path, new AudioShader(json.Sounds, json.Volume, json.Pitch));
+                return Resource<AudioShader>.Register(path, new AudioShader());
 
             if (json.Sound != null)
-                return Resource<AudioShader>.Register(path, new AudioShader(json.Sound ?? path, json.Volume, json.Pitch));
+                return Resource<AudioShader>.Register(path, new AudioShader());
 
             throw new System.InvalidOperationException("Missing sound!");
         }
@@ -116,36 +109,8 @@ namespace NoZ
             if (Resource<Font>.TryGet(path, out var resource))
                 return resource!;
 
-            // Load the font to render the SDF with 
-            var fileSize = 0;
-            var fileData = Raylib_cs.Raylib.LoadFileData(GetFullResourcePath(path) + ".ttf", ref fileSize);
-            var font = new Raylib_cs.Font
-            {
-                BaseSize = 16,
-                GlyphCount = 95,
-                Glyphs = Raylib_cs.Raylib.LoadFontData(fileData, fileSize, DefaultFontSize, null, 95, Raylib_cs.FontType.Default)
-            };
-
-            var atlas = Raylib_cs.Raylib.GenImageFontAtlas(font.Glyphs, &font.Recs, 95, DefaultFontSize, 4, 0);
-            font.Texture = Raylib_cs.Raylib.LoadTextureFromImage(atlas);
-            Raylib_cs.Raylib.UnloadImage(atlas);
-
-            // Create the SDF font
-            var fontSDF = new Raylib_cs.Font
-            {
-                BaseSize = DefaultFontSize,
-                GlyphCount = 95,
-                Glyphs = Raylib_cs.Raylib.LoadFontData(fileData, fileSize, DefaultFontSize, null, 0, Raylib_cs.FontType.Sdf)
-            };
-
-            atlas = Raylib_cs.Raylib.GenImageFontAtlas(fontSDF.Glyphs, &fontSDF.Recs, 95, SdfFontSize, 0, 1);
-            fontSDF.Texture = Raylib_cs.Raylib.LoadTextureFromImage(atlas);
-            Raylib_cs.Raylib.UnloadImage(atlas);
-
-            Raylib_cs.Raylib.UnloadFileData(fileData);
-            Raylib_cs.Raylib.SetTextureFilter(fontSDF.Texture, Raylib_cs.TextureFilter.Bilinear);
-
-            return Resource<Font>.Register(path, new Font(fontSDF));
+            // TODO: Implement SDL3 font loading logic here
+            return Resource<Font>.Register(path, new Font(DefaultFontSize));
         }
 
         public static VfxGraph LoadVfxGraph(string path)
@@ -154,23 +119,67 @@ namespace NoZ
                 return resource!;
 
             var text = File.ReadAllText(GetFullResourcePath(path) + ".json");
-            var graph = AudioShaderSerializer.Deserialize(text);
-
+            // TODO: Implement SDL3 VFX graph deserialization logic here
             return Resource<VfxGraph>.Register(path, VfxGraphDeserializer.Deserialize(text));
         }
 
-        private static Texture LoadTexture(string path)
+        public static Texture LoadTexture(string path)
         {
             if (Resource<Texture>.TryGet(path, out var resource))
                 return resource!;
 
             path = GetFullResourcePath(path)!;
 
-            var texture = Raylib_cs.Raylib.LoadTexture(path + ".png");
-            Raylib_cs.Raylib.SetTextureWrap(texture, Raylib_cs.TextureWrap.Clamp);
-            Raylib_cs.Raylib.SetTextureFilter(texture, Raylib_cs.TextureFilter.Bilinear);
+            // Use ImageSharp to load PNG/JPG cross-platform
+            using var image = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(path);
+            int width = image.Width;
+            int height = image.Height;
 
-            return Resource<Texture>.Register(path, new Texture(texture));
+            if (!image.Frames.RootFrame.DangerousTryGetSinglePixelMemory(out var memory))
+                throw new Exception($"Failed to get pixel memory from image: {path}");
+
+            unsafe
+            {
+                fixed (void* pointer = memory.Span)
+                {
+                    var texture = SDL.CreateGPUTexture(Application.Renderer.Device, new SDL.GPUTextureCreateInfo
+                    {
+                        Type = SDL.GPUTextureType.Texturetype2D,
+                        Format = SDL.GPUTextureFormat.R8G8B8A8Uint,
+                        Usage = SDL.GPUTextureUsageFlags.GraphicsStorageRead,
+                        Width = (uint)width,
+                        Height = (uint)height,
+                        NumLevels = 1,
+                        LayerCountOrDepth = 1
+                    });
+
+                    var transfer_buffer = SDL.CreateGPUTransferBuffer(Application.Renderer.Device, new SDL.GPUTransferBufferCreateInfo
+                    {
+                        Size = (uint)(width * height * 4),
+                    });
+
+                    var transferSource = SDL.MapGPUTransferBuffer(Application.Renderer.Device, transfer_buffer, false);
+                    Unsafe.CopyBlockUnaligned((void*)transferSource, pointer, (uint)(width * height * 4));
+                    SDL.UnmapGPUTransferBuffer(Application.Renderer.Device, transfer_buffer);
+
+                    var commandBuffer = SDL.AcquireGPUCommandBuffer(Application.Renderer.Device);
+                    var copyPass = SDL.BeginGPUCopyPass(commandBuffer);
+                    SDL.UploadToGPUTexture(copyPass, new SDL.GPUTextureTransferInfo
+                    {
+                        TransferBuffer = transfer_buffer,
+                    },
+                    new SDL.GPUTextureRegion
+                    {
+                        Texture = texture,
+                        W = (uint)width,
+                        H = (uint)height,
+                        D = 1
+                    },
+                    false);
+
+                    return Resource<Texture>.Register(path, new Texture(texture, width, height));
+                }
+            }
         }
     }
 }

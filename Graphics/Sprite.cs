@@ -4,7 +4,6 @@
 
 */
 
-using Raylib_cs;
 using System.Numerics;
 
 namespace NoZ.Graphics
@@ -43,5 +42,7 @@ namespace NoZ.Graphics
             _texture.Dispose();
             _texture = null;
         }
+
+        // TODO: Stub out SDL3 migration logic in Sprite.cs.
     }
 }

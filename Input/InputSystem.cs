@@ -4,7 +4,6 @@
 
 */
 
-using Raylib_cs;
 using System.Numerics;
 
 namespace NoZ.Input
@@ -38,9 +37,9 @@ namespace NoZ.Input
 
             if (TryGetMouseButton(button.Id, out var mouseButton))
             {
-                button.IsDown = Raylib.IsMouseButtonDown(mouseButton);
-                button.IsPressed = Raylib.IsMouseButtonPressed(mouseButton);
-                button.IsReleased = Raylib.IsMouseButtonReleased(mouseButton);
+                button.IsDown = false; // Stub for SDL3 migration
+                button.IsPressed = false; // Stub for SDL3 migration
+                button.IsReleased = false; // Stub for SDL3 migration
                 return;
             }
 
@@ -56,35 +55,35 @@ namespace NoZ.Input
             switch (axis.Id)
             {
                 case InputAxisId.GamePadLeftX:
-                    axis.Value = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
                 
                 case InputAxisId.GamePadLeftY:
-                    axis.Value = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePadRightX:
-                    axis.Value = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightX);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePadRightY:
-                    axis.Value = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightY);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePad2LeftX:
-                    axis.Value = Raylib.GetGamepadAxisMovement(1, GamepadAxis.LeftX);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePad2LeftY:
-                    axis.Value = Raylib.GetGamepadAxisMovement(1, GamepadAxis.LeftY);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePad2RightX:
-                    axis.Value = Raylib.GetGamepadAxisMovement(1, GamepadAxis.RightX);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
 
                 case InputAxisId.GamePad2RightY:
-                    axis.Value = Raylib.GetGamepadAxisMovement(1, GamepadAxis.RightY);
+                    axis.Value = 0.0f; // Stub for SDL3 migration
                     break;
             }
 
@@ -116,9 +115,9 @@ namespace NoZ.Input
             if (key == KeyboardKey.Null)
                 return false;
 
-            button.IsDown = Raylib.IsKeyDown(key);
-            button.IsPressed = Raylib.IsKeyPressed(key);
-            button.IsReleased = Raylib.IsKeyReleased(key);
+            button.IsDown = false; // Stub for SDL3 migration
+            button.IsPressed = false; // Stub for SDL3 migration
+            button.IsReleased = false; // Stub for SDL3 migration
 
             return true;
         }
@@ -237,9 +236,9 @@ namespace NoZ.Input
                     return false;
             };
 
-            button.IsDown = Raylib.IsGamepadButtonDown(gamePadIndex, gamePadButton);
-            button.IsPressed = Raylib.IsGamepadButtonPressed(gamePadIndex, gamePadButton);
-            button.IsReleased = Raylib.IsGamepadButtonReleased(gamePadIndex, gamePadButton);
+            button.IsDown = false; // Stub for SDL3 migration
+            button.IsPressed = false; // Stub for SDL3 migration
+            button.IsReleased = false; // Stub for SDL3 migration
             return true;
         }
 
@@ -298,9 +297,9 @@ namespace NoZ.Input
                     return false;
             };
 
-            var gamePadAxisValue = Raylib.GetGamepadAxisMovement(gamePadIndex, gamePadAxis);
+            var gamePadAxisValue = 0.0f; // Stub for SDL3 migration
             var wasDown = button.IsDown;
-            var isDown = direction * Raylib.GetGamepadAxisMovement(gamePadIndex, gamePadAxis) > GamePadAxisButtonThreshold;
+            var isDown = false; // Stub for SDL3 migration
             button.IsReleased = wasDown && !isDown;
             button.IsPressed = !wasDown && isDown;
             button.IsDown = isDown;

@@ -1,20 +1,30 @@
-﻿/*
+/*
 
-    Copyright (c) 2024 NoZ Games, LLC. All rights reserved.
+    Copyright (c) 2025 NoZ Games, LLC. All rights reserved.
 
 */
 
-using Raylib_cs;
-
-namespace NoZ.Helpers
+namespace NoZ.Graphics 
 {
-    public static class ColorHelper
+    public struct Color 
     {
+        public static readonly Color White = new(255, 255, 255, 255);
+
+        public byte R;
+        public byte G;
+        public byte B;
+        public byte A;
+        
+        public Color(byte r, byte g, byte b, byte a = 255) 
+        {
+            R = r; G = g; B = b; A = a;
+        }
+
         public static Color ParseColor(string value)
         {
             // Parse the hex string into a color
             if (!value.StartsWith('#'))
-                return Color.White;
+                return White;
 
             var hex = value[1..];
             if (hex.Length == 3)
@@ -22,7 +32,7 @@ namespace NoZ.Helpers
                 var r = Convert.ToByte(hex[..1], 16);
                 var g = Convert.ToByte(hex.Substring(1, 1), 16);
                 var b = Convert.ToByte(hex.Substring(2, 1), 16);
-                return new Color(r + (r << 4), g + (g << 4), b + (b << 4), (byte)255);
+                return new Color((byte)(r + (r << 4)), (byte)(g + (g << 4)), (byte)(b + (b << 4)), (byte)255);
             }
             else if (hex.Length == 6)
             {

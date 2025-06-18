@@ -7,7 +7,6 @@
 using System.Numerics;
 using System.Text.Json;
 using NoZ.Graphics;
-using Raylib_cs;
 
 namespace NoZ.VFX
 {
@@ -38,8 +37,7 @@ namespace NoZ.VFX
                     ? atlas.LoadSprite(particleJson.Sprite)
                     : null;
 
-                //else if (particleJson.Animation != null)
-                //    animation = particleJson.Animation.Value.LoadAnimation(graph._atlas, null)!.Value;
+                // TODO: Remove Raylib_cs dependencies and implement SDL3 VFX deserialization logic as needed.
 
                 graph._emitters[i] = new VfxEmitterConfig
                 {

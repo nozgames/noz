@@ -6,27 +6,14 @@
 
 namespace NoZ.Graphics
 {
+    // SDL3 stub for Shader
     public class Shader : Resource<Shader>
     {
-        internal Raylib_cs.Shader _shader;
-
-        internal Shader(Raylib_cs.Shader shader)
-        {
-            _shader = shader;
-        }
-
-        protected internal override void Unload()
-        {
-            Raylib_cs.Raylib.UnloadShader(_shader);
-        }
-
-        public int GetLocation(string name) =>
-            Raylib_cs.Raylib.GetShaderLocation(_shader, name);
-
-        public int GetLocationAttrib(string name) =>
-            Raylib_cs.Raylib.GetShaderLocationAttrib(_shader, name);
-
-        public unsafe void SetValue(int index, float value) =>
-            Raylib_cs.Raylib.SetShaderValue(_shader, index, &value, Raylib_cs.ShaderUniformDataType.Float);
+        // TODO: Add SDL3 shader fields as needed
+        public Shader() { }
+        protected internal override void Unload() { }
+        public int GetLocation(string name) => 0;
+        public int GetLocationAttrib(string name) => 0;
+        public unsafe void SetValue(int index, float value) { }
     }
 }

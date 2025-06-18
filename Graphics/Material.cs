@@ -8,7 +8,7 @@ namespace NoZ.Graphics
 {
     public class Material : Resource<Material>
     {
-        internal Raylib_cs.Material _material;
+        // TODO: Implement SDL3 material logic as needed.
         private Shader? _shader;
         private Texture? _texture;
 
@@ -21,11 +21,12 @@ namespace NoZ.Graphics
                 _shader?.Dispose();
                 _shader = value.GetRef();
 
-                _material.Shader = value != null ? value._shader : default;
+                // Stub for SDL3 migration
+                // Implement shader assignment logic for SDL3 here
             }
         }
 
-        public unsafe Texture Texture
+        public Texture Texture
         {
             get => _texture!;
             set
@@ -35,22 +36,25 @@ namespace NoZ.Graphics
 
                 _texture = value;
 
-                fixed (Raylib_cs.Material* mm = &_material)
-                    Raylib_cs.Raylib.SetMaterialTexture(mm, Raylib_cs.MaterialMapIndex.Diffuse, _texture != null ? _texture._texture : default);
+                // Stub for SDL3 migration
+                // Implement texture assignment logic for SDL3 here
             }
         }
 
         public Material(Shader shader)
         {
             _shader = shader.GetRef();
-            _material = Raylib_cs.Raylib.LoadMaterialDefault();
-            _material.Shader = _shader._shader;
+
+            // Stub for SDL3 migration
+            // Initialize material logic for SDL3 here
+
             _texture = null;
         }
 
         protected internal override void Unload()
         {
-            Raylib_cs.Raylib.UnloadMaterial(_material);
+            // Stub for SDL3 migration
+            // Implement material unloading logic for SDL3 here
 
             _texture?.Dispose();
             _texture = null;

@@ -4,8 +4,6 @@
 
 */
 
-using Raylib_cs;
-
 namespace NoZ
 {
     public struct RectInt
@@ -29,7 +27,5 @@ namespace NoZ
         }
         
         public RectInt Shrink(int amount) => new(X + amount, Y + amount, Width - amount * 2, Height - amount * 2);
-        
-        public static implicit operator Rect(RectInt rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
     }
 }
