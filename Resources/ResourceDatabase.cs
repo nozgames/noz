@@ -63,14 +63,23 @@ namespace NoZ
             return atlas.LoadSprite(Path.GetFileName(path));
         }
 
-        public static Shader LoadShader(string? vs, string? fs)
+        public static Shader LoadShader(string vs, string fs)
         {
-            var path = (vs ?? "") + "_" + (fs ?? "");
+            var path = vs + "_" + fs;
             if (Resource<Shader>.TryGet(path, out var resource))
                 return resource!;
 
+            vs = vs + ".vert";
+            fs = fs + ".frag";
+
+            var fullVertexPath = GetFullResourcePath(vs)!;
+            var fullFragmentPath = GetFullResourcePath(fs)!;            
+            var vertexSource = File.ReadAllText(fullVertexPath);
+            var fragmentSource = File.ReadAllText(fullFragmentPath);
+            var shader = Shader.Create(vertexSource, vs, fragmentSource, fs);
+
             // TODO: Implement SDL3 shader loading logic here
-            return Resource<Shader>.Register(path, new Shader());
+            return Resource<Shader>.Register(path, shader);
         }
 
         public static AudioShader LoadAudioShader(string path)

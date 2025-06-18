@@ -6,6 +6,7 @@
 
 using SDL3;
 using System.Numerics;
+using System.Collections.Generic;
 
 namespace NoZ.Graphics
 {
@@ -24,6 +25,9 @@ namespace NoZ.Graphics
         private nint _window;
 
         internal nint Device => _gpuDevice;
+
+        // List of meshes to render this frame
+        private readonly List<(Mesh mesh, Vector2 position)> _meshQueue = new();
 
         public Renderer() 
         { 
@@ -73,12 +77,21 @@ namespace NoZ.Graphics
             // TODO: Issue draw call for mesh using _currentRenderPass
         }
 
+        public void DrawMesh(Mesh mesh, Vector2 position)
+        {
+            // Add mesh and position to the queue for this frame
+            _meshQueue.Add((mesh, position));
+        }
+
         public void EndFrame()
         {
             // TODO: End render pass, submit and present
             // SDL.GPURenderPassEncoderEnd(_currentRenderPass);
             // SDL.GPUQueueSubmit(_gpuQueue);
             // SDL.GPUQueuePresent(_gpuQueue);
+
+            // Clear the queue after rendering
+            _meshQueue.Clear();
         }
     }
 }

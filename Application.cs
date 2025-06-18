@@ -26,6 +26,8 @@ namespace NoZ
 
         public static void Initialize(string title, int screenWidth, int screenHeight)
         {
+            Tools.ShaderCross.Init();
+
             SetPixelsPerUnit(DefaultPixelsPerUnit);
             ResourceDatabase.Initialize();
             SDL.Init(
@@ -41,6 +43,9 @@ namespace NoZ
             Renderer.Load(_window);
             _screenWidth = screenWidth;
             _screenHeight = screenHeight;
+
+
+            ResourceDatabase.LoadShader("shaders/test", "shaders/test");
         }
 
         public static void Update()
